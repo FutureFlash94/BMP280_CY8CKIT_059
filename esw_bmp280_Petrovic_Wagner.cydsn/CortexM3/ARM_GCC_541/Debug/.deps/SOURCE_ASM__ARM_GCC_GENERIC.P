@@ -1,0 +1,18 @@
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/CortexM3/ARM_GCC_541/Debug/CyBootAsmGnu.o : C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/CyBootAsmGnu.s C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/cydevicegnu.inc C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/cydevicegnu_trm.inc C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/cyfittergnu.inc 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/CyBootAsmGnu.s : 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/cydevicegnu.inc : 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/cydevicegnu_trm.inc : 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/Generated_Source/PSoC5/cyfittergnu.inc : 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/CortexM3/ARM_GCC_541/Debug/cpu_a.o : C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/uC-CPU/ARM-Cortex-M3/GNU/cpu_a.s 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/uC-CPU/ARM-Cortex-M3/GNU/cpu_a.s : 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/CortexM3/ARM_GCC_541/Debug/os_cpu_a.o : C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/uCOS-III/Ports/ARM-Cortex-M3/Generic/GNU/os_cpu_a.s 
+
+C:/cypress/esw_bmp280_Petrovic_Wagner/esw_bmp280_Petrovic_Wagner.cydsn/uCOS-III/Ports/ARM-Cortex-M3/Generic/GNU/os_cpu_a.s : 
+
