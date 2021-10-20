@@ -1,10 +1,10 @@
-Loading plugins phase: Elapsed time ==> 0s.156ms
+Loading plugins phase: Elapsed time ==> 0s.140ms
 <CYPRESSTAG name="CyDsfit arguments...">
-cydsfit arguments: -.fdsnotice -.fdswarpdepfile=warp_dependencies.txt -.fdselabdepfile=elab_dependencies.txt -.fdsbldfile=generated_files.txt -.fdsreffile=referenced_files.txt -p C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -d CY8C5888LTI-LP097 -s C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\Generated_Source\PSoC5 -- -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE
+cydsfit arguments: -.fdsnotice -.fdswarpdepfile=warp_dependencies.txt -.fdselabdepfile=elab_dependencies.txt -.fdsbldfile=generated_files.txt -.fdsreffile=referenced_files.txt -p C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -d CY8C5888LTI-LP097 -s C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\Generated_Source\PSoC5 -- -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE
 </CYPRESSTAG>
 <CYPRESSTAG name="Design elaboration results...">
 </CYPRESSTAG>
-Elaboration phase: Elapsed time ==> 1s.280ms
+Elaboration phase: Elapsed time ==> 1s.421ms
 <CYPRESSTAG name="HDL generation results...">
 </CYPRESSTAG>
 HDL generation phase: Elapsed time ==> 0s.031ms
@@ -25,23 +25,23 @@ HDL generation phase: Elapsed time ==> 0s.031ms
 ======================================================================
 Compiling:  esw_bmp280_Petrovic_Wagner.v
 Program  :   C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\bin\warp.exe
-Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 esw_bmp280_Petrovic_Wagner.v -verilog
+Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 esw_bmp280_Petrovic_Wagner.v -verilog
 ======================================================================
 
 ======================================================================
 Compiling:  esw_bmp280_Petrovic_Wagner.v
 Program  :   C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\bin\warp.exe
-Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 esw_bmp280_Petrovic_Wagner.v -verilog
+Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 esw_bmp280_Petrovic_Wagner.v -verilog
 ======================================================================
 
 ======================================================================
 Compiling:  esw_bmp280_Petrovic_Wagner.v
 Program  :   vlogfe
-Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 -verilog esw_bmp280_Petrovic_Wagner.v
+Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 -verilog esw_bmp280_Petrovic_Wagner.v
 ======================================================================
 
 vlogfe V6.3 IR 41:  Verilog parser
-Wed Oct 20 19:54:58 2021
+Wed Oct 20 20:37:20 2021
 
 
 ======================================================================
@@ -51,7 +51,7 @@ Options  :    -yv2 -q10 esw_bmp280_Petrovic_Wagner.v
 ======================================================================
 
 vpp V6.3 IR 41:  Verilog Pre-Processor
-Wed Oct 20 19:54:58 2021
+Wed Oct 20 20:37:20 2021
 
 Flattening file 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\CyPrimitives\cyprimitives.cylib\cy_virtualmux_v1_0\cy_virtualmux_v1_0.v'
 Flattening file 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\B_UART_v2_50\B_UART_v2_50.v'
@@ -93,11 +93,11 @@ vlogfe:  No errors.
 ======================================================================
 Compiling:  esw_bmp280_Petrovic_Wagner.v
 Program  :   tovif
-Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 -verilog esw_bmp280_Petrovic_Wagner.v
+Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 -verilog esw_bmp280_Petrovic_Wagner.v
 ======================================================================
 
 tovif V6.3 IR 41:  High-level synthesis
-Wed Oct 20 19:54:58 2021
+Wed Oct 20 20:37:20 2021
 
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\std.vhd'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\cypress.vhd'.
@@ -108,9 +108,9 @@ Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\c
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\stdlogic\mod_cnst.vif'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\stdlogic\mod_mthv.vif'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\stdlogic\mod_genv.vif'.
-Linking 'C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.ctl'.
+Linking 'C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.ctl'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\CyPrimitives\cyprimitives.cylib\cy_virtualmux_v1_0\cy_virtualmux_v1_0.v'.
-Linking 'C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.v'.
+Linking 'C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.v'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\B_UART_v2_50\B_UART_v2_50.v'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\cypress.v'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\cy_psoc3_inc.v'.
@@ -127,11 +127,11 @@ tovif:  No errors.
 ======================================================================
 Compiling:  esw_bmp280_Petrovic_Wagner.v
 Program  :   topld
-Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 -verilog esw_bmp280_Petrovic_Wagner.v
+Options  :    -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 -verilog esw_bmp280_Petrovic_Wagner.v
 ======================================================================
 
 topld V6.3 IR 41:  Synthesis and optimization
-Wed Oct 20 19:54:58 2021
+Wed Oct 20 20:37:21 2021
 
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\std.vhd'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\cypress.vhd'.
@@ -142,9 +142,9 @@ Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\c
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\stdlogic\mod_cnst.vif'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\stdlogic\mod_mthv.vif'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\stdlogic\mod_genv.vif'.
-Linking 'C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.ctl'.
+Linking 'C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.ctl'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\CyPrimitives\cyprimitives.cylib\cy_virtualmux_v1_0\cy_virtualmux_v1_0.v'.
-Linking 'C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.v'.
+Linking 'C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\codegentemp\esw_bmp280_Petrovic_Wagner.v'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\psoc\content\CyComponentLibrary\CyComponentLibrary.cylib\B_UART_v2_50\B_UART_v2_50.v'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\cypress.v'.
 Linking 'C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\lib\common\cy_psoc3_inc.v'.
@@ -593,13 +593,13 @@ topld:  No errors.
 
 CYPRESS_DIR    : C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp
 Warp Program   : C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\warp\bin\warp.exe
-Warp Arguments : -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 esw_bmp280_Petrovic_Wagner.v -verilog
+Warp Arguments : -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -dcpsoc3 esw_bmp280_Petrovic_Wagner.v -verilog
 </CYPRESSTAG>
-Warp synthesis phase: Elapsed time ==> 1s.046ms
+Warp synthesis phase: Elapsed time ==> 1s.187ms
 <CYPRESSTAG name="Fitter results...">
 <CYPRESSTAG name="Fitter startup details...">
-cyp3fit: V4.2.0.641, Family: PSoC3, Started at: Wednesday, 20 October 2021 19:54:59
-Options: -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\esw_bmp280_Petrovic_Wagner\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -d CY8C5888LTI-LP097 esw_bmp280_Petrovic_Wagner.v -verilog
+cyp3fit: V4.2.0.641, Family: PSoC3, Started at: Wednesday, 20 October 2021 20:37:21
+Options: -yv2 -q10 -ygs -o2 -v3 -.fftcfgtype=LE -ya -.fftprj=C:\cypress\ESW-BMP280\esw_bmp280_Petrovic_Wagner.cydsn\esw_bmp280_Petrovic_Wagner.cyprj -d CY8C5888LTI-LP097 esw_bmp280_Petrovic_Wagner.v -verilog
 </CYPRESSTAG>
 <CYPRESSTAG name="Design parsing">
 Design parsing phase: Elapsed time ==> 0s.015ms
@@ -2106,8 +2106,8 @@ Analog (SC/CT) Blocks         :    0 :    4 :    4 :  0.00 %
 DAC                           :      :      :      :        
   VIDAC                       :    0 :    4 :    4 :  0.00 %
 </CYPRESSTAG>
-Technology Mapping: Elapsed time ==> 0s.109ms
-Tech Mapping phase: Elapsed time ==> 0s.171ms
+Technology Mapping: Elapsed time ==> 0s.124ms
+Tech Mapping phase: Elapsed time ==> 0s.203ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Analog Placement">
 Initial Analog Placement Results:
@@ -2121,7 +2121,7 @@ IO_6@[IOP=(12)][IoId=(6)] : Rx_1(0) (fixed)
 IO_0@[IOP=(12)][IoId=(0)] : SCLK_1(0) (fixed)
 IO_7@[IOP=(12)][IoId=(7)] : Tx_1(0) (fixed)
 IO_2@[IOP=(2)][IoId=(2)] : push_button(0) (fixed)
-Analog Placement phase: Elapsed time ==> 0s.015ms
+Analog Placement phase: Elapsed time ==> 0s.000ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Analog Routing">
 Analog Routing phase: Elapsed time ==> 0s.000ms
@@ -2139,7 +2139,7 @@ Dump of CyP35AnalogRoutingResultsDB
 IsVddaHalfUsedForComp = False
 IsVddaHalfUsedForSar0 = False
 IsVddaHalfUsedForSar1 = False
-Analog Code Generation phase: Elapsed time ==> 0s.281ms
+Analog Code Generation phase: Elapsed time ==> 0s.297ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Digital Placement">
 <CYPRESSTAG name="Detailed placement messages">
@@ -3787,19 +3787,19 @@ Port | Pin | Fixed |      Type |       Drive Mode |           Name | Connections
 </CYPRESSTAG>
 </CYPRESSTAG>
 </CYPRESSTAG>
-Digital component placer commit/Report: Elapsed time ==> 0s.032ms
-Digital Placement phase: Elapsed time ==> 1s.110ms
+Digital component placer commit/Report: Elapsed time ==> 0s.031ms
+Digital Placement phase: Elapsed time ==> 1s.109ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Digital Routing">
 "C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\bin/sjrouter.exe" --xml-path "C:\Program Files (x86)\Cypress\PSoC Creator\4.2\PSoC Creator\dev\psoc5/psoc5lp/route_arch-rrg.cydata" --vh2-path "esw_bmp280_Petrovic_Wagner_r.vh2" --pcf-path "esw_bmp280_Petrovic_Wagner.pco" --des-name "esw_bmp280_Petrovic_Wagner" --dsf-path "esw_bmp280_Petrovic_Wagner.dsf" --sdc-path "esw_bmp280_Petrovic_Wagner.sdc" --lib-path "esw_bmp280_Petrovic_Wagner_r.lib"
 Routing successful.
-Digital Routing phase: Elapsed time ==> 1s.467ms
+Digital Routing phase: Elapsed time ==> 1s.546ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Bitstream Generation">
-Bitstream Generation phase: Elapsed time ==> 0s.140ms
+Bitstream Generation phase: Elapsed time ==> 0s.156ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Bitstream Verification">
-Bitstream Verification phase: Elapsed time ==> 0s.031ms
+Bitstream Verification phase: Elapsed time ==> 0s.030ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Static timing analysis">
 Timing report is in esw_bmp280_Petrovic_Wagner_timing.html.
@@ -3809,11 +3809,11 @@ Static timing analysis phase: Elapsed time ==> 0s.312ms
 Data reporting phase: Elapsed time ==> 0s.000ms
 </CYPRESSTAG>
 <CYPRESSTAG name="Database update...">
-Design database save phase: Elapsed time ==> 0s.219ms
+Design database save phase: Elapsed time ==> 0s.203ms
 </CYPRESSTAG>
-cydsfit: Elapsed time ==> 3s.828ms
+cydsfit: Elapsed time ==> 3s.922ms
 </CYPRESSTAG>
-Fitter phase: Elapsed time ==> 3s.828ms
-API generation phase: Elapsed time ==> 0s.983ms
-Dependency generation phase: Elapsed time ==> 0s.000ms
+Fitter phase: Elapsed time ==> 3s.922ms
+API generation phase: Elapsed time ==> 1s.015ms
+Dependency generation phase: Elapsed time ==> 0s.015ms
 Cleanup phase: Elapsed time ==> 0s.000ms
