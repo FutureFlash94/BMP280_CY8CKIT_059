@@ -1,2 +1,22 @@
 
 *.DS_Store
+*.log
+*.txt
+*.ld
+*.icf
+*.scat
+*.inc
+*.cycdx
+*.cyfit
+*.dsf
+*.pci
+*.o
+*.xml
+*.html
+*.svd
+*.rpt
+*.filip
+*.hex
+*.rpt
+esw_bmp280_Petrovic_Wagner.cydsn/CortexM3/*
+esw_bmp280_Petrovic_Wagner.cydsn/codegentemp/*
