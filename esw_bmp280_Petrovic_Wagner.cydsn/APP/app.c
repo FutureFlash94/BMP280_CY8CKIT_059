@@ -243,7 +243,7 @@ static void App_TaskSINE (void *p_arg)
   /* start of the endless loop */
   while (DEF_TRUE) {
     
-    spi_send_byte(0x0A);
+    spi_send_byte(BMP280_REG_ID);
     
     /* We need to know the moment when SPI communication is complete
     * to display received data. SPIS_SPI_DONE status should be polled. 
