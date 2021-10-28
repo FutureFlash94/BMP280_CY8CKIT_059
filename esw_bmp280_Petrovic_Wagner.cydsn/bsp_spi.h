@@ -14,4 +14,8 @@
 
 #include <SPIM_1.h>
 
+CPU_VOID init_spi(CPU_VOID);
+CPU_INT08U spi_get_byte(CPU_VOID);
+CPU_VOID spi_send_byte(CPU_INT08U byte);
+
 /* [] END OF FILE */

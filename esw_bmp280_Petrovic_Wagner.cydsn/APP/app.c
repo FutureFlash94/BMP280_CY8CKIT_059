@@ -31,6 +31,10 @@
 #define  APP_USER_IF_CTXSW                          3u
 #define  APP_USER_IF_STATE_MAX                      4u
 
+#define  BMP280_ID                                  0x58
+
+#define  BMP280_REG_ID                              0xD0
+
 /*
 *********************************************************************************************************
 *                                            LOCAL VARIABLES
@@ -46,9 +50,6 @@ static  CPU_STK  App_TaskCMDStk[APP_CFG_TASK_CMD_STK_SIZE];
 static  OS_TCB   App_TaskSine_TCB;
 static  CPU_STK  App_TaskSineStk[APP_CFG_TASK_SINE_STK_SIZE];
 
-static  OS_TCB   App_TaskCosine_TCB;
-static  CPU_STK  App_TaskCosineStk[APP_CFG_TASK_COSINE_STK_SIZE];
-
 
 /*
 *********************************************************************************************************
@@ -60,7 +61,6 @@ static  void  App_TaskStart  (void *p_arg);
 
 static  void  App_TaskCMD (void *p_arg);
 static  void  App_TaskSINE (void *p_arg);
-static  void  App_TaskCOSINE (void *p_arg);
 
 static  void  App_TaskCreate (void);
 
@@ -84,8 +84,17 @@ static  void  App_TaskCreate (void);
 int  main (void)
 {
   OS_ERR  os_err;
-
-
+  CPU_INT08U bmp_id = 0;
+  
+  // TODO: init SPI, check for sensor and continue only if sensor was detected
+  init_spi();
+  
+  /*
+  while(bmp_id != BMP280_ID) {
+    spi_send_byte(BMP280_REG_ID);
+    bmp_id = spi_get_byte();
+  }*/
+  
   BSP_PreInit();                                              /* Perform BSP pre-initialization.                      */
 
   CPU_Init();                                                 /* Initialize the uC/CPU services                       */
@@ -184,7 +193,7 @@ static  void  App_TaskCreate (void)
                (CPU_STK     *)&App_TaskCMDStk[0],
                (CPU_STK_SIZE )APP_CFG_TASK_CMD_STK_SIZE_LIMIT,
                (CPU_STK_SIZE )APP_CFG_TASK_CMD_STK_SIZE,
-               (OS_MSG_QTY   )0u,
+               (OS_MSG_QTY   )10u,
                (OS_TICK      )0u,
                (void        *)0,
                (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
@@ -198,20 +207,6 @@ static  void  App_TaskCreate (void)
                (CPU_STK     *)&App_TaskSineStk[0],
                (CPU_STK_SIZE )APP_CFG_TASK_SINE_STK_SIZE_LIMIT,
                (CPU_STK_SIZE )APP_CFG_TASK_SINE_STK_SIZE,
-               (OS_MSG_QTY   )10u,
-               (OS_TICK      )0u,
-               (void        *)0,
-               (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
-               (OS_ERR      *)&os_err);
-  /* create COSINE task */
-  OSTaskCreate((OS_TCB      *)&App_TaskCosine_TCB,
-               (CPU_CHAR    *)"TaskCOSINE",
-               (OS_TASK_PTR  )App_TaskCOSINE, 
-               (void        *)0,
-               (OS_PRIO      )APP_CFG_TASK_COSINE_PRIO,
-               (CPU_STK     *)&App_TaskCosineStk[0],
-               (CPU_STK_SIZE )APP_CFG_TASK_COSINE_STK_SIZE_LIMIT,
-               (CPU_STK_SIZE )APP_CFG_TASK_COSINE_STK_SIZE,
                (OS_MSG_QTY   )10u,
                (OS_TICK      )0u,
                (void        *)0,
@@ -241,10 +236,6 @@ static void App_TaskSINE (void *p_arg)
 {
   /* declare and define task local variables */
   OS_ERR       os_err;
-  OS_MSG_SIZE  msg_size;
-  CPU_INT08U   angle_array[4] = {0};
-  CPU_INT16U   angle_value;
-  CPU_INT08U*  p_rx_msg;
   
   /* prevent compiler warnings */
   (void)p_arg;
@@ -252,114 +243,28 @@ static void App_TaskSINE (void *p_arg)
   /* start of the endless loop */
   while (DEF_TRUE) {
     
-    /* wait for message */
-    p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
-    if (os_err == OS_ERR_NONE) {
-      /* message received */
-      if (msg_size <= 3) {
-        /* message contains function but no parameter */
-        uart_send_string("Argument of function empty!\n");
-      }
-      else {
-        /* get part of message between index = 4 and msg_size but not more then msg_size = 6 */
-        memcpy(angle_array, (p_rx_msg+4), (msg_size > 6 ? 6 : msg_size)-3);
-        if (BSP_STR_ISBLANC((CPU_CHAR *)angle_array, strlen((CPU_CHAR *)angle_array))) {
-          /* message contains function but no parameter */
-          uart_send_string("Argument of function empty!\n");
-        }
-        else if (strncmp((CPU_CHAR *)angle_array, "all", 3) == 0) {
-          /* message = 'sin all' -> send sine-values from 0-360 with step-size 10 */
-          for (CPU_INT16U a = 0; a <= 360; a+=10) {
-            uart_send_double("SINE-RES: ", sin(a * M_PI / 180));
-          }
-        } else {
-          /* check if argument is a number and between 0 and 360 */
-          CPU_BOOLEAN isNumber = BSP_STR_ISNUMBER((CPU_CHAR *)angle_array, strlen((CPU_CHAR *)angle_array));
-          angle_value = atoi((CPU_CHAR *)angle_array);
+    spi_send_byte(0x0A);
+    
+    /* We need to know the moment when SPI communication is complete
+    * to display received data. SPIS_SPI_DONE status should be polled. 
+    */
+    while(!(SPIM_1_ReadTxStatus() & SPIM_1_STS_SPI_DONE));
+    
+    /* SPI communication is complete so we can display received data */
+    
+    CPU_INT08U bmp_id = spi_get_byte();
+    
+    /* send received message to COM Task*/
+    OSTaskQPost((OS_TCB      *)&App_TaskCMD_TCB,
+                (CPU_INT08U  *)&bmp_id,
+                (OS_MSG_SIZE  )sizeof(bmp_id),
+                (OS_OPT       )OS_OPT_POST_FIFO,
+                (OS_ERR      *)&os_err);
           
-          if (isNumber == DEF_TRUE && angle_value >= 0 && angle_value <= 360) {
-            /* argument is a number and between 0 and 360, send calculated sine-value */
-            uart_send_double("SINE-RES: ", sin(angle_value * M_PI / 180));
-          }
-          else {
-            /* send message to user that argument exceeds expected value*/
-            uart_send_string("Please use a number between 0 and 360\n");
-          }
-        }
-      }
-    }
-  }
-}
-
-/*
-*********************************************************************************************************
-*                                          App_TaskCOSINE()
-*
-* Description : COSINE Task checks received message from CMD Task and give in case
-*               of missing or invalid parameter an error message back 
-*               via the UART interface. For the parameter "all" it output all 
-*               cosine-values from 0-360 with step-size 10. For all numeric parameter 
-*               between 0-360 the cosin-value will be send vie the UART interface.
-*
-* Argument(s) : p_arg   is the argument passed to 'App_TaskCOSINE()' by 'OSTaskCreate()'.
-*
-* Return(s)   : none
-*
-* Note(s)     : none
-*********************************************************************************************************
-*/
-
-static void App_TaskCOSINE (void *p_arg)
-{
-  /* declare and define task local variables */
-  OS_ERR       os_err;
-  OS_MSG_SIZE  msg_size;
-  CPU_INT08U   angle_array[4] = {0};
-  CPU_INT16U   angle_value;
-  CPU_INT08U*  p_rx_msg;
-  
-  /* prevent compiler warnings */
-  (void)p_arg;
-  
-  /* start of the endless loop */
-  while (DEF_TRUE) {
-
-    /* wait for message */
-    p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
-    if (os_err == OS_ERR_NONE) {
-      /* message received */
-      if (msg_size <= 3) {
-        /* message contains function but no parameter */
-        uart_send_string("Argument of function empty!\n");
-      }
-      else {
-        /* get part of message between index = 4 and msg_size but not more then msg_size = 6 */
-        memcpy(angle_array, (p_rx_msg+4), (msg_size > 6 ? 6 : msg_size)-3);
-        if (BSP_STR_ISBLANC((CPU_CHAR *)angle_array, strlen((CPU_CHAR *)angle_array))) {
-          /* message contains function but no parameter */
-          uart_send_string("Argument of function empty!\n");
-        }
-        else if (strncmp((CPU_CHAR *)angle_array, "all", 3) == 0) {
-          /* message = 'cos all' -> send cosine-values from 0-360 with step-size 10 */
-          for (CPU_INT16U a = 0; a <= 360; a+=10) {
-            uart_send_double("COSINE-RES: ", cos(a * M_PI / 180));
-          }
-        } else {
-          /* check if argument is a number and between 0 and 360 */
-          CPU_BOOLEAN isNumber = BSP_STR_ISNUMBER((CPU_CHAR *)angle_array, strlen((CPU_CHAR *)angle_array));
-          angle_value = atoi((CPU_CHAR *)angle_array);
-          
-          if (isNumber == DEF_TRUE && angle_value >= 0 && angle_value <= 360) {
-            /* argument is a number and between 0 and 360, send calculated cosine-value */
-            uart_send_double("COSINE-RES: ", cos(angle_value * M_PI / 180));
-          }
-          else {
-            /* send message to user that argument exceeds expected value*/
-            uart_send_string("Please use a number between 0 and 360\n");
-          }
-        }
-      }
-    }
+    /* initiate scheduler */
+    OSTimeDlyHMSM(0, 0, 0, 500, 
+                  OS_OPT_TIME_HMSM_STRICT, 
+                  &os_err);
   }
 }
 
@@ -389,6 +294,9 @@ static  void  App_TaskCMD (void *p_arg)
   CPU_INT08U   rec_byte_cnt = 0x00;
   CPU_BOOLEAN  str_available = DEF_FALSE;
   
+  OS_MSG_SIZE  msg_size;
+  CPU_INT08U*  p_rx_msg;
+  
   /* prevent compiler warnings */
   (void)p_arg;
   (void)Start_of_Packet;
@@ -396,6 +304,16 @@ static  void  App_TaskCMD (void *p_arg)
   
   /* start of the endless loop */
   while (DEF_TRUE) {
+    
+    /* wait for message */
+    p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
+    
+    if (os_err == OS_ERR_NONE) {
+      uart_send_string("ID: ");
+      uart_send_byte(*p_rx_msg);
+    }
+    
+#if DEF_FALSE
     /* check if a byte is available */
     rec_byte = uart_get_byte();
     /* check if the received byte is '#'*/
@@ -439,46 +357,6 @@ static  void  App_TaskCMD (void *p_arg)
     }
     /* check if message is available */
     if(str_available){
-      /* process received message */
-      /* check if message start with 'sin ' */
-      if (strncmp((CPU_CHAR *)rx_msg,"sin ",4)==0) {
-        /* message start with 'sin ' */
-        if (rec_byte_cnt<=6) {
-          /* message is not longer as 7 characters (e.g. 'sin 360', 'sin all') */
-          /* send received message to SINE Task*/
-          OSTaskQPost((OS_TCB      *)&App_TaskSine_TCB,
-                      (CPU_INT08U  *)&rx_msg[0],
-                      (OS_MSG_SIZE  )sizeof(rx_msg),
-                      (OS_OPT       )OS_OPT_POST_FIFO,
-                      (OS_ERR      *)&os_err);
-        } else {
-          /* send message to user that entered message exceeds expected length*/
-          uart_send_string("Please use a number between 0 and 360\n");
-        }
-      }
-      /* check if message start with 'cos ' */
-      else if (strncmp((CPU_CHAR *)rx_msg,"cos ",4)==0){
-        /* message start with 'cos ' */
-        if (rec_byte_cnt<=6) {
-          /* message is not longer as 7 characters (e.g. 'cos 360', 'cos all') */
-          /* send received message to COSINE Task*/
-          OSTaskQPost((OS_TCB      *)&App_TaskCosine_TCB,
-                      (CPU_INT08U  *)&rx_msg[0],
-                      (OS_MSG_SIZE  )sizeof(rx_msg),
-                      (OS_OPT       )OS_OPT_POST_FIFO,
-                      (OS_ERR      *)&os_err);
-        } else {
-          /* send message to user that entered message exceeds expected length*/
-          uart_send_string("Please use a number between 0 and 360\n");
-        }
-      }
-      else {
-        /* unknown message received, send help message to user */
-        uart_send_string("Command not found!\n\n");
-        uart_send_string("Please use on of the following commands:\n");
-        uart_send_string("\t*) \"sin x\" where x is a number between 0 and 360 or \"sin all\"\n");
-        uart_send_string("\t*) \"cos x\" where x is a number between 0 and 360 or \"cos all\"\n");
-      }
       /* reset software receive buffer */
       memset(&rx_msg[0],0,sizeof(rx_msg));
       /* reset string available signal */
@@ -492,6 +370,7 @@ static  void  App_TaskCMD (void *p_arg)
     OSTimeDlyHMSM(0, 0, 0, 100, 
                   OS_OPT_TIME_HMSM_STRICT, 
                   &os_err);
+#endif
   }
 }
 
