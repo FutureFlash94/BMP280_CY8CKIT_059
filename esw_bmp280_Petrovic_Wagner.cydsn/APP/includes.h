@@ -64,8 +64,8 @@
 #include  <bsp.h>
 #include  <bsp_uart.h>
 #include  <bsp_gpio.h>
-#include  <bsp_spi.h>
 #include  <bsp_os.h>
+#include  <bmp280.h>
 
 
 /*

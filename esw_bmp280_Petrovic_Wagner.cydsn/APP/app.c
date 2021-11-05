@@ -31,10 +31,6 @@
 #define  APP_USER_IF_CTXSW                          3u
 #define  APP_USER_IF_STATE_MAX                      4u
 
-#define  BMP280_ID                                  0x58
-
-#define  BMP280_REG_ID                              0xD0
-
 /*
 *********************************************************************************************************
 *                                            LOCAL VARIABLES
@@ -243,26 +239,26 @@ static void App_TaskSINE (void *p_arg)
   /* start of the endless loop */
   while (DEF_TRUE) {
     
-    spi_send_byte(BMP280_REG_ID);
+    CPU_INT08U bmp_id = get_chip_id();
     
-    /* We need to know the moment when SPI communication is complete
-    * to display received data. SPIS_SPI_DONE status should be polled. 
-    */
-    while(!(SPIM_1_ReadTxStatus() & SPIM_1_STS_SPI_DONE));
-    
-    /* SPI communication is complete so we can display received data */
-    
+    /*
+    spi_send_two_bytes(BMP280_REG_ID, BMP280_REG_ID);
+    wait_spi_tx();
     CPU_INT08U bmp_id = spi_get_byte();
     
+    spi_send_six_bytes(BMP280_DATA_READ_OUT);
+    wait_spi_tx();
+    spi_get_byte();
+    */
     /* send received message to COM Task*/
     OSTaskQPost((OS_TCB      *)&App_TaskCMD_TCB,
                 (CPU_INT08U  *)&bmp_id,
                 (OS_MSG_SIZE  )sizeof(bmp_id),
                 (OS_OPT       )OS_OPT_POST_FIFO,
                 (OS_ERR      *)&os_err);
-          
+    
     /* initiate scheduler */
-    OSTimeDlyHMSM(0, 0, 0, 500, 
+    OSTimeDlyHMSM(0, 0, 1, 0,
                   OS_OPT_TIME_HMSM_STRICT, 
                   &os_err);
   }
@@ -309,8 +305,7 @@ static  void  App_TaskCMD (void *p_arg)
     p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
     
     if (os_err == OS_ERR_NONE) {
-      uart_send_string("ID: ");
-      uart_send_byte(*p_rx_msg);
+      uart_send_hex("ID: ", *p_rx_msg);
     }
     
 #if DEF_FALSE

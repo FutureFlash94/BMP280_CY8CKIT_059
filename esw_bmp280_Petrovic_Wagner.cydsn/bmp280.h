@@ -11,14 +11,13 @@
 */
 
 #include <cpu.h>
+#include <bsp_spi.h>
 
-#include <SPIM_1.h>
+#define  BMP280_REG_ID                              0xD0
+#define  BMP280_REG_PRESS_MSB                       0xF7
 
-CPU_VOID init_spi(CPU_VOID);
-CPU_INT08U spi_get_byte(CPU_VOID);
-CPU_VOID spi_send_one_byte(CPU_INT08U byte);
-CPU_VOID spi_send_two_bytes(CPU_INT08U byte1, CPU_INT08U byte2);
-CPU_VOID wait_spi_tx(CPU_VOID);
-CPU_VOID spi_send_six_bytes(CPU_INT08U byte);
+#define  BMP280_CHIP_ID                             0x58
+
+CPU_INT08U get_chip_id(CPU_VOID);
 
 /* [] END OF FILE */

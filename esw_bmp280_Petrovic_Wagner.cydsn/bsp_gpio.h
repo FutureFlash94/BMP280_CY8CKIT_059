@@ -14,6 +14,7 @@
 
 #include <Pin_1.h>
 #include <Pin_2.h>
+#include <CS_1.h>
 #include <push_button.h>
 
 #define HIGH 1

@@ -10,15 +10,12 @@
  * ========================================
 */
 
-#include <cpu.h>
+#include <bmp280.h>
 
-#include <SPIM_1.h>
-
-CPU_VOID init_spi(CPU_VOID);
-CPU_INT08U spi_get_byte(CPU_VOID);
-CPU_VOID spi_send_one_byte(CPU_INT08U byte);
-CPU_VOID spi_send_two_bytes(CPU_INT08U byte1, CPU_INT08U byte2);
-CPU_VOID wait_spi_tx(CPU_VOID);
-CPU_VOID spi_send_six_bytes(CPU_INT08U byte);
+CPU_INT08U get_chip_id(CPU_VOID) {
+  spi_send_two_bytes(BMP280_REG_ID, BMP280_REG_ID+1);
+  wait_spi_tx();
+  return spi_get_byte();
+}
 
 /* [] END OF FILE */

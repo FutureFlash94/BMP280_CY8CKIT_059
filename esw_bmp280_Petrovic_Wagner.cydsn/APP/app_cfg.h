@@ -61,8 +61,8 @@
 
 #define  APP_CFG_TASK_START_STK_SIZE                    128u
 #define  APP_CFG_TASK_CMD_STK_SIZE                      256u
-#define  APP_CFG_TASK_SINE_STK_SIZE                     256u
-#define  APP_CFG_TASK_COSINE_STK_SIZE                   256u
+#define  APP_CFG_TASK_SINE_STK_SIZE                     512u
+#define  APP_CFG_TASK_COSINE_STK_SIZE                   512u
 
 /*
 *********************************************************************************************************

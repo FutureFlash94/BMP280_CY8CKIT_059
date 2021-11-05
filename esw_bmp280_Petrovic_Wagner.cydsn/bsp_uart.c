@@ -166,4 +166,18 @@ CPU_VOID uart_send_double(CPU_CHAR array[], CPU_FP64 double_value)
     memset(&tx_msg[0],0,sizeof(tx_msg));
 }
 
+
+
+CPU_VOID uart_send_hex(CPU_CHAR array[], CPU_INT08U uint_value)
+{
+    CPU_INT08U   tx_msg[UART_1_TX_BUFFER_SIZE] = {0};
+    int tx_msg_len = 0;
+    
+    tx_msg_len = strlen(strncpy((CPU_CHAR *)tx_msg, array, UART_1_TX_BUFFER_SIZE-4));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", uint_value);
+    uart_send_array(tx_msg, tx_msg_len);
+    memset(&tx_msg[0],0,sizeof(tx_msg));
+}
+
+
 /* [] END OF FILE */
