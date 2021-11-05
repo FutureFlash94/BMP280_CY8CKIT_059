@@ -84,7 +84,7 @@ int  main (void)
   
   // TODO: init SPI, check for sensor and continue only if sensor was detected
   init_spi();
-  
+  //CPU_INT08U bmp_id = get_chip_id();
   /*
   while(bmp_id != BMP280_ID) {
     spi_send_byte(BMP280_REG_ID);
@@ -232,28 +232,22 @@ static void App_TaskSINE (void *p_arg)
 {
   /* declare and define task local variables */
   OS_ERR       os_err;
+  CPU_INT08U   reg_press_temp[BMP280_BURST_READ_SIZE] = {0};
   
   /* prevent compiler warnings */
   (void)p_arg;
   
+  bmp280_config(0x37, 0x10);
+  
   /* start of the endless loop */
   while (DEF_TRUE) {
     
-    CPU_INT08U bmp_id = get_chip_id();
+    burst_read(reg_press_temp, BMP280_BURST_READ_SIZE);
     
-    /*
-    spi_send_two_bytes(BMP280_REG_ID, BMP280_REG_ID);
-    wait_spi_tx();
-    CPU_INT08U bmp_id = spi_get_byte();
-    
-    spi_send_six_bytes(BMP280_DATA_READ_OUT);
-    wait_spi_tx();
-    spi_get_byte();
-    */
     /* send received message to COM Task*/
     OSTaskQPost((OS_TCB      *)&App_TaskCMD_TCB,
-                (CPU_INT08U  *)&bmp_id,
-                (OS_MSG_SIZE  )sizeof(bmp_id),
+                (CPU_INT08U  *)&reg_press_temp,
+                (OS_MSG_SIZE  )sizeof(reg_press_temp),
                 (OS_OPT       )OS_OPT_POST_FIFO,
                 (OS_ERR      *)&os_err);
     
@@ -305,7 +299,7 @@ static  void  App_TaskCMD (void *p_arg)
     p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
     
     if (os_err == OS_ERR_NONE) {
-      uart_send_hex("ID: ", *p_rx_msg);
+      uart_send_press_temp(p_rx_msg);
     }
     
 #if DEF_FALSE

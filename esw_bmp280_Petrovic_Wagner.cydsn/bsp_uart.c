@@ -179,5 +179,32 @@ CPU_VOID uart_send_hex(CPU_CHAR array[], CPU_INT08U uint_value)
     memset(&tx_msg[0],0,sizeof(tx_msg));
 }
 
+CPU_VOID uart_send_press_temp(CPU_INT08U* uint_value)
+{
+    CPU_INT08U   tx_msg[UART_1_TX_BUFFER_SIZE] = {0};
+    int tx_msg_len = 0;
+    
+    tx_msg_len = strlen(strcpy((CPU_CHAR *)tx_msg, "PRESS MSB:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *uint_value);
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "PRESS LSB:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+1));
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "PRESS XLSB:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+2));
+    
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP MSB:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+3));
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP LSB:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+4));
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP XLSB:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+5));
+    
+    CPU_INT16U temp_value = ((*(uint_value+3))<<8) + (*(uint_value+4));
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP CELSIUS:"));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 15, "%d\n\n", temp_value);
+    
+    uart_send_array(tx_msg, tx_msg_len);
+    memset(&tx_msg[0],0,sizeof(tx_msg));
+}
+
 
 /* [] END OF FILE */
