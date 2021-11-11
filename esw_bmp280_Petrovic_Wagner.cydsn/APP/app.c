@@ -40,11 +40,11 @@
 static  OS_TCB   App_TaskStartTCB;
 static  CPU_STK  App_TaskStartStk[APP_CFG_TASK_START_STK_SIZE];
 
-static  OS_TCB   App_TaskCMD_TCB;
-static  CPU_STK  App_TaskCMDStk[APP_CFG_TASK_CMD_STK_SIZE];
+static  OS_TCB   App_TaskCOM_TCB;
+static  CPU_STK  App_TaskCOMStk[APP_CFG_TASK_COM_STK_SIZE];
 
-static  OS_TCB   App_TaskSine_TCB;
-static  CPU_STK  App_TaskSineStk[APP_CFG_TASK_SINE_STK_SIZE];
+static  OS_TCB   App_TaskPRESS_TCB;
+static  CPU_STK  App_TaskPRESSStk[APP_CFG_TASK_PRESS_STK_SIZE];
 
 
 /*
@@ -55,8 +55,8 @@ static  CPU_STK  App_TaskSineStk[APP_CFG_TASK_SINE_STK_SIZE];
 
 static  void  App_TaskStart  (void *p_arg);
 
-static  void  App_TaskCMD (void *p_arg);
-static  void  App_TaskSINE (void *p_arg);
+static  void  App_TaskCOM (void *p_arg);
+static  void  App_TaskPRESS (void *p_arg);
 
 static  void  App_TaskCreate (void);
 
@@ -80,23 +80,13 @@ static  void  App_TaskCreate (void);
 int  main (void)
 {
   OS_ERR  os_err;
-  CPU_INT08U bmp_id = 0;
-  
-  // TODO: init SPI, check for sensor and continue only if sensor was detected
-  init_spi();
-  //CPU_INT08U bmp_id = get_chip_id();
-  /*
-  while(bmp_id != BMP280_ID) {
-    spi_send_byte(BMP280_REG_ID);
-    bmp_id = spi_get_byte();
-  }*/
   
   BSP_PreInit();                                              /* Perform BSP pre-initialization.                      */
 
   CPU_Init();                                                 /* Initialize the uC/CPU services                       */
 
   OSInit(&os_err);                                            /* Init uC/OS-III.                                      */
-
+  
   OSTaskCreate((OS_TCB      *)&App_TaskStartTCB,              /* Create the start task                                */
                (CPU_CHAR    *)"Start",
                (OS_TASK_PTR  )App_TaskStart, 
@@ -110,7 +100,7 @@ int  main (void)
                (void        *)0,
                (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                (OS_ERR      *)&os_err);
-
+  
   OSStart(&os_err);                                            /* Start multitasking (i.e. give control to uC/OS-III).  */
 }
 
@@ -140,7 +130,7 @@ static  void  App_TaskStart (void *p_arg)
   BSP_PostInit();                                               /* Perform BSP post-initialization functions.       */
   
   BSP_CPU_TickInit();                                           /* Perfrom Tick Initialization                      */
-
+  
 #if (OS_CFG_STAT_TASK_EN > 0u)
   OSStatTaskCPUUsageInit(&err);
 #endif    
@@ -148,6 +138,9 @@ static  void  App_TaskStart (void *p_arg)
 #ifdef CPU_CFG_INT_DIS_MEAS_EN
   CPU_IntDisMeasMaxCurReset();
 #endif      
+
+  // wait for bmp280 sensor to be connected
+  wait_bmp280_connecting();
 
   App_TaskCreate();                                             /* Create application tasks.                         */
   
@@ -180,29 +173,29 @@ static  void  App_TaskCreate (void)
   /* declare and define function local variables */
   OS_ERR  os_err;
   
-  /* create CMD task */
-  OSTaskCreate((OS_TCB      *)&App_TaskCMD_TCB,
-               (CPU_CHAR    *)"TaskCMD",
-               (OS_TASK_PTR  )App_TaskCMD, 
+  /* create COM task */
+  OSTaskCreate((OS_TCB      *)&App_TaskCOM_TCB,
+               (CPU_CHAR    *)"TaskCOM",
+               (OS_TASK_PTR  )App_TaskCOM, 
                (void        *)0,
-               (OS_PRIO      )APP_CFG_TASK_CMD_PRIO,
-               (CPU_STK     *)&App_TaskCMDStk[0],
-               (CPU_STK_SIZE )APP_CFG_TASK_CMD_STK_SIZE_LIMIT,
-               (CPU_STK_SIZE )APP_CFG_TASK_CMD_STK_SIZE,
+               (OS_PRIO      )APP_CFG_TASK_COM_PRIO,
+               (CPU_STK     *)&App_TaskCOMStk[0],
+               (CPU_STK_SIZE )APP_CFG_TASK_COM_STK_SIZE_LIMIT,
+               (CPU_STK_SIZE )APP_CFG_TASK_COM_STK_SIZE,
                (OS_MSG_QTY   )10u,
                (OS_TICK      )0u,
                (void        *)0,
                (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
                (OS_ERR      *)&os_err);
-  /* create SINE task */
-  OSTaskCreate((OS_TCB      *)&App_TaskSine_TCB,
-               (CPU_CHAR    *)"TaskSINE",
-               (OS_TASK_PTR  )App_TaskSINE, 
+  /* create PRESS task */
+  OSTaskCreate((OS_TCB      *)&App_TaskPRESS_TCB,
+               (CPU_CHAR    *)"TaskPRESS",
+               (OS_TASK_PTR  )App_TaskPRESS, 
                (void        *)0,
-               (OS_PRIO      )APP_CFG_TASK_SINE_PRIO,
-               (CPU_STK     *)&App_TaskSineStk[0],
-               (CPU_STK_SIZE )APP_CFG_TASK_SINE_STK_SIZE_LIMIT,
-               (CPU_STK_SIZE )APP_CFG_TASK_SINE_STK_SIZE,
+               (OS_PRIO      )APP_CFG_TASK_PRESS_PRIO,
+               (CPU_STK     *)&App_TaskPRESSStk[0],
+               (CPU_STK_SIZE )APP_CFG_TASK_PRESS_STK_SIZE_LIMIT,
+               (CPU_STK_SIZE )APP_CFG_TASK_PRESS_STK_SIZE,
                (OS_MSG_QTY   )10u,
                (OS_TICK      )0u,
                (void        *)0,
@@ -212,7 +205,7 @@ static  void  App_TaskCreate (void)
 
 /*
 *********************************************************************************************************
-*                                          App_TaskSINE()
+*                                          App_TaskPRESS()
 *
 * Description : SINE Task checks received message from CMD Task and give in case
 *               of missing or invalid parameter an error message back 
@@ -220,7 +213,7 @@ static  void  App_TaskCreate (void)
 *               sine-values from 0-360 with step-size 10. For all numeric parameter 
 *               between 0-360 the sin-value will be send vie the UART interface.
 *
-* Argument(s) : p_arg   is the argument passed to 'App_TaskSINE()' by 'OSTaskCreate()'.
+* Argument(s) : p_arg   is the argument passed to 'App_TaskPRESS()' by 'OSTaskCreate()'.
 *
 * Return(s)   : none
 *
@@ -228,24 +221,28 @@ static  void  App_TaskCreate (void)
 *********************************************************************************************************
 */
 
-static void App_TaskSINE (void *p_arg)
+static void App_TaskPRESS (void *p_arg)
 {
   /* declare and define task local variables */
   OS_ERR       os_err;
-  CPU_INT08U   reg_press_temp[BMP280_BURST_READ_SIZE] = {0};
+  CPU_INT08U   reg_press_temp[BMP280_PRESS_TEMP_DATA_SIZE] = {0};
   
   /* prevent compiler warnings */
   (void)p_arg;
   
-  bmp280_config(0x37, 0x10);
+  
+  set_bmp280_config(
+    (BMP280_OSRT_T_X1<<BMP280_OSRT_T_POS)+(BMP280_OSRT_P_X1<<BMP280_OSRT_P_POS)+(BMP280_POWER_MODE_NORMAL<<BMP280_POWER_MODE_POS), 
+    (BMP280_T_STANDBY_0_5MS<<BMP280_T_STANDBY_POS)+(BMP280_FILTER_OFF<<BMP280_FILTER_POS)+(BMP280_SPI3_WIRE_DISENABLE<<BMP280_SPI3W_EN_POS)
+  );
   
   /* start of the endless loop */
   while (DEF_TRUE) {
     
-    burst_read(reg_press_temp, BMP280_BURST_READ_SIZE);
+    get_bmp280_press_temp(reg_press_temp);
     
     /* send received message to COM Task*/
-    OSTaskQPost((OS_TCB      *)&App_TaskCMD_TCB,
+    OSTaskQPost((OS_TCB      *)&App_TaskCOM_TCB,
                 (CPU_INT08U  *)&reg_press_temp,
                 (OS_MSG_SIZE  )sizeof(reg_press_temp),
                 (OS_OPT       )OS_OPT_POST_FIFO,
@@ -260,13 +257,13 @@ static void App_TaskSINE (void *p_arg)
 
 /*
 *********************************************************************************************************
-*                                          App_TaskCMD()
+*                                          App_TaskCOM()
 *
 * Description : CMD Task checks for available bytes within the UART receive buffer. If correct string is
 *               available (e.g. PC -> uC: #abc$ or #Hellor World$), process the message and send it to SINE or
 *               COSINE Task for further processing, otherwise it output a help message via the UART interface.
 *
-* Argument(s) : p_arg   is the argument passed to 'App_TaskCMD()' by 'OSTaskCreate()'.
+* Argument(s) : p_arg   is the argument passed to 'App_TaskCOM()' by 'OSTaskCreate()'.
 *
 * Return(s)   : none
 *
@@ -274,7 +271,7 @@ static void App_TaskSINE (void *p_arg)
 *********************************************************************************************************
 */
 
-static  void  App_TaskCMD (void *p_arg)
+static  void  App_TaskCOM (void *p_arg)
 {
   /* declare and define task local variables */
   OS_ERR       os_err;

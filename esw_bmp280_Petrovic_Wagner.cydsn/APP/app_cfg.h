@@ -47,8 +47,8 @@
 */
 
 #define  APP_CFG_TASK_START_PRIO                        2u
-#define  APP_CFG_TASK_CMD_PRIO                          4u
-#define  APP_CFG_TASK_SINE_PRIO                         3u
+#define  APP_CFG_TASK_COM_PRIO                          4u
+#define  APP_CFG_TASK_PRESS_PRIO                         3u
 #define  APP_CFG_TASK_COSINE_PRIO                       3u
 
 
@@ -60,8 +60,8 @@
 */
 
 #define  APP_CFG_TASK_START_STK_SIZE                    128u
-#define  APP_CFG_TASK_CMD_STK_SIZE                      256u
-#define  APP_CFG_TASK_SINE_STK_SIZE                     512u
+#define  APP_CFG_TASK_COM_STK_SIZE                      256u
+#define  APP_CFG_TASK_PRESS_STK_SIZE                     512u
 #define  APP_CFG_TASK_COSINE_STK_SIZE                   512u
 
 /*
@@ -73,11 +73,11 @@
 #define  APP_CFG_TASK_START_STK_SIZE_PCT_FULL           90u
 #define  APP_CFG_TASK_START_STK_SIZE_LIMIT          (APP_CFG_TASK_START_STK_SIZE    * (100u - APP_CFG_TASK_START_STK_SIZE_PCT_FULL))    / 100u
 
-#define  APP_CFG_TASK_CMD_STK_SIZE_PCT_FULL             90u
-#define  APP_CFG_TASK_CMD_STK_SIZE_LIMIT            (APP_CFG_TASK_CMD_STK_SIZE  * (100u - APP_CFG_TASK_CMD_STK_SIZE_PCT_FULL))  / 100u
+#define  APP_CFG_TASK_COM_STK_SIZE_PCT_FULL             90u
+#define  APP_CFG_TASK_COM_STK_SIZE_LIMIT            (APP_CFG_TASK_COM_STK_SIZE  * (100u - APP_CFG_TASK_COM_STK_SIZE_PCT_FULL))  / 100u
 
-#define  APP_CFG_TASK_SINE_STK_SIZE_PCT_FULL            90u
-#define  APP_CFG_TASK_SINE_STK_SIZE_LIMIT           (APP_CFG_TASK_SINE_STK_SIZE  * (100u - APP_CFG_TASK_SINE_STK_SIZE_PCT_FULL))  / 100u
+#define  APP_CFG_TASK_PRESS_STK_SIZE_PCT_FULL            90u
+#define  APP_CFG_TASK_PRESS_STK_SIZE_LIMIT           (APP_CFG_TASK_PRESS_STK_SIZE  * (100u - APP_CFG_TASK_PRESS_STK_SIZE_PCT_FULL))  / 100u
 
 #define  APP_CFG_TASK_COSINE_STK_SIZE_PCT_FULL          90u
 #define  APP_CFG_TASK_COSINE_STK_SIZE_LIMIT         (APP_CFG_TASK_COSINE_STK_SIZE  * (100u - APP_CFG_TASK_COSINE_STK_SIZE_PCT_FULL))  / 100u
