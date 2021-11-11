@@ -224,27 +224,26 @@ static  void  App_TaskCreate (void)
 static void App_TaskPRESS (void *p_arg)
 {
   /* declare and define task local variables */
-  OS_ERR       os_err;
-  CPU_INT08U   reg_press_temp[BMP280_PRESS_TEMP_DATA_SIZE] = {0};
+  OS_ERR             os_err;
+  Bmp280_press_temp  bmp280_data;
   
   /* prevent compiler warnings */
   (void)p_arg;
   
-  
   set_bmp280_config(
-    (BMP280_OSRT_T_X1<<BMP280_OSRT_T_POS)+(BMP280_OSRT_P_X1<<BMP280_OSRT_P_POS)+(BMP280_POWER_MODE_NORMAL<<BMP280_POWER_MODE_POS), 
-    (BMP280_T_STANDBY_0_5MS<<BMP280_T_STANDBY_POS)+(BMP280_FILTER_OFF<<BMP280_FILTER_POS)+(BMP280_SPI3_WIRE_DISENABLE<<BMP280_SPI3W_EN_POS)
+    BMP280_OSRT_T_X16, BMP280_OSRT_P_X16, BMP280_POWER_MODE_NORMAL,
+    BMP280_T_STANDBY_0_5MS, BMP280_FILTER_OFF, BMP280_SPI3_WIRE_DISENABLE
   );
   
   /* start of the endless loop */
   while (DEF_TRUE) {
     
-    get_bmp280_press_temp(reg_press_temp);
+    bmp280_data = get_bmp280_press_temp();
     
     /* send received message to COM Task*/
     OSTaskQPost((OS_TCB      *)&App_TaskCOM_TCB,
-                (CPU_INT08U  *)&reg_press_temp,
-                (OS_MSG_SIZE  )sizeof(reg_press_temp),
+                (CPU_INT08U  *)&bmp280_data,
+                (OS_MSG_SIZE  )sizeof(bmp280_data),
                 (OS_OPT       )OS_OPT_POST_FIFO,
                 (OS_ERR      *)&os_err);
     
@@ -282,7 +281,7 @@ static  void  App_TaskCOM (void *p_arg)
   CPU_BOOLEAN  str_available = DEF_FALSE;
   
   OS_MSG_SIZE  msg_size;
-  CPU_INT08U*  p_rx_msg;
+  Bmp280_press_temp* p_rx_msg;
   
   /* prevent compiler warnings */
   (void)p_arg;
@@ -296,8 +295,12 @@ static  void  App_TaskCOM (void *p_arg)
     p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
     
     if (os_err == OS_ERR_NONE) {
-      uart_send_press_temp(p_rx_msg);
+      uart_send_press_temp(*p_rx_msg);
     }
+    /* initiate scheduler */
+    OSTimeDlyHMSM(0, 0, 0, 100, 
+                  OS_OPT_TIME_HMSM_STRICT, 
+                  &os_err);
     
 #if DEF_FALSE
     /* check if a byte is available */

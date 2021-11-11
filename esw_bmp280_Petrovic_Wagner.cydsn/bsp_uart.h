@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include <UART_1.h>
+#include <bmp280.h>
 
 static CPU_INT08U Start_of_Packet = '#';
 static CPU_INT08U End_of_Packet = '$';
@@ -25,6 +26,6 @@ CPU_VOID uart_send_string(CPU_CHAR array[]);
 CPU_VOID uart_send_array(CPU_INT08U array[], CPU_INT08U byteCount);
 CPU_VOID uart_send_double(CPU_CHAR array[], CPU_FP64 double_value);
 CPU_VOID uart_send_hex(CPU_CHAR array[], CPU_INT08U uint_value);
-CPU_VOID uart_send_press_temp(CPU_INT08U* uint_value);
+CPU_VOID uart_send_press_temp(Bmp280_press_temp bmp280_data);
 
 /* [] END OF FILE */

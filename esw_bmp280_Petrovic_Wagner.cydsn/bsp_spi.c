@@ -49,24 +49,13 @@ CPU_VOID init_spi(CPU_VOID)
 *********************************************************************************************************
 */
 
-CPU_INT08U spi_get_byte_non_blocking(CPU_INT08U default_value)
-{
-    if(SPIM_1_GetRxBufferSize() != 0) 
-    {
-      SPIM_1_ReadRxData(); // No valid data
-      return SPIM_1_ReadRxData();
-    } 
-    else 
-    {
-      return default_value;
-    }
-}
-
 CPU_INT08U spi_get_byte(CPU_VOID)
 {
     while(SPIM_1_GetRxBufferSize() == 0);
     SPIM_1_ReadRxData(); // No valid data
-    return SPIM_1_ReadRxData();
+    CPU_INT08U data = SPIM_1_ReadRxData();
+    SPIM_1_ClearRxBuffer();
+    return data;
 }
 
 CPU_VOID spi_get_n_bytes(CPU_INT08U reg_values[], CPU_INT08U byteCount)
@@ -77,6 +66,7 @@ CPU_VOID spi_get_n_bytes(CPU_INT08U reg_values[], CPU_INT08U byteCount)
     for(CPU_INT08U byteCountTemp = 0u; byteCountTemp < byteCount; byteCountTemp++) {
         reg_values[byteCountTemp] = SPIM_1_ReadRxData();
     }
+    SPIM_1_ClearRxBuffer();
 }
 
 /*
@@ -99,6 +89,8 @@ CPU_VOID prepare_and_wait_spi_send(CPU_VOID)
 {
   /* Clear the transmit buffer before next reading (good practice) */
   SPIM_1_ClearTxBuffer();
+  
+  SPIM_1_ClearRxBuffer();
   
   /* Ensure that previous SPI read is done, or SPI is idle before sending data */
   while(!(SPIM_1_ReadTxStatus() & (SPIM_1_STS_SPI_DONE | SPIM_1_STS_SPI_IDLE)));
@@ -129,7 +121,6 @@ CPU_VOID spi_send_n_bytes(CPU_INT08U byte, CPU_INT08U byteCount)
 
 CPU_VOID wait_spi_tx(CPU_VOID)
 {
-  //while(!(SPIM_1_ReadTxStatus() & (SPIM_1_STS_SPI_DONE | SPIM_1_STS_SPI_IDLE)));
   while(!(SPIM_1_ReadTxStatus() & (SPIM_1_STS_SPI_DONE)));
 }
 

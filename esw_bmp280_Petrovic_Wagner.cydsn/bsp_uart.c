@@ -179,28 +179,18 @@ CPU_VOID uart_send_hex(CPU_CHAR array[], CPU_INT08U uint_value)
     memset(&tx_msg[0],0,sizeof(tx_msg));
 }
 
-CPU_VOID uart_send_press_temp(CPU_INT08U* uint_value)
+CPU_VOID uart_send_press_temp(Bmp280_press_temp bmp280_data)
 {
-    CPU_INT08U   tx_msg[UART_1_TX_BUFFER_SIZE] = {0};
-    int tx_msg_len = 0;
+    CPU_INT08U tx_msg[UART_1_TX_BUFFER_SIZE] = {0};
+    CPU_INT08U tx_msg_len = 0;
     
-    tx_msg_len = strlen(strcpy((CPU_CHAR *)tx_msg, "PRESS MSB:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *uint_value);
-    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "PRESS LSB:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+1));
-    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "PRESS XLSB:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+2));
+    CPU_FP64   press = (CPU_FP64)bmp280_data.press/256;
+    CPU_FP64   temp = (CPU_FP64)bmp280_data.temp/100;
     
-    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP MSB:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+3));
-    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP LSB:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+4));
-    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP XLSB:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 5, "0x%02X\n", *(uint_value+5));
-    
-    CPU_INT16U temp_value = ((*(uint_value+3))<<8) + (*(uint_value+4));
-    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMP CELSIUS:"));
-    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 15, "%d\n\n", temp_value);
+    tx_msg_len = strlen(strcpy((CPU_CHAR *)tx_msg, "PRESSURE: "));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 15, "%d Pa\n", (CPU_INT32U)bmp280_data.press);
+    tx_msg_len += strlen(strcpy((CPU_CHAR *)(tx_msg+tx_msg_len), "TEMPERATURE: "));
+    tx_msg_len += snprintf((CPU_CHAR *)(tx_msg+tx_msg_len), 15, "%d.%2d DegC\n\n", (CPU_INT32S)temp, (CPU_INT32S)(100*temp)%100);
     
     uart_send_array(tx_msg, tx_msg_len);
     memset(&tx_msg[0],0,sizeof(tx_msg));

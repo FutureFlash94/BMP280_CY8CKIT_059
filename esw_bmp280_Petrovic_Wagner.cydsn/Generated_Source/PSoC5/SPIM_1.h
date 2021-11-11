@@ -40,8 +40,8 @@
 #define SPIM_1_BIDIRECTIONAL_MODE         (0u)
 
 /* Internal interrupt handling */
-#define SPIM_1_TX_BUFFER_SIZE             (10u)
-#define SPIM_1_RX_BUFFER_SIZE             (10u)
+#define SPIM_1_TX_BUFFER_SIZE             (30u)
+#define SPIM_1_RX_BUFFER_SIZE             (30u)
 #define SPIM_1_INTERNAL_TX_INT_ENABLED    (1u)
 #define SPIM_1_INTERNAL_RX_INT_ENABLED    (1u)
 

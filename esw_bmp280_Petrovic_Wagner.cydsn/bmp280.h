@@ -19,6 +19,8 @@
 #define  BMP280_REG_PRESS_MSB                       0xF7
 #define  BMP280_PRESS_TEMP_DATA_SIZE                6u
 
+#define  BMP280_REG_CALIB_LSB                       0x88
+#define  BMP280_CALIB_DATA_SIZE                     24u
 
 #define  BMP280_REG_CTRL_MEAS                       0xF4
 #define  BMP280_REG_CONFIG                          0xF5
@@ -71,13 +73,24 @@
 #define  BMP280_POWER_MODE_NORMAL                   0x03
 #define  BMP280_POWER_MODE_POS                      0u
 
+#ifndef BMP280_H
+#define BMP280_H
+
+typedef struct s_Bmp280_press_temp {
+  CPU_INT32S temp;
+  CPU_INT32U press;
+} Bmp280_press_temp;
+
+#endif
 
 CPU_INT08U bmp280_spi_read(CPU_INT08U spi_reg_addr);
 CPU_VOID bmp280_spi_read_multiple(CPU_INT08U spi_reg_addr, CPU_INT08U reg_values[], CPU_INT08U read_size);
 CPU_VOID bmp280_spi_write(CPU_INT08U spi_reg_addr, CPU_INT08U spi_reg_data);
-CPU_VOID set_bmp280_config(CPU_INT08U ctrl_meas_value, CPU_INT08U config_value);
+CPU_VOID set_bmp280_config(CPU_INT08U osrt_t, CPU_INT08U osrt_p, CPU_INT08U power_mode, CPU_INT08U t_standby, CPU_INT08U filter, CPU_INT08U spi3w_en);
 CPU_VOID wait_bmp280_connecting(CPU_VOID);
 CPU_INT08U get_bmp280_chip_id(CPU_VOID);
-CPU_VOID get_bmp280_press_temp(CPU_INT08U reg_values[]);
+CPU_VOID read_bmp280_press_temp(CPU_INT08U reg_values[]);
+CPU_VOID read_bmp280_calib(CPU_INT08U reg_values[]);
+Bmp280_press_temp get_bmp280_press_temp();
 
 /* [] END OF FILE */
