@@ -130,8 +130,6 @@ void BSP_PreInit (void)
                                                                    /* Install the PendSV & Systick Interrupt Handler       */
     p_vect_tbl[CPU_INT_PENDSV]  = (CPU_INT32U  )OS_CPU_PendSVHandler;
     p_vect_tbl[CPU_INT_SYSTICK] = (CPU_INT32U  )OS_CPU_SysTickHandler;
-    
-    init_spi();
 }
 
 
@@ -155,6 +153,7 @@ void  BSP_PostInit (void)
 {
     init_gpio();
     init_uart();
+    init_spi();
 }
 
 

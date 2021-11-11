@@ -12,21 +12,91 @@
 
 #include <bmp280.h>
 
+/*
+*********************************************************************************************************
+*                                     bmp280_spi_read()
+*
+* Description : This function waits for the spi interface to be in status done 
+*               or idle and then sends the spi register address over the spi 
+*               interface and returns first received byte from the slave. 
+*               Regarding the datasheet of bmp280 bit7 of the register address 
+*               is set to 1.
+*
+* Argument(s) : none.
+*
+* Return(s)   : First received byte from bmp280
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
+
 CPU_INT08U bmp280_spi_read(CPU_INT08U spi_reg_addr)
 {
+  /* clear spi buffer and wait for spi to be ready for sending */
   prepare_and_wait_spi_send();
+  /* Send register address (set bit7 (R/W) to 1) and a second byte to be able to 
+     receive the real data byte of the register address, otherwise SPIM_1 set 
+     CS_1 to 1 after sending the first byte and the desired byte never comes.
+  */
   spi_send_n_bytes(spi_reg_addr | (1<<7), 2);
+  /* wait to send data over spi */
   wait_spi_tx();
+  /* return received data byte */
   return spi_get_byte();
 }
 
+/*
+*********************************************************************************************************
+*                                   bmp280_spi_read_multiple()
+*
+* Description : This function waits for the spi interface to be in status done 
+*               or idle and then sends the spi register address over the spi 
+*               interface. Finally it writes read_size bytes from the spi rx 
+*               buffer to the reg_values array. Regarding the datasheet of 
+*               bmp280 bit7 of the register address is set to 1.
+*
+* Argument(s) : spi_reg_addr ... first byte that is written to spi tx buffer 
+*               reg_values ... array where data received over spi is written
+*               read_size ... amount of bytes to be read from spi rx buffer
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
+
 CPU_VOID bmp280_spi_read_multiple(CPU_INT08U spi_reg_addr, CPU_INT08U reg_values[], CPU_INT08U read_size)
 {
+  /* clear spi buffer and wait for spi to be ready for sending */
   prepare_and_wait_spi_send();
+  /* Send register address (set bit7 (R/W) to 1) and read_size more bytes */
   spi_send_n_bytes(spi_reg_addr | (1<<7), read_size+1);
+  /* wait to send data over spi */
   wait_spi_tx();
+  /* write read_size received data bytes to reg_values array */
   spi_get_n_bytes(reg_values, read_size);
 }
+
+/*
+*********************************************************************************************************
+*                                       bmp280_spi_write()
+*
+* Description : 
+*
+* Argument(s) : spi_reg_addr ...
+*               spi_reg_data ...
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
 
 CPU_VOID bmp280_spi_write(CPU_INT08U spi_reg_addr, CPU_INT08U spi_reg_data)
 {
@@ -34,38 +104,83 @@ CPU_VOID bmp280_spi_write(CPU_INT08U spi_reg_addr, CPU_INT08U spi_reg_data)
   spi_send_n_bytes(spi_reg_data, 1);
 }
 
-CPU_VOID set_bmp280_config(CPU_INT08U osrt_t, CPU_INT08U osrt_p, CPU_INT08U power_mode, CPU_INT08U t_standby, CPU_INT08U filter, CPU_INT08U spi3w_en)
+/*
+*********************************************************************************************************
+*                                   set_bmp280_config()
+*
+* Description : 
+*
+* Argument(s) : osrt_t ...
+*               osrt_p
+*               power_mode
+*               t_standby
+*               filter
+*               spi3w_en
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
+
+CPU_VOID set_bmp280_config(CPU_INT08U osrt_t, CPU_INT08U osrt_p, 
+                           CPU_INT08U power_mode, CPU_INT08U t_standby, 
+                           CPU_INT08U filter, CPU_INT08U spi3w_en)
 {
-  // Go to sleep mode to override config register
+  /* clear spi buffer and wait for spi to be ready for sending */
   prepare_and_wait_spi_send();
+  /* Go to sleep mode to be able to set data in config register */
   bmp280_spi_write(
-    BMP280_REG_CTRL_MEAS, 
-    (osrt_t<<BMP280_OSRT_T_POS)+(osrt_p<<BMP280_OSRT_P_POS)+(BMP280_POWER_MODE_SLEEP<<BMP280_POWER_MODE_POS)
+    BMP280_REG_CTRL_MEAS,
+    (osrt_t<<BMP280_OSRT_T_POS)|(osrt_p<<BMP280_OSRT_P_POS)|(BMP280_POWER_MODE_SLEEP<<BMP280_POWER_MODE_POS)
   );
+  /* wait to send data over spi */
   wait_spi_tx();
   // set user defined config register values
   prepare_and_wait_spi_send();
   bmp280_spi_write(
     BMP280_REG_CONFIG, 
-    (t_standby<<BMP280_T_STANDBY_POS)+(filter<<BMP280_FILTER_POS)+(spi3w_en<<BMP280_SPI3W_EN_POS)
+    (t_standby<<BMP280_T_STANDBY_POS)|(filter<<BMP280_FILTER_POS)|(spi3w_en<<BMP280_SPI3W_EN_POS)
   );
+  /* wait to send data over spi */
   wait_spi_tx();
   // set user defined control measurements register values
   prepare_and_wait_spi_send();
   bmp280_spi_write(
     BMP280_REG_CTRL_MEAS, 
-    (osrt_t<<BMP280_OSRT_T_POS)+(osrt_p<<BMP280_OSRT_P_POS)+(power_mode<<BMP280_POWER_MODE_POS)
+    (osrt_t<<BMP280_OSRT_T_POS)|(osrt_p<<BMP280_OSRT_P_POS)|(power_mode<<BMP280_POWER_MODE_POS)
   );
+  /* wait to send data over spi */
   wait_spi_tx();
 }
+
+/*
+*********************************************************************************************************
+*                                       init_spi()
+*
+* Description : This function initializes the SPIM_1 communication module. Configuration: -
+*
+* Argument(s) : none.
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
 
 CPU_VOID wait_bmp280_connecting(CPU_VOID)
 {
   CPU_INT08U reg_value = 0u;
   
   do {
+    /* clear spi buffer and wait for spi to be ready for sending */
     prepare_and_wait_spi_send();
     spi_send_n_bytes(BMP280_REG_ID | (1<<7), 2);
+    /* wait to send data over spi */
     wait_spi_tx();
     if(SPIM_1_GetRxBufferSize() != 0) 
     {
@@ -75,15 +190,63 @@ CPU_VOID wait_bmp280_connecting(CPU_VOID)
   } while(reg_value != BMP280_CHIP_ID);
 }
 
+/*
+*********************************************************************************************************
+*                                       init_spi()
+*
+* Description : 
+*
+* Argument(s) : none.
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
+
 CPU_INT08U get_bmp280_chip_id(CPU_VOID)
 {
   return bmp280_spi_read(BMP280_REG_ID);
 }
 
+/*
+*********************************************************************************************************
+*                                       init_spi()
+*
+* Description : This function initializes the SPIM_1 communication module. Configuration: -
+*
+* Argument(s) : none.
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
+
 CPU_VOID read_bmp280_press_temp(CPU_INT08U reg_values[])
 {
   bmp280_spi_read_multiple(BMP280_REG_PRESS_MSB, reg_values, BMP280_PRESS_TEMP_DATA_SIZE);
 }
+
+/*
+*********************************************************************************************************
+*                                       init_spi()
+*
+* Description : This function initializes the SPIM_1 communication module. Configuration: -
+*
+* Argument(s) : none.
+*
+* Return(s)   : none.
+*
+* Caller(s)   : Application.
+*
+* Note(s)     : Not re-entrant.
+*********************************************************************************************************
+*/
 
 CPU_VOID read_bmp280_calib(CPU_INT08U reg_values[])
 {
@@ -106,6 +269,7 @@ CPU_VOID read_bmp280_calib(CPU_INT08U reg_values[])
 * Note(s)     : none
 *********************************************************************************************************
 */
+
 Bmp280_press_temp get_bmp280_press_temp()
 {
   CPU_INT08U  reg_press_temp[BMP280_PRESS_TEMP_DATA_SIZE] = {0};
@@ -133,7 +297,7 @@ Bmp280_press_temp get_bmp280_press_temp()
   read_bmp280_press_temp(reg_press_temp);
   read_bmp280_calib(reg_calib);
   
-  // Use calibration data to compute temperature
+  /* Use calibration data to compute temperature */
   adc_T = ((CPU_INT32S)reg_press_temp[3] << 12) 
         | ((CPU_INT32S)reg_press_temp[4] << 4) 
         | ((CPU_INT32S)reg_press_temp[5] >> 4);
@@ -147,7 +311,7 @@ Bmp280_press_temp get_bmp280_press_temp()
   t_fine = var1 + var2;
   return_data.temp = (t_fine * 5 + 128) / 256;
   
-  // Use calibration data to compute press
+  /* Use calibration data to compute press */
   adc_P = ((CPU_INT32U)reg_press_temp[0] << 12) 
         | ((CPU_INT32U)reg_press_temp[1] << 4) 
         | ((CPU_INT32U)reg_press_temp[2] >> 4);
