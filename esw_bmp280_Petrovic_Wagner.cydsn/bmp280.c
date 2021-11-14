@@ -85,10 +85,10 @@ CPU_VOID bmp280_spi_read_multiple(CPU_INT08U spi_reg_addr, CPU_INT08U reg_values
 *********************************************************************************************************
 *                                       bmp280_spi_write()
 *
-* Description : 
+* Description : This function send one register address byte and the corresponding data byte over spi.
 *
-* Argument(s) : spi_reg_addr ...
-*               spi_reg_data ...
+* Argument(s) : spi_reg_addr ... address byte
+*               spi_reg_data ... data byte
 *
 * Return(s)   : none.
 *
@@ -108,14 +108,15 @@ CPU_VOID bmp280_spi_write(CPU_INT08U spi_reg_addr, CPU_INT08U spi_reg_data)
 *********************************************************************************************************
 *                                   set_bmp280_config()
 *
-* Description : 
+* Description : This function configure the bmp280 by setting data in the config and control measurements
+*               register.
 *
-* Argument(s) : osrt_t ...
-*               osrt_p
-*               power_mode
-*               t_standby
-*               filter
-*               spi3w_en
+* Argument(s) : osrt_t ... oversampling rate for temperature measurement
+*               osrt_p ... oversampling rate for pressure measurement
+*               power_mode ... power mode of the bmp280
+*               t_standby ... standby time between measurements
+*               filter ... filter settings
+*               spi3w_en ... 3-wire-spi configuration enable / disable 
 *
 * Return(s)   : none.
 *
@@ -138,16 +139,18 @@ CPU_VOID set_bmp280_config(CPU_INT08U osrt_t, CPU_INT08U osrt_p,
   );
   /* wait to send data over spi */
   wait_spi_tx();
-  // set user defined config register values
+  /* clear spi buffer and wait for spi to be ready for sending */
   prepare_and_wait_spi_send();
+  /* write data to the config register */
   bmp280_spi_write(
     BMP280_REG_CONFIG, 
     (t_standby<<BMP280_T_STANDBY_POS)|(filter<<BMP280_FILTER_POS)|(spi3w_en<<BMP280_SPI3W_EN_POS)
   );
   /* wait to send data over spi */
   wait_spi_tx();
-  // set user defined control measurements register values
+  /* clear spi buffer and wait for spi to be ready for sending */
   prepare_and_wait_spi_send();
+  /* write data to the control measurements register register */
   bmp280_spi_write(
     BMP280_REG_CTRL_MEAS, 
     (osrt_t<<BMP280_OSRT_T_POS)|(osrt_p<<BMP280_OSRT_P_POS)|(power_mode<<BMP280_POWER_MODE_POS)
@@ -158,9 +161,10 @@ CPU_VOID set_bmp280_config(CPU_INT08U osrt_t, CPU_INT08U osrt_p,
 
 /*
 *********************************************************************************************************
-*                                       init_spi()
+*                                       wait_bmp280_connecting()
 *
-* Description : This function initializes the SPIM_1 communication module. Configuration: -
+* Description : This function waits until the register id of the bmp280 will be returned over spi after 
+*               sending the register id address. Consider that this is a blocking function.
 *
 * Argument(s) : none.
 *
@@ -194,11 +198,12 @@ CPU_VOID wait_bmp280_connecting(CPU_VOID)
 *********************************************************************************************************
 *                                       init_spi()
 *
-* Description : 
+* Description : This function returns the first received byte from spi after sending the register id 
+*               address.
 *
 * Argument(s) : none.
 *
-* Return(s)   : none.
+* Return(s)   : First receiver byte from spi.
 *
 * Caller(s)   : Application.
 *
@@ -213,11 +218,13 @@ CPU_INT08U get_bmp280_chip_id(CPU_VOID)
 
 /*
 *********************************************************************************************************
-*                                       init_spi()
+*                                       read_bmp280_press_temp()
 *
-* Description : This function initializes the SPIM_1 communication module. Configuration: -
+* Description : This function writes the pressure MSB register address and waits till all measurement 
+*               values are received. These values are then written to the given reg_values array. The
+*               given array should have at least a size of BMP280_PRESS_TEMP_DATA_SIZE.
 *
-* Argument(s) : none.
+* Argument(s) : reg_values[] ... array of bytes, where received bytes are written to
 *
 * Return(s)   : none.
 *
@@ -234,11 +241,13 @@ CPU_VOID read_bmp280_press_temp(CPU_INT08U reg_values[])
 
 /*
 *********************************************************************************************************
-*                                       init_spi()
+*                                       read_bmp280_calib()
 *
-* Description : This function initializes the SPIM_1 communication module. Configuration: -
+* Description : This function writes the calibrate LSB register address and waits till all calibrate 
+*               values are received. These values are then written to the given reg_values array. The
+*               given array should have at least a size of BMP280_CALIB_DATA_SIZE.
 *
-* Argument(s) : none.
+* Argument(s) : reg_values[] ... array of bytes, where received bytes are written to
 *
 * Return(s)   : none.
 *

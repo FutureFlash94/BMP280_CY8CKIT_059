@@ -43,9 +43,9 @@ CPU_VOID init_spi(CPU_VOID)
 * Description : This fuction clears the transmit and receive buffer of the spi. 
 *               Furthermore it waits for the spi status to be set to done or idle.
 *
-* Argument(s) : None.
+* Argument(s) : none.
 *
-* Return(s)   : None.
+* Return(s)   : none.
 *
 * Caller(s)   : Application.
 *
@@ -73,7 +73,7 @@ CPU_VOID prepare_and_wait_spi_send(CPU_VOID)
 * Argument(s) : byte ... first byte that is written to spi tx buffer
 *               n ... amount of bytes to be write spi tx buffer
 *
-* Return(s)   : None
+* Return(s)   : none.
 *
 * Caller(s)   : Application.
 *
@@ -94,9 +94,9 @@ CPU_VOID spi_send_n_bytes(CPU_INT08U byte, CPU_INT08U n)
 *
 * Description : Waits for transmission of data stored in the spi tx buffer.
 *
-* Argument(s) : None.
+* Argument(s) : none.
 *
-* Return(s)   : None.
+* Return(s)   : none.
 *
 * Caller(s)   : Application.
 *
@@ -145,7 +145,7 @@ CPU_INT08U spi_get_byte(CPU_VOID)
 * Argument(s) : reg_values ... array where data received over spi is written
 *               n ... amount of bytes to be write to the reg_values array
 *
-* Return(s)   : None
+* Return(s)   : none.
 *
 * Caller(s)   : Application.
 *

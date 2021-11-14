@@ -140,7 +140,7 @@ static  void  App_TaskStart (void *p_arg)
   CPU_IntDisMeasMaxCurReset();
 #endif      
 
-  // wait for bmp280 sensor to be connected
+  /* wait for bmp280 sensor to be connected */
   wait_bmp280_connecting();
 
   App_TaskCreate();                                             /* Create application tasks.                         */
@@ -248,7 +248,7 @@ static void App_TaskPRESS (void *p_arg)
                 (OS_ERR      *)&os_err);
     
     /* initiate scheduler */
-    OSTimeDlyHMSM(0, 0, 1, 0,
+    OSTimeDlyHMSM(0, 0, 0, 500,
                   OS_OPT_TIME_HMSM_STRICT, 
                   &os_err);
   }
