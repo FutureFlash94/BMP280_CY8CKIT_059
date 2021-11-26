@@ -1,0 +1,4767 @@
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"bmp280.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.bmp280_spi_read,"ax",%progbits
+  20              		.align	2
+  21              		.global	bmp280_spi_read
+  22              		.thumb
+  23              		.thumb_func
+  24              		.type	bmp280_spi_read, %function
+  25              	bmp280_spi_read:
+  26              	.LFB0:
+  27              		.file 1 "bmp280.c"
+   1:bmp280.c      **** /* ========================================
+   2:bmp280.c      ****  *
+   3:bmp280.c      ****  * Copyright YOUR COMPANY, THE YEAR
+   4:bmp280.c      ****  * All Rights Reserved
+   5:bmp280.c      ****  * UNPUBLISHED, LICENSED SOFTWARE.
+   6:bmp280.c      ****  *
+   7:bmp280.c      ****  * CONFIDENTIAL AND PROPRIETARY INFORMATION
+   8:bmp280.c      ****  * WHICH IS THE PROPERTY OF your company.
+   9:bmp280.c      ****  *
+  10:bmp280.c      ****  * ========================================
+  11:bmp280.c      **** */
+  12:bmp280.c      **** 
+  13:bmp280.c      **** #include <bmp280.h>
+  14:bmp280.c      **** 
+  15:bmp280.c      **** /*
+  16:bmp280.c      **** ***************************************************************************************************
+  17:bmp280.c      **** *                                     bmp280_spi_read()
+  18:bmp280.c      **** *
+  19:bmp280.c      **** * Description : This function waits for the spi interface to be in status done 
+  20:bmp280.c      **** *               or idle and then sends the spi register address over the spi 
+  21:bmp280.c      **** *               interface and returns first received byte from the slave. 
+  22:bmp280.c      **** *               Regarding the datasheet of bmp280 bit7 of the register address 
+  23:bmp280.c      **** *               is set to 1.
+  24:bmp280.c      **** *
+  25:bmp280.c      **** * Argument(s) : none.
+  26:bmp280.c      **** *
+  27:bmp280.c      **** * Return(s)   : First received byte from bmp280
+  28:bmp280.c      **** *
+  29:bmp280.c      **** * Caller(s)   : Application.
+  30:bmp280.c      **** *
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 2
+
+
+  31:bmp280.c      **** * Note(s)     : Not re-entrant.
+  32:bmp280.c      **** ***************************************************************************************************
+  33:bmp280.c      **** */
+  34:bmp280.c      **** 
+  35:bmp280.c      **** CPU_INT08U bmp280_spi_read(CPU_INT08U spi_reg_addr)
+  36:bmp280.c      **** {
+  28              		.loc 1 36 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              	.LVL0:
+  33 0000 10B5     		push	{r4, lr}
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37 0002 0446     		mov	r4, r0
+  37:bmp280.c      ****   /* clear spi buffer and wait for spi to be ready for sending */
+  38:bmp280.c      ****   prepare_and_wait_spi_send();
+  38              		.loc 1 38 0
+  39 0004 FFF7FEFF 		bl	prepare_and_wait_spi_send
+  40              	.LVL1:
+  39:bmp280.c      ****   /* Send register address (set bit7 (R/W) to 1) and a second byte to be able to 
+  40:bmp280.c      ****      receive the real data byte of the register address, otherwise SPIM_1 set 
+  41:bmp280.c      ****      CS_1 to 1 after sending the first byte and the desired byte never comes.
+  42:bmp280.c      ****   */
+  43:bmp280.c      ****   spi_send_n_bytes(spi_reg_addr | (1<<7), 2);
+  41              		.loc 1 43 0
+  42 0008 0221     		movs	r1, #2
+  43 000a 44F08000 		orr	r0, r4, #128
+  44 000e FFF7FEFF 		bl	spi_send_n_bytes
+  45              	.LVL2:
+  44:bmp280.c      ****   /* wait to send data over spi */
+  45:bmp280.c      ****   wait_spi_tx();
+  46              		.loc 1 45 0
+  47 0012 FFF7FEFF 		bl	wait_spi_tx
+  48              	.LVL3:
+  46:bmp280.c      ****   /* return received data byte */
+  47:bmp280.c      ****   return spi_get_byte();
+  49              		.loc 1 47 0
+  50 0016 FFF7FEFF 		bl	spi_get_byte
+  51              	.LVL4:
+  48:bmp280.c      **** }
+  52              		.loc 1 48 0
+  53 001a 10BD     		pop	{r4, pc}
+  54              		.cfi_endproc
+  55              	.LFE0:
+  56              		.size	bmp280_spi_read, .-bmp280_spi_read
+  57              		.section	.text.bmp280_spi_read_multiple,"ax",%progbits
+  58              		.align	2
+  59              		.global	bmp280_spi_read_multiple
+  60              		.thumb
+  61              		.thumb_func
+  62              		.type	bmp280_spi_read_multiple, %function
+  63              	bmp280_spi_read_multiple:
+  64              	.LFB1:
+  49:bmp280.c      **** 
+  50:bmp280.c      **** /*
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 3
+
+
+  51:bmp280.c      **** ***************************************************************************************************
+  52:bmp280.c      **** *                                   bmp280_spi_read_multiple()
+  53:bmp280.c      **** *
+  54:bmp280.c      **** * Description : This function waits for the spi interface to be in status done 
+  55:bmp280.c      **** *               or idle and then sends the spi register address over the spi 
+  56:bmp280.c      **** *               interface. Finally it writes read_size bytes from the spi rx 
+  57:bmp280.c      **** *               buffer to the reg_values array. Regarding the datasheet of 
+  58:bmp280.c      **** *               bmp280 bit7 of the register address is set to 1.
+  59:bmp280.c      **** *
+  60:bmp280.c      **** * Argument(s) : spi_reg_addr ... first byte that is written to spi tx buffer 
+  61:bmp280.c      **** *               reg_values ... array where data received over spi is written
+  62:bmp280.c      **** *               read_size ... amount of bytes to be read from spi rx buffer
+  63:bmp280.c      **** *
+  64:bmp280.c      **** * Return(s)   : none.
+  65:bmp280.c      **** *
+  66:bmp280.c      **** * Caller(s)   : Application.
+  67:bmp280.c      **** *
+  68:bmp280.c      **** * Note(s)     : Not re-entrant.
+  69:bmp280.c      **** ***************************************************************************************************
+  70:bmp280.c      **** */
+  71:bmp280.c      **** 
+  72:bmp280.c      **** CPU_VOID bmp280_spi_read_multiple(CPU_INT08U spi_reg_addr, CPU_INT08U reg_values[], CPU_INT08U read
+  73:bmp280.c      **** {
+  65              		.loc 1 73 0
+  66              		.cfi_startproc
+  67              		@ args = 0, pretend = 0, frame = 0
+  68              		@ frame_needed = 0, uses_anonymous_args = 0
+  69              	.LVL5:
+  70 0000 70B5     		push	{r4, r5, r6, lr}
+  71              		.cfi_def_cfa_offset 16
+  72              		.cfi_offset 4, -16
+  73              		.cfi_offset 5, -12
+  74              		.cfi_offset 6, -8
+  75              		.cfi_offset 14, -4
+  76 0002 0646     		mov	r6, r0
+  77 0004 0D46     		mov	r5, r1
+  78 0006 1446     		mov	r4, r2
+  74:bmp280.c      ****   /* clear spi buffer and wait for spi to be ready for sending */
+  75:bmp280.c      ****   prepare_and_wait_spi_send();
+  79              		.loc 1 75 0
+  80 0008 FFF7FEFF 		bl	prepare_and_wait_spi_send
+  81              	.LVL6:
+  76:bmp280.c      ****   /* Send register address (set bit7 (R/W) to 1) and read_size more bytes */
+  77:bmp280.c      ****   spi_send_n_bytes(spi_reg_addr | (1<<7), read_size+1);
+  82              		.loc 1 77 0
+  83 000c 611C     		adds	r1, r4, #1
+  84 000e C9B2     		uxtb	r1, r1
+  85 0010 46F08000 		orr	r0, r6, #128
+  86 0014 FFF7FEFF 		bl	spi_send_n_bytes
+  87              	.LVL7:
+  78:bmp280.c      ****   /* wait to send data over spi */
+  79:bmp280.c      ****   wait_spi_tx();
+  88              		.loc 1 79 0
+  89 0018 FFF7FEFF 		bl	wait_spi_tx
+  90              	.LVL8:
+  80:bmp280.c      ****   /* write read_size received data bytes to reg_values array */
+  81:bmp280.c      ****   spi_get_n_bytes(reg_values, read_size);
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 4
+
+
+  91              		.loc 1 81 0
+  92 001c 2146     		mov	r1, r4
+  93 001e 2846     		mov	r0, r5
+  94 0020 FFF7FEFF 		bl	spi_get_n_bytes
+  95              	.LVL9:
+  96 0024 70BD     		pop	{r4, r5, r6, pc}
+  97              		.cfi_endproc
+  98              	.LFE1:
+  99              		.size	bmp280_spi_read_multiple, .-bmp280_spi_read_multiple
+ 100 0026 00BF     		.section	.text.bmp280_spi_write,"ax",%progbits
+ 101              		.align	2
+ 102              		.global	bmp280_spi_write
+ 103              		.thumb
+ 104              		.thumb_func
+ 105              		.type	bmp280_spi_write, %function
+ 106              	bmp280_spi_write:
+ 107              	.LFB2:
+  82:bmp280.c      **** }
+  83:bmp280.c      **** 
+  84:bmp280.c      **** /*
+  85:bmp280.c      **** ***************************************************************************************************
+  86:bmp280.c      **** *                                       bmp280_spi_write()
+  87:bmp280.c      **** *
+  88:bmp280.c      **** * Description : This function send one register address byte and the corresponding data byte over s
+  89:bmp280.c      **** *
+  90:bmp280.c      **** * Argument(s) : spi_reg_addr ... address byte
+  91:bmp280.c      **** *               spi_reg_data ... data byte
+  92:bmp280.c      **** *
+  93:bmp280.c      **** * Return(s)   : none.
+  94:bmp280.c      **** *
+  95:bmp280.c      **** * Caller(s)   : Application.
+  96:bmp280.c      **** *
+  97:bmp280.c      **** * Note(s)     : Not re-entrant.
+  98:bmp280.c      **** ***************************************************************************************************
+  99:bmp280.c      **** */
+ 100:bmp280.c      **** 
+ 101:bmp280.c      **** CPU_VOID bmp280_spi_write(CPU_INT08U spi_reg_addr, CPU_INT08U spi_reg_data)
+ 102:bmp280.c      **** {
+ 108              		.loc 1 102 0
+ 109              		.cfi_startproc
+ 110              		@ args = 0, pretend = 0, frame = 0
+ 111              		@ frame_needed = 0, uses_anonymous_args = 0
+ 112              	.LVL10:
+ 113 0000 10B5     		push	{r4, lr}
+ 114              		.cfi_def_cfa_offset 8
+ 115              		.cfi_offset 4, -8
+ 116              		.cfi_offset 14, -4
+ 117 0002 0C46     		mov	r4, r1
+ 103:bmp280.c      ****   spi_send_n_bytes(spi_reg_addr & ~(1<<7), 1);
+ 118              		.loc 1 103 0
+ 119 0004 0121     		movs	r1, #1
+ 120              	.LVL11:
+ 121 0006 00F07F00 		and	r0, r0, #127
+ 122              	.LVL12:
+ 123 000a FFF7FEFF 		bl	spi_send_n_bytes
+ 124              	.LVL13:
+ 104:bmp280.c      ****   spi_send_n_bytes(spi_reg_data, 1);
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 5
+
+
+ 125              		.loc 1 104 0
+ 126 000e 0121     		movs	r1, #1
+ 127 0010 2046     		mov	r0, r4
+ 128 0012 FFF7FEFF 		bl	spi_send_n_bytes
+ 129              	.LVL14:
+ 130 0016 10BD     		pop	{r4, pc}
+ 131              		.cfi_endproc
+ 132              	.LFE2:
+ 133              		.size	bmp280_spi_write, .-bmp280_spi_write
+ 134              		.section	.text.set_bmp280_config,"ax",%progbits
+ 135              		.align	2
+ 136              		.global	set_bmp280_config
+ 137              		.thumb
+ 138              		.thumb_func
+ 139              		.type	set_bmp280_config, %function
+ 140              	set_bmp280_config:
+ 141              	.LFB3:
+ 105:bmp280.c      **** }
+ 106:bmp280.c      **** 
+ 107:bmp280.c      **** /*
+ 108:bmp280.c      **** ***************************************************************************************************
+ 109:bmp280.c      **** *                                   set_bmp280_config()
+ 110:bmp280.c      **** *
+ 111:bmp280.c      **** * Description : This function configure the bmp280 by setting data in the config and control measur
+ 112:bmp280.c      **** *               register.
+ 113:bmp280.c      **** *
+ 114:bmp280.c      **** * Argument(s) : osrt_t ... oversampling rate for temperature measurement
+ 115:bmp280.c      **** *               osrt_p ... oversampling rate for pressure measurement
+ 116:bmp280.c      **** *               power_mode ... power mode of the bmp280
+ 117:bmp280.c      **** *               t_standby ... standby time between measurements
+ 118:bmp280.c      **** *               filter ... filter settings
+ 119:bmp280.c      **** *               spi3w_en ... 3-wire-spi configuration enable / disable 
+ 120:bmp280.c      **** *
+ 121:bmp280.c      **** * Return(s)   : none.
+ 122:bmp280.c      **** *
+ 123:bmp280.c      **** * Caller(s)   : Application.
+ 124:bmp280.c      **** *
+ 125:bmp280.c      **** * Note(s)     : Not re-entrant.
+ 126:bmp280.c      **** ***************************************************************************************************
+ 127:bmp280.c      **** */
+ 128:bmp280.c      **** 
+ 129:bmp280.c      **** CPU_VOID set_bmp280_config(CPU_INT08U osrt_t, CPU_INT08U osrt_p, 
+ 130:bmp280.c      ****                            CPU_INT08U power_mode, CPU_INT08U t_standby, 
+ 131:bmp280.c      ****                            CPU_INT08U filter, CPU_INT08U spi3w_en)
+ 132:bmp280.c      **** {
+ 142              		.loc 1 132 0
+ 143              		.cfi_startproc
+ 144              		@ args = 8, pretend = 0, frame = 0
+ 145              		@ frame_needed = 0, uses_anonymous_args = 0
+ 146              	.LVL15:
+ 147 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 148              		.cfi_def_cfa_offset 24
+ 149              		.cfi_offset 3, -24
+ 150              		.cfi_offset 4, -20
+ 151              		.cfi_offset 5, -16
+ 152              		.cfi_offset 6, -12
+ 153              		.cfi_offset 7, -8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 6
+
+
+ 154              		.cfi_offset 14, -4
+ 155 0002 0446     		mov	r4, r0
+ 156 0004 0D46     		mov	r5, r1
+ 157 0006 1646     		mov	r6, r2
+ 158 0008 1F46     		mov	r7, r3
+ 133:bmp280.c      ****   /* clear spi buffer and wait for spi to be ready for sending */
+ 134:bmp280.c      ****   prepare_and_wait_spi_send();
+ 159              		.loc 1 134 0
+ 160 000a FFF7FEFF 		bl	prepare_and_wait_spi_send
+ 161              	.LVL16:
+ 135:bmp280.c      ****   /* Go to sleep mode to be able to set data in config register */
+ 136:bmp280.c      ****   bmp280_spi_write(
+ 137:bmp280.c      ****     BMP280_REG_CTRL_MEAS,
+ 138:bmp280.c      ****     (osrt_t<<BMP280_OSRT_T_POS)|(osrt_p<<BMP280_OSRT_P_POS)|(BMP280_POWER_MODE_SLEEP<<BMP280_POWER_
+ 162              		.loc 1 138 0
+ 163 000e AD00     		lsls	r5, r5, #2
+ 136:bmp280.c      ****     BMP280_REG_CTRL_MEAS,
+ 164              		.loc 1 136 0
+ 165 0010 45EA4414 		orr	r4, r5, r4, lsl #5
+ 166 0014 64B2     		sxtb	r4, r4
+ 167 0016 04F0FC01 		and	r1, r4, #252
+ 168 001a F420     		movs	r0, #244
+ 169 001c FFF7FEFF 		bl	bmp280_spi_write
+ 170              	.LVL17:
+ 139:bmp280.c      ****   );
+ 140:bmp280.c      ****   /* wait to send data over spi */
+ 141:bmp280.c      ****   wait_spi_tx();
+ 171              		.loc 1 141 0
+ 172 0020 FFF7FEFF 		bl	wait_spi_tx
+ 173              	.LVL18:
+ 142:bmp280.c      ****   /* clear spi buffer and wait for spi to be ready for sending */
+ 143:bmp280.c      ****   prepare_and_wait_spi_send();
+ 174              		.loc 1 143 0
+ 175 0024 FFF7FEFF 		bl	prepare_and_wait_spi_send
+ 176              	.LVL19:
+ 144:bmp280.c      ****   /* write data to the config register */
+ 145:bmp280.c      ****   bmp280_spi_write(
+ 146:bmp280.c      ****     BMP280_REG_CONFIG, 
+ 147:bmp280.c      ****     (t_standby<<BMP280_T_STANDBY_POS)|(filter<<BMP280_FILTER_POS)|(spi3w_en<<BMP280_SPI3W_EN_POS)
+ 177              		.loc 1 147 0
+ 178 0028 9DF81830 		ldrb	r3, [sp, #24]	@ zero_extendqisi2
+ 179 002c 9B00     		lsls	r3, r3, #2
+ 145:bmp280.c      ****     BMP280_REG_CONFIG, 
+ 180              		.loc 1 145 0
+ 181 002e 43EA4713 		orr	r3, r3, r7, lsl #5
+ 182 0032 9DF81C10 		ldrb	r1, [sp, #28]	@ zero_extendqisi2
+ 183 0036 1943     		orrs	r1, r1, r3
+ 184 0038 C9B2     		uxtb	r1, r1
+ 185 003a F520     		movs	r0, #245
+ 186 003c FFF7FEFF 		bl	bmp280_spi_write
+ 187              	.LVL20:
+ 148:bmp280.c      ****   );
+ 149:bmp280.c      ****   /* wait to send data over spi */
+ 150:bmp280.c      ****   wait_spi_tx();
+ 188              		.loc 1 150 0
+ 189 0040 FFF7FEFF 		bl	wait_spi_tx
+ 190              	.LVL21:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 7
+
+
+ 151:bmp280.c      ****   /* clear spi buffer and wait for spi to be ready for sending */
+ 152:bmp280.c      ****   prepare_and_wait_spi_send();
+ 191              		.loc 1 152 0
+ 192 0044 FFF7FEFF 		bl	prepare_and_wait_spi_send
+ 193              	.LVL22:
+ 153:bmp280.c      ****   /* write data to the control measurements register register */
+ 154:bmp280.c      ****   bmp280_spi_write(
+ 194              		.loc 1 154 0
+ 195 0048 44EA0601 		orr	r1, r4, r6
+ 196 004c C9B2     		uxtb	r1, r1
+ 197 004e F420     		movs	r0, #244
+ 198 0050 FFF7FEFF 		bl	bmp280_spi_write
+ 199              	.LVL23:
+ 155:bmp280.c      ****     BMP280_REG_CTRL_MEAS, 
+ 156:bmp280.c      ****     (osrt_t<<BMP280_OSRT_T_POS)|(osrt_p<<BMP280_OSRT_P_POS)|(power_mode<<BMP280_POWER_MODE_POS)
+ 157:bmp280.c      ****   );
+ 158:bmp280.c      ****   /* wait to send data over spi */
+ 159:bmp280.c      ****   wait_spi_tx();
+ 200              		.loc 1 159 0
+ 201 0054 FFF7FEFF 		bl	wait_spi_tx
+ 202              	.LVL24:
+ 203 0058 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 204              		.cfi_endproc
+ 205              	.LFE3:
+ 206              		.size	set_bmp280_config, .-set_bmp280_config
+ 207 005a 00BF     		.section	.text.wait_bmp280_connecting,"ax",%progbits
+ 208              		.align	2
+ 209              		.global	wait_bmp280_connecting
+ 210              		.thumb
+ 211              		.thumb_func
+ 212              		.type	wait_bmp280_connecting, %function
+ 213              	wait_bmp280_connecting:
+ 214              	.LFB4:
+ 160:bmp280.c      **** }
+ 161:bmp280.c      **** 
+ 162:bmp280.c      **** /*
+ 163:bmp280.c      **** ***************************************************************************************************
+ 164:bmp280.c      **** *                                       wait_bmp280_connecting()
+ 165:bmp280.c      **** *
+ 166:bmp280.c      **** * Description : This function waits until the register id of the bmp280 will be returned over spi a
+ 167:bmp280.c      **** *               sending the register id address. Consider that this is a blocking function.
+ 168:bmp280.c      **** *
+ 169:bmp280.c      **** * Argument(s) : none.
+ 170:bmp280.c      **** *
+ 171:bmp280.c      **** * Return(s)   : none.
+ 172:bmp280.c      **** *
+ 173:bmp280.c      **** * Caller(s)   : Application.
+ 174:bmp280.c      **** *
+ 175:bmp280.c      **** * Note(s)     : Not re-entrant.
+ 176:bmp280.c      **** ***************************************************************************************************
+ 177:bmp280.c      **** */
+ 178:bmp280.c      **** 
+ 179:bmp280.c      **** CPU_VOID wait_bmp280_connecting(CPU_VOID)
+ 180:bmp280.c      **** {
+ 215              		.loc 1 180 0
+ 216              		.cfi_startproc
+ 217              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 8
+
+
+ 218              		@ frame_needed = 0, uses_anonymous_args = 0
+ 219 0000 10B5     		push	{r4, lr}
+ 220              		.cfi_def_cfa_offset 8
+ 221              		.cfi_offset 4, -8
+ 222              		.cfi_offset 14, -4
+ 223              	.LVL25:
+ 181:bmp280.c      ****   CPU_INT08U reg_value = 0u;
+ 224              		.loc 1 181 0
+ 225 0002 0024     		movs	r4, #0
+ 226              	.LVL26:
+ 227              	.L11:
+ 182:bmp280.c      ****   
+ 183:bmp280.c      ****   do {
+ 184:bmp280.c      ****     /* clear spi buffer and wait for spi to be ready for sending */
+ 185:bmp280.c      ****     prepare_and_wait_spi_send();
+ 228              		.loc 1 185 0
+ 229 0004 FFF7FEFF 		bl	prepare_and_wait_spi_send
+ 230              	.LVL27:
+ 186:bmp280.c      ****     spi_send_n_bytes(BMP280_REG_ID | (1<<7), 2);
+ 231              		.loc 1 186 0
+ 232 0008 0221     		movs	r1, #2
+ 233 000a D020     		movs	r0, #208
+ 234 000c FFF7FEFF 		bl	spi_send_n_bytes
+ 235              	.LVL28:
+ 187:bmp280.c      ****     /* wait to send data over spi */
+ 188:bmp280.c      ****     wait_spi_tx();
+ 236              		.loc 1 188 0
+ 237 0010 FFF7FEFF 		bl	wait_spi_tx
+ 238              	.LVL29:
+ 189:bmp280.c      ****     if(SPIM_1_GetRxBufferSize() != 0) 
+ 239              		.loc 1 189 0
+ 240 0014 FFF7FEFF 		bl	SPIM_1_GetRxBufferSize
+ 241              	.LVL30:
+ 242 0018 20B1     		cbz	r0, .L10
+ 190:bmp280.c      ****     {
+ 191:bmp280.c      ****       SPIM_1_ReadRxData(); // No valid data
+ 243              		.loc 1 191 0
+ 244 001a FFF7FEFF 		bl	SPIM_1_ReadRxData
+ 245              	.LVL31:
+ 192:bmp280.c      ****       reg_value = SPIM_1_ReadRxData();
+ 246              		.loc 1 192 0
+ 247 001e FFF7FEFF 		bl	SPIM_1_ReadRxData
+ 248              	.LVL32:
+ 249 0022 0446     		mov	r4, r0
+ 250              	.LVL33:
+ 251              	.L10:
+ 193:bmp280.c      ****     }
+ 194:bmp280.c      ****   } while(reg_value != BMP280_CHIP_ID);
+ 252              		.loc 1 194 0
+ 253 0024 582C     		cmp	r4, #88
+ 254 0026 EDD1     		bne	.L11
+ 195:bmp280.c      **** }
+ 255              		.loc 1 195 0
+ 256 0028 10BD     		pop	{r4, pc}
+ 257              		.cfi_endproc
+ 258              	.LFE4:
+ 259              		.size	wait_bmp280_connecting, .-wait_bmp280_connecting
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 9
+
+
+ 260 002a 00BF     		.section	.text.get_bmp280_chip_id,"ax",%progbits
+ 261              		.align	2
+ 262              		.global	get_bmp280_chip_id
+ 263              		.thumb
+ 264              		.thumb_func
+ 265              		.type	get_bmp280_chip_id, %function
+ 266              	get_bmp280_chip_id:
+ 267              	.LFB5:
+ 196:bmp280.c      **** 
+ 197:bmp280.c      **** /*
+ 198:bmp280.c      **** ***************************************************************************************************
+ 199:bmp280.c      **** *                                       init_spi()
+ 200:bmp280.c      **** *
+ 201:bmp280.c      **** * Description : This function returns the first received byte from spi after sending the register i
+ 202:bmp280.c      **** *               address.
+ 203:bmp280.c      **** *
+ 204:bmp280.c      **** * Argument(s) : none.
+ 205:bmp280.c      **** *
+ 206:bmp280.c      **** * Return(s)   : First receiver byte from spi.
+ 207:bmp280.c      **** *
+ 208:bmp280.c      **** * Caller(s)   : Application.
+ 209:bmp280.c      **** *
+ 210:bmp280.c      **** * Note(s)     : Not re-entrant.
+ 211:bmp280.c      **** ***************************************************************************************************
+ 212:bmp280.c      **** */
+ 213:bmp280.c      **** 
+ 214:bmp280.c      **** CPU_INT08U get_bmp280_chip_id(CPU_VOID)
+ 215:bmp280.c      **** {
+ 268              		.loc 1 215 0
+ 269              		.cfi_startproc
+ 270              		@ args = 0, pretend = 0, frame = 0
+ 271              		@ frame_needed = 0, uses_anonymous_args = 0
+ 272 0000 08B5     		push	{r3, lr}
+ 273              		.cfi_def_cfa_offset 8
+ 274              		.cfi_offset 3, -8
+ 275              		.cfi_offset 14, -4
+ 216:bmp280.c      ****   return bmp280_spi_read(BMP280_REG_ID);
+ 276              		.loc 1 216 0
+ 277 0002 D020     		movs	r0, #208
+ 278 0004 FFF7FEFF 		bl	bmp280_spi_read
+ 279              	.LVL34:
+ 217:bmp280.c      **** }
+ 280              		.loc 1 217 0
+ 281 0008 08BD     		pop	{r3, pc}
+ 282              		.cfi_endproc
+ 283              	.LFE5:
+ 284              		.size	get_bmp280_chip_id, .-get_bmp280_chip_id
+ 285 000a 00BF     		.section	.text.read_bmp280_press_temp,"ax",%progbits
+ 286              		.align	2
+ 287              		.global	read_bmp280_press_temp
+ 288              		.thumb
+ 289              		.thumb_func
+ 290              		.type	read_bmp280_press_temp, %function
+ 291              	read_bmp280_press_temp:
+ 292              	.LFB6:
+ 218:bmp280.c      **** 
+ 219:bmp280.c      **** /*
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 10
+
+
+ 220:bmp280.c      **** ***************************************************************************************************
+ 221:bmp280.c      **** *                                       read_bmp280_press_temp()
+ 222:bmp280.c      **** *
+ 223:bmp280.c      **** * Description : This function writes the pressure MSB register address and waits till all measureme
+ 224:bmp280.c      **** *               values are received. These values are then written to the given reg_values array. T
+ 225:bmp280.c      **** *               given array should have at least a size of BMP280_PRESS_TEMP_DATA_SIZE.
+ 226:bmp280.c      **** *
+ 227:bmp280.c      **** * Argument(s) : reg_values[] ... array of bytes, where received bytes are written to
+ 228:bmp280.c      **** *
+ 229:bmp280.c      **** * Return(s)   : none.
+ 230:bmp280.c      **** *
+ 231:bmp280.c      **** * Caller(s)   : Application.
+ 232:bmp280.c      **** *
+ 233:bmp280.c      **** * Note(s)     : Not re-entrant.
+ 234:bmp280.c      **** ***************************************************************************************************
+ 235:bmp280.c      **** */
+ 236:bmp280.c      **** 
+ 237:bmp280.c      **** CPU_VOID read_bmp280_press_temp(CPU_INT08U reg_values[])
+ 238:bmp280.c      **** {
+ 293              		.loc 1 238 0
+ 294              		.cfi_startproc
+ 295              		@ args = 0, pretend = 0, frame = 0
+ 296              		@ frame_needed = 0, uses_anonymous_args = 0
+ 297              	.LVL35:
+ 298 0000 08B5     		push	{r3, lr}
+ 299              		.cfi_def_cfa_offset 8
+ 300              		.cfi_offset 3, -8
+ 301              		.cfi_offset 14, -4
+ 239:bmp280.c      ****   bmp280_spi_read_multiple(BMP280_REG_PRESS_MSB, reg_values, BMP280_PRESS_TEMP_DATA_SIZE);
+ 302              		.loc 1 239 0
+ 303 0002 0622     		movs	r2, #6
+ 304 0004 0146     		mov	r1, r0
+ 305 0006 F720     		movs	r0, #247
+ 306              	.LVL36:
+ 307 0008 FFF7FEFF 		bl	bmp280_spi_read_multiple
+ 308              	.LVL37:
+ 309 000c 08BD     		pop	{r3, pc}
+ 310              		.cfi_endproc
+ 311              	.LFE6:
+ 312              		.size	read_bmp280_press_temp, .-read_bmp280_press_temp
+ 313 000e 00BF     		.section	.text.read_bmp280_calib,"ax",%progbits
+ 314              		.align	2
+ 315              		.global	read_bmp280_calib
+ 316              		.thumb
+ 317              		.thumb_func
+ 318              		.type	read_bmp280_calib, %function
+ 319              	read_bmp280_calib:
+ 320              	.LFB7:
+ 240:bmp280.c      **** }
+ 241:bmp280.c      **** 
+ 242:bmp280.c      **** /*
+ 243:bmp280.c      **** ***************************************************************************************************
+ 244:bmp280.c      **** *                                       read_bmp280_calib()
+ 245:bmp280.c      **** *
+ 246:bmp280.c      **** * Description : This function writes the calibrate LSB register address and waits till all calibrat
+ 247:bmp280.c      **** *               values are received. These values are then written to the given reg_values array. T
+ 248:bmp280.c      **** *               given array should have at least a size of BMP280_CALIB_DATA_SIZE.
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 11
+
+
+ 249:bmp280.c      **** *
+ 250:bmp280.c      **** * Argument(s) : reg_values[] ... array of bytes, where received bytes are written to
+ 251:bmp280.c      **** *
+ 252:bmp280.c      **** * Return(s)   : none.
+ 253:bmp280.c      **** *
+ 254:bmp280.c      **** * Caller(s)   : Application.
+ 255:bmp280.c      **** *
+ 256:bmp280.c      **** * Note(s)     : Not re-entrant.
+ 257:bmp280.c      **** ***************************************************************************************************
+ 258:bmp280.c      **** */
+ 259:bmp280.c      **** 
+ 260:bmp280.c      **** CPU_VOID read_bmp280_calib(CPU_INT08U reg_values[])
+ 261:bmp280.c      **** {
+ 321              		.loc 1 261 0
+ 322              		.cfi_startproc
+ 323              		@ args = 0, pretend = 0, frame = 0
+ 324              		@ frame_needed = 0, uses_anonymous_args = 0
+ 325              	.LVL38:
+ 326 0000 08B5     		push	{r3, lr}
+ 327              		.cfi_def_cfa_offset 8
+ 328              		.cfi_offset 3, -8
+ 329              		.cfi_offset 14, -4
+ 262:bmp280.c      ****   bmp280_spi_read_multiple(BMP280_REG_CALIB_LSB, reg_values, BMP280_CALIB_DATA_SIZE);
+ 330              		.loc 1 262 0
+ 331 0002 1822     		movs	r2, #24
+ 332 0004 0146     		mov	r1, r0
+ 333 0006 8820     		movs	r0, #136
+ 334              	.LVL39:
+ 335 0008 FFF7FEFF 		bl	bmp280_spi_read_multiple
+ 336              	.LVL40:
+ 337 000c 08BD     		pop	{r3, pc}
+ 338              		.cfi_endproc
+ 339              	.LFE7:
+ 340              		.size	read_bmp280_calib, .-read_bmp280_calib
+ 341 000e 00BF     		.section	.text.get_bmp280_press_temp,"ax",%progbits
+ 342              		.align	2
+ 343              		.global	get_bmp280_press_temp
+ 344              		.thumb
+ 345              		.thumb_func
+ 346              		.type	get_bmp280_press_temp, %function
+ 347              	get_bmp280_press_temp:
+ 348              	.LFB8:
+ 263:bmp280.c      **** }
+ 264:bmp280.c      **** 
+ 265:bmp280.c      **** /*
+ 266:bmp280.c      **** ***************************************************************************************************
+ 267:bmp280.c      **** *                                     get_bmp280_press_temp()
+ 268:bmp280.c      **** *
+ 269:bmp280.c      **** * Description : Reads sensor and calibration data and compute the calibrated sensor data.
+ 270:bmp280.c      **** *               The temperature is in DegC, resolution is 0.01 DegC, so an output "5123"
+ 271:bmp280.c      **** *               equal 51.23 DegC. 
+ 272:bmp280.c      **** *               The pressure is in Pa, so an output "100838" equals 100838 Pa.
+ 273:bmp280.c      **** *
+ 274:bmp280.c      **** * Argument(s) : none.
+ 275:bmp280.c      **** *
+ 276:bmp280.c      **** * Return(s)   : calibrated temperature and pressure.
+ 277:bmp280.c      **** *
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 12
+
+
+ 278:bmp280.c      **** * Note(s)     : none
+ 279:bmp280.c      **** ***************************************************************************************************
+ 280:bmp280.c      **** */
+ 281:bmp280.c      **** 
+ 282:bmp280.c      **** Bmp280_press_temp get_bmp280_press_temp()
+ 283:bmp280.c      **** {
+ 349              		.loc 1 283 0
+ 350              		.cfi_startproc
+ 351              		@ args = 0, pretend = 0, frame = 32
+ 352              		@ frame_needed = 0, uses_anonymous_args = 0
+ 353              	.LVL41:
+ 354 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 355              		.cfi_def_cfa_offset 36
+ 356              		.cfi_offset 4, -36
+ 357              		.cfi_offset 5, -32
+ 358              		.cfi_offset 6, -28
+ 359              		.cfi_offset 7, -24
+ 360              		.cfi_offset 8, -20
+ 361              		.cfi_offset 9, -16
+ 362              		.cfi_offset 10, -12
+ 363              		.cfi_offset 11, -8
+ 364              		.cfi_offset 14, -4
+ 365 0004 89B0     		sub	sp, sp, #36
+ 366              		.cfi_def_cfa_offset 72
+ 367 0006 0446     		mov	r4, r0
+ 284:bmp280.c      ****   CPU_INT08U  reg_press_temp[BMP280_PRESS_TEMP_DATA_SIZE] = {0};
+ 368              		.loc 1 284 0
+ 369 0008 0023     		movs	r3, #0
+ 370 000a 0693     		str	r3, [sp, #24]
+ 371 000c ADF81C30 		strh	r3, [sp, #28]	@ movhi
+ 285:bmp280.c      ****   CPU_INT08U  reg_calib[BMP280_CALIB_DATA_SIZE] = {0};
+ 372              		.loc 1 285 0
+ 373 0010 0093     		str	r3, [sp]
+ 374 0012 0193     		str	r3, [sp, #4]
+ 375 0014 0293     		str	r3, [sp, #8]
+ 376 0016 0393     		str	r3, [sp, #12]
+ 377 0018 0493     		str	r3, [sp, #16]
+ 378 001a 0593     		str	r3, [sp, #20]
+ 286:bmp280.c      ****   
+ 287:bmp280.c      ****   CPU_INT32U  adc_T;
+ 288:bmp280.c      ****   CPU_INT16U  dig_T1;
+ 289:bmp280.c      ****   CPU_INT16S  dig_T2;
+ 290:bmp280.c      ****   CPU_INT16S  dig_T3;
+ 291:bmp280.c      ****   CPU_INT32S  var1,var2, t_fine;
+ 292:bmp280.c      ****   
+ 293:bmp280.c      ****   CPU_INT32U  adc_P;
+ 294:bmp280.c      ****   CPU_INT16U  dig_P1;
+ 295:bmp280.c      ****   CPU_INT16S  dig_P2;
+ 296:bmp280.c      ****   CPU_INT16S  dig_P3;
+ 297:bmp280.c      ****   CPU_INT16S  dig_P4;
+ 298:bmp280.c      ****   CPU_INT16S  dig_P5;
+ 299:bmp280.c      ****   CPU_INT16S  dig_P6;
+ 300:bmp280.c      ****   CPU_INT16S  dig_P7;
+ 301:bmp280.c      ****   CPU_INT16S  dig_P8;
+ 302:bmp280.c      ****   CPU_INT16S  dig_P9;
+ 303:bmp280.c      ****   
+ 304:bmp280.c      ****   Bmp280_press_temp return_data;
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 13
+
+
+ 305:bmp280.c      ****   
+ 306:bmp280.c      ****   read_bmp280_press_temp(reg_press_temp);
+ 379              		.loc 1 306 0
+ 380 001c 06A8     		add	r0, sp, #24
+ 381              	.LVL42:
+ 382 001e FFF7FEFF 		bl	read_bmp280_press_temp
+ 383              	.LVL43:
+ 307:bmp280.c      ****   read_bmp280_calib(reg_calib);
+ 384              		.loc 1 307 0
+ 385 0022 6846     		mov	r0, sp
+ 386 0024 FFF7FEFF 		bl	read_bmp280_calib
+ 387              	.LVL44:
+ 308:bmp280.c      ****   
+ 309:bmp280.c      ****   /* Use calibration data to compute temperature */
+ 310:bmp280.c      ****   adc_T = ((CPU_INT32S)reg_press_temp[3] << 12) 
+ 388              		.loc 1 310 0
+ 389 0028 9DF81B50 		ldrb	r5, [sp, #27]	@ zero_extendqisi2
+ 311:bmp280.c      ****         | ((CPU_INT32S)reg_press_temp[4] << 4) 
+ 390              		.loc 1 311 0
+ 391 002c 9DF81C10 		ldrb	r1, [sp, #28]	@ zero_extendqisi2
+ 392 0030 0901     		lsls	r1, r1, #4
+ 393 0032 41EA0531 		orr	r1, r1, r5, lsl #12
+ 312:bmp280.c      ****         | ((CPU_INT32S)reg_press_temp[5] >> 4);
+ 394              		.loc 1 312 0
+ 395 0036 9DF81D50 		ldrb	r5, [sp, #29]	@ zero_extendqisi2
+ 396 003a 41EA1515 		orr	r5, r1, r5, lsr #4
+ 397              	.LVL45:
+ 313:bmp280.c      ****   dig_T1 = reg_calib[0] + (reg_calib[1]<<8);
+ 398              		.loc 1 313 0
+ 399 003e 9DF80030 		ldrb	r3, [sp]	@ zero_extendqisi2
+ 400 0042 9DF80100 		ldrb	r0, [sp, #1]	@ zero_extendqisi2
+ 401 0046 03EB0020 		add	r0, r3, r0, lsl #8
+ 402 004a 80B2     		uxth	r0, r0
+ 403              	.LVL46:
+ 314:bmp280.c      ****   dig_T2 = reg_calib[2] + (reg_calib[3]<<8);
+ 404              		.loc 1 314 0
+ 405 004c 9DF80230 		ldrb	r3, [sp, #2]	@ zero_extendqisi2
+ 406 0050 9DF80320 		ldrb	r2, [sp, #3]	@ zero_extendqisi2
+ 407 0054 03EB0222 		add	r2, r3, r2, lsl #8
+ 408 0058 12B2     		sxth	r2, r2
+ 409              	.LVL47:
+ 315:bmp280.c      ****   dig_T3 = reg_calib[4] + (reg_calib[5]<<8);
+ 410              		.loc 1 315 0
+ 411 005a 9DF80410 		ldrb	r1, [sp, #4]	@ zero_extendqisi2
+ 412 005e 9DF80560 		ldrb	r6, [sp, #5]	@ zero_extendqisi2
+ 413 0062 01EB0621 		add	r1, r1, r6, lsl #8
+ 414 0066 0EB2     		sxth	r6, r1
+ 415              	.LVL48:
+ 316:bmp280.c      ****   
+ 317:bmp280.c      ****   var1 = ((((adc_T / 8) - ((CPU_INT32S) dig_T1 * 2))) * ((CPU_INT32S) dig_T2)) / 2048;
+ 416              		.loc 1 317 0
+ 417 0068 4300     		lsls	r3, r0, #1
+ 418 006a C3EBD503 		rsb	r3, r3, r5, lsr #3
+ 419 006e 03FB02F2 		mul	r2, r3, r2
+ 420              	.LVL49:
+ 318:bmp280.c      ****   var2 = (((((adc_T / 16) - ((CPU_INT32S) dig_T1)) * ((adc_T / 16) - ((CPU_INT32S) dig_T1))) / 4096
+ 421              		.loc 1 318 0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 14
+
+
+ 422 0072 C0EB1511 		rsb	r1, r0, r5, lsr #4
+ 423 0076 01FB01F1 		mul	r1, r1, r1
+ 424 007a 090B     		lsrs	r1, r1, #12
+ 425 007c 01FB06F1 		mul	r1, r1, r6
+ 426 0080 890B     		lsrs	r1, r1, #14
+ 427              	.LVL50:
+ 319:bmp280.c      **** 
+ 320:bmp280.c      ****   t_fine = var1 + var2;
+ 428              		.loc 1 320 0
+ 429 0082 01EBD222 		add	r2, r1, r2, lsr #11
+ 430              	.LVL51:
+ 321:bmp280.c      ****   return_data.temp = (t_fine * 5 + 128) / 256;
+ 431              		.loc 1 321 0
+ 432 0086 02EB8203 		add	r3, r2, r2, lsl #2
+ 433              	.LVL52:
+ 434 008a 8033     		adds	r3, r3, #128
+ 435 008c 00D5     		bpl	.L20
+ 436 008e FF33     		adds	r3, r3, #255
+ 437              	.L20:
+ 438 0090 1B12     		asrs	r3, r3, #8
+ 439 0092 2360     		str	r3, [r4]
+ 322:bmp280.c      ****   
+ 323:bmp280.c      ****   /* Use calibration data to compute press */
+ 324:bmp280.c      ****   adc_P = ((CPU_INT32U)reg_press_temp[0] << 12) 
+ 440              		.loc 1 324 0
+ 441 0094 9DF81830 		ldrb	r3, [sp, #24]	@ zero_extendqisi2
+ 325:bmp280.c      ****         | ((CPU_INT32U)reg_press_temp[1] << 4) 
+ 442              		.loc 1 325 0
+ 443 0098 9DF81900 		ldrb	r0, [sp, #25]	@ zero_extendqisi2
+ 444              	.LVL53:
+ 445 009c 0001     		lsls	r0, r0, #4
+ 446 009e 40EA0333 		orr	r3, r0, r3, lsl #12
+ 326:bmp280.c      ****         | ((CPU_INT32U)reg_press_temp[2] >> 4);
+ 447              		.loc 1 326 0
+ 448 00a2 9DF81A00 		ldrb	r0, [sp, #26]	@ zero_extendqisi2
+ 324:bmp280.c      ****         | ((CPU_INT32U)reg_press_temp[1] << 4) 
+ 449              		.loc 1 324 0
+ 450 00a6 43EA1010 		orr	r0, r3, r0, lsr #4
+ 451              	.LVL54:
+ 327:bmp280.c      ****   dig_P1 =  reg_calib[6] + (reg_calib[7] << 8);
+ 452              		.loc 1 327 0
+ 453 00aa 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
+ 454 00ae 9DF80710 		ldrb	r1, [sp, #7]	@ zero_extendqisi2
+ 455              	.LVL55:
+ 456 00b2 03EB0121 		add	r1, r3, r1, lsl #8
+ 457 00b6 89B2     		uxth	r1, r1
+ 458              	.LVL56:
+ 328:bmp280.c      ****   dig_P2 =  reg_calib[8] + (reg_calib[9] << 8);
+ 459              		.loc 1 328 0
+ 460 00b8 9DF80830 		ldrb	r3, [sp, #8]	@ zero_extendqisi2
+ 461 00bc 9DF809E0 		ldrb	lr, [sp, #9]	@ zero_extendqisi2
+ 462 00c0 03EB0E23 		add	r3, r3, lr, lsl #8
+ 463 00c4 0FFA83FE 		sxth	lr, r3
+ 464              	.LVL57:
+ 329:bmp280.c      ****   dig_P3 = reg_calib[10] + (reg_calib[11] << 8);
+ 465              		.loc 1 329 0
+ 466 00c8 9DF80A30 		ldrb	r3, [sp, #10]	@ zero_extendqisi2
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 15
+
+
+ 467 00cc 9DF80BC0 		ldrb	ip, [sp, #11]	@ zero_extendqisi2
+ 468 00d0 03EB0C2C 		add	ip, r3, ip, lsl #8
+ 469 00d4 0FFA8CF9 		sxth	r9, ip
+ 470              	.LVL58:
+ 330:bmp280.c      ****   dig_P4 = reg_calib[12] + (reg_calib[13] << 8);
+ 471              		.loc 1 330 0
+ 472 00d8 9DF80C30 		ldrb	r3, [sp, #12]	@ zero_extendqisi2
+ 473 00dc 9DF80DA0 		ldrb	r10, [sp, #13]	@ zero_extendqisi2
+ 474 00e0 03EB0A2A 		add	r10, r3, r10, lsl #8
+ 475 00e4 0FFA8AFA 		sxth	r10, r10
+ 476              	.LVL59:
+ 331:bmp280.c      ****   dig_P5 = reg_calib[14] + (reg_calib[15] << 8);
+ 477              		.loc 1 331 0
+ 478 00e8 9DF80E30 		ldrb	r3, [sp, #14]	@ zero_extendqisi2
+ 479 00ec 9DF80F80 		ldrb	r8, [sp, #15]	@ zero_extendqisi2
+ 480 00f0 03EB0828 		add	r8, r3, r8, lsl #8
+ 481 00f4 0FFA88F8 		sxth	r8, r8
+ 482              	.LVL60:
+ 332:bmp280.c      ****   dig_P6 = reg_calib[16] + (reg_calib[17] << 8);
+ 483              		.loc 1 332 0
+ 484 00f8 9DF81030 		ldrb	r3, [sp, #16]	@ zero_extendqisi2
+ 485 00fc 9DF811B0 		ldrb	fp, [sp, #17]	@ zero_extendqisi2
+ 486 0100 03EB0B2B 		add	fp, r3, fp, lsl #8
+ 487 0104 0FFA8BFB 		sxth	fp, fp
+ 488              	.LVL61:
+ 333:bmp280.c      ****   dig_P7 = reg_calib[18] + (reg_calib[19] << 8);
+ 489              		.loc 1 333 0
+ 490 0108 9DF81230 		ldrb	r3, [sp, #18]	@ zero_extendqisi2
+ 491 010c 9DF81360 		ldrb	r6, [sp, #19]	@ zero_extendqisi2
+ 492              	.LVL62:
+ 493 0110 03EB0626 		add	r6, r3, r6, lsl #8
+ 494 0114 36B2     		sxth	r6, r6
+ 495              	.LVL63:
+ 334:bmp280.c      ****   dig_P8 = reg_calib[20] + (reg_calib[21] << 8);
+ 496              		.loc 1 334 0
+ 497 0116 9DF81430 		ldrb	r3, [sp, #20]	@ zero_extendqisi2
+ 498 011a 9DF81550 		ldrb	r5, [sp, #21]	@ zero_extendqisi2
+ 499              	.LVL64:
+ 500 011e 03EB0525 		add	r5, r3, r5, lsl #8
+ 501 0122 2DB2     		sxth	r5, r5
+ 502              	.LVL65:
+ 335:bmp280.c      ****   dig_P9 = reg_calib[22] + (reg_calib[23] << 8);
+ 503              		.loc 1 335 0
+ 504 0124 9DF81630 		ldrb	r3, [sp, #22]	@ zero_extendqisi2
+ 505 0128 9DF81770 		ldrb	r7, [sp, #23]	@ zero_extendqisi2
+ 506 012c 03EB0727 		add	r7, r3, r7, lsl #8
+ 507 0130 3FB2     		sxth	r7, r7
+ 508              	.LVL66:
+ 336:bmp280.c      ****   
+ 337:bmp280.c      ****   var1 = (((CPU_INT32S) t_fine) / 2) - (CPU_INT32S) 64000;
+ 509              		.loc 1 337 0
+ 510 0132 02EBD273 		add	r3, r2, r2, lsr #31
+ 511 0136 5B10     		asrs	r3, r3, #1
+ 512 0138 A3F57A43 		sub	r3, r3, #64000
+ 513              	.LVL67:
+ 338:bmp280.c      ****   var2 = (((var1 / 4) * (var1 / 4)) / 2048) * ((CPU_INT32S) dig_P6);
+ 514              		.loc 1 338 0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 16
+
+
+ 515 013c 9C46     		mov	ip, r3
+ 516 013e 002B     		cmp	r3, #0
+ 517 0140 01DA     		bge	.L21
+ 518 0142 03F1030C 		add	ip, r3, #3
+ 519              	.L21:
+ 520 0146 4FEAAC0C 		asr	ip, ip, #2
+ 521 014a 0CFB0CFC 		mul	ip, ip, ip
+ 522 014e 6246     		mov	r2, ip
+ 523              	.LVL68:
+ 524 0150 BCF1000F 		cmp	ip, #0
+ 525 0154 01DA     		bge	.L22
+ 526 0156 0CF2FF72 		addw	r2, ip, #2047
+ 527              	.L22:
+ 528 015a D212     		asrs	r2, r2, #11
+ 529              	.LVL69:
+ 339:bmp280.c      ****   var2 = var2 + ((var1 * ((CPU_INT32S) dig_P5)) * 2);
+ 530              		.loc 1 339 0
+ 531 015c 08FB03F8 		mul	r8, r8, r3
+ 532              	.LVL70:
+ 533 0160 4FEA4808 		lsl	r8, r8, #1
+ 534 0164 0BFB0282 		mla	r2, fp, r2, r8
+ 535              	.LVL71:
+ 340:bmp280.c      ****   var2 = (var2 / 4) + (((CPU_INT32S) dig_P4) * 65536);
+ 536              		.loc 1 340 0
+ 537 0168 002A     		cmp	r2, #0
+ 538 016a 00DA     		bge	.L23
+ 539 016c 0332     		adds	r2, r2, #3
+ 540              	.L23:
+ 541 016e 4FEA0A4A 		lsl	r10, r10, #16
+ 542              	.LVL72:
+ 543 0172 0AEBA202 		add	r2, r10, r2, asr #2
+ 544              	.LVL73:
+ 341:bmp280.c      ****   var1 = (((dig_P3 * (((var1 / 4) * (var1 / 4)) / 8192)) / 8) + ((((CPU_INT32S) dig_P2) * var1) / 2
+ 545              		.loc 1 341 0
+ 546 0176 E046     		mov	r8, ip
+ 547 0178 BCF1000F 		cmp	ip, #0
+ 548 017c 03DA     		bge	.L24
+ 549 017e 0CF5FF58 		add	r8, ip, #8160
+ 550 0182 08F11F08 		add	r8, r8, #31
+ 551              	.L24:
+ 552 0186 4FEA683C 		asr	ip, r8, #13
+ 553 018a 0CFB09FC 		mul	ip, ip, r9
+ 554 018e BCF1000F 		cmp	ip, #0
+ 555 0192 01DA     		bge	.L25
+ 556 0194 0CF1070C 		add	ip, ip, #7
+ 557              	.L25:
+ 558 0198 0EFB03F3 		mul	r3, lr, r3
+ 559              	.LVL74:
+ 560 019c 03EBD373 		add	r3, r3, r3, lsr #31
+ 561 01a0 5B10     		asrs	r3, r3, #1
+ 562 01a2 13EBEC03 		adds	r3, r3, ip, asr #3
+ 563 01a6 03D5     		bpl	.L26
+ 564 01a8 03F57F33 		add	r3, r3, #261120
+ 565 01ac 03F2FF33 		addw	r3, r3, #1023
+ 566              	.L26:
+ 567 01b0 9B14     		asrs	r3, r3, #18
+ 568              	.LVL75:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 17
+
+
+ 342:bmp280.c      ****   var1 = ((((32768 + var1)) * ((CPU_INT32S) dig_P1)) / 32768);
+ 569              		.loc 1 342 0
+ 570 01b2 03F50043 		add	r3, r3, #32768
+ 571              	.LVL76:
+ 572 01b6 01FB03F3 		mul	r3, r1, r3
+ 573              	.LVL77:
+ 574 01ba 002B     		cmp	r3, #0
+ 575 01bc 02DA     		bge	.L27
+ 576 01be 03F5FF43 		add	r3, r3, #32640
+ 577 01c2 7F33     		adds	r3, r3, #127
+ 578              	.L27:
+ 579              	.LVL78:
+ 343:bmp280.c      **** 
+ 344:bmp280.c      ****   /* Avoid exception caused by division with zero */
+ 345:bmp280.c      ****   if (var1 != 0)
+ 580              		.loc 1 345 0
+ 581 01c4 DB13     		asrs	r3, r3, #15
+ 582              	.LVL79:
+ 583 01c6 37D0     		beq	.L19
+ 346:bmp280.c      ****   {
+ 347:bmp280.c      ****       return_data.press = (((CPU_INT32U)(((CPU_INT32S)1048576) - adc_P) - (var2 / 4096))) * 3125;
+ 584              		.loc 1 347 0
+ 585 01c8 1146     		mov	r1, r2
+ 586              	.LVL80:
+ 587 01ca 002A     		cmp	r2, #0
+ 588 01cc 01DA     		bge	.L29
+ 589              	.LVL81:
+ 590 01ce 02F6FF71 		addw	r1, r2, #4095
+ 591              	.LVL82:
+ 592              	.L29:
+ 593 01d2 4042     		negs	r0, r0
+ 594              	.LVL83:
+ 595 01d4 A0EB2130 		sub	r0, r0, r1, asr #12
+ 596              	.LVL84:
+ 597 01d8 40F63542 		movw	r2, #3125
+ 598              	.LVL85:
+ 599 01dc 02FB00F0 		mul	r0, r2, r0
+ 600 01e0 00F14340 		add	r0, r0, #-1023410176
+ 601 01e4 00F5A000 		add	r0, r0, #5242880
+ 602 01e8 6060     		str	r0, [r4, #4]
+ 348:bmp280.c      ****       
+ 349:bmp280.c      ****       /* Check for overflows against UINT32_MAX/2; if pressure is left-shifted by 1 */
+ 350:bmp280.c      ****       if (return_data.press < 0x80000000)
+ 603              		.loc 1 350 0
+ 604 01ea 0028     		cmp	r0, #0
+ 605 01ec 04DB     		blt	.L30
+ 351:bmp280.c      ****       {
+ 352:bmp280.c      ****           return_data.press = (return_data.press * 2) / ((CPU_INT32U) var1);
+ 606              		.loc 1 352 0
+ 607 01ee 4000     		lsls	r0, r0, #1
+ 608 01f0 B0FBF3F0 		udiv	r0, r0, r3
+ 609 01f4 6060     		str	r0, [r4, #4]
+ 610 01f6 03E0     		b	.L31
+ 611              	.L30:
+ 353:bmp280.c      ****       }
+ 354:bmp280.c      ****       else
+ 355:bmp280.c      ****       {
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 18
+
+
+ 356:bmp280.c      ****           return_data.press = (return_data.press / (CPU_INT32U) var1) * 2;
+ 612              		.loc 1 356 0
+ 613 01f8 B0FBF3F0 		udiv	r0, r0, r3
+ 614 01fc 4000     		lsls	r0, r0, #1
+ 615 01fe 6060     		str	r0, [r4, #4]
+ 616              	.L31:
+ 357:bmp280.c      ****       }
+ 358:bmp280.c      ****       var1 = (((CPU_INT32S) dig_P9) * ((CPU_INT32S) (((return_data.press / 8) * (return_data.press 
+ 617              		.loc 1 358 0
+ 618 0200 6268     		ldr	r2, [r4, #4]
+ 619 0202 D308     		lsrs	r3, r2, #3
+ 620              	.LVL86:
+ 621 0204 03FB03F3 		mul	r3, r3, r3
+ 622 0208 5B0B     		lsrs	r3, r3, #13
+ 623 020a 03FB07F7 		mul	r7, r3, r7
+ 624              	.LVL87:
+ 625 020e 002F     		cmp	r7, #0
+ 626 0210 01DA     		bge	.L32
+ 627 0212 07F6FF77 		addw	r7, r7, #4095
+ 628              	.L32:
+ 629 0216 3F13     		asrs	r7, r7, #12
+ 630              	.LVL88:
+ 359:bmp280.c      ****       var2 = (((CPU_INT32S) (return_data.press / 4)) * ((CPU_INT32S) dig_P8)) / 8192;
+ 631              		.loc 1 359 0
+ 632 0218 9308     		lsrs	r3, r2, #2
+ 633 021a 05FB03F5 		mul	r5, r5, r3
+ 634              	.LVL89:
+ 635 021e 002D     		cmp	r5, #0
+ 636 0220 02DA     		bge	.L33
+ 637 0222 05F5FF55 		add	r5, r5, #8160
+ 638 0226 1F35     		adds	r5, r5, #31
+ 639              	.L33:
+ 640              	.LVL90:
+ 360:bmp280.c      ****       return_data.press = (CPU_INT32U) ((CPU_INT32S) return_data.press + ((var1 + var2 + dig_P7) / 
+ 641              		.loc 1 360 0
+ 642 0228 07EB6537 		add	r7, r7, r5, asr #13
+ 643              	.LVL91:
+ 644 022c F719     		adds	r7, r6, r7
+ 645 022e 00D5     		bpl	.L34
+ 646 0230 0F37     		adds	r7, r7, #15
+ 647              	.L34:
+ 648 0232 02EB2717 		add	r7, r2, r7, asr #4
+ 649 0236 6760     		str	r7, [r4, #4]
+ 650              	.LVL92:
+ 651              	.L19:
+ 361:bmp280.c      ****   }
+ 362:bmp280.c      ****   
+ 363:bmp280.c      ****   return return_data;
+ 364:bmp280.c      **** }
+ 652              		.loc 1 364 0
+ 653 0238 2046     		mov	r0, r4
+ 654 023a 09B0     		add	sp, sp, #36
+ 655              		.cfi_def_cfa_offset 36
+ 656              	.LVL93:
+ 657              		@ sp needed
+ 658 023c BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 659              		.cfi_endproc
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 19
+
+
+ 660              	.LFE8:
+ 661              		.size	get_bmp280_press_temp, .-get_bmp280_press_temp
+ 662              		.text
+ 663              	.Letext0:
+ 664              		.file 2 ".\\uC-CPU\\ARM-Cortex-M3\\GNU/cpu.h"
+ 665              		.file 3 "./bmp280.h"
+ 666              		.file 4 "./bsp_spi.h"
+ 667              		.file 5 "Generated_Source\\PSoC5/SPIM_1.h"
+ 668              		.section	.debug_info,"",%progbits
+ 669              	.Ldebug_info0:
+ 670 0000 44060000 		.4byte	0x644
+ 671 0004 0400     		.2byte	0x4
+ 672 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 673 000a 04       		.byte	0x4
+ 674 000b 01       		.uleb128 0x1
+ 675 000c C3020000 		.4byte	.LASF69
+ 676 0010 0C       		.byte	0xc
+ 677 0011 07000000 		.4byte	.LASF70
+ 678 0015 C5000000 		.4byte	.LASF71
+ 679 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 680 001d 00000000 		.4byte	0
+ 681 0021 00000000 		.4byte	.Ldebug_line0
+ 682 0025 02       		.uleb128 0x2
+ 683 0026 01       		.byte	0x1
+ 684 0027 08       		.byte	0x8
+ 685 0028 8C030000 		.4byte	.LASF0
+ 686 002c 02       		.uleb128 0x2
+ 687 002d 01       		.byte	0x1
+ 688 002e 08       		.byte	0x8
+ 689 002f 9D020000 		.4byte	.LASF1
+ 690 0033 03       		.uleb128 0x3
+ 691 0034 F7010000 		.4byte	.LASF3
+ 692 0038 02       		.byte	0x2
+ 693 0039 78       		.byte	0x78
+ 694 003a 2C000000 		.4byte	0x2c
+ 695 003e 02       		.uleb128 0x2
+ 696 003f 01       		.byte	0x1
+ 697 0040 06       		.byte	0x6
+ 698 0041 71000000 		.4byte	.LASF2
+ 699 0045 03       		.uleb128 0x3
+ 700 0046 E8030000 		.4byte	.LASF4
+ 701 004a 02       		.byte	0x2
+ 702 004b 7A       		.byte	0x7a
+ 703 004c 50000000 		.4byte	0x50
+ 704 0050 02       		.uleb128 0x2
+ 705 0051 02       		.byte	0x2
+ 706 0052 07       		.byte	0x7
+ 707 0053 02020000 		.4byte	.LASF5
+ 708 0057 03       		.uleb128 0x3
+ 709 0058 DD030000 		.4byte	.LASF6
+ 710 005c 02       		.byte	0x2
+ 711 005d 7B       		.byte	0x7b
+ 712 005e 62000000 		.4byte	0x62
+ 713 0062 02       		.uleb128 0x2
+ 714 0063 02       		.byte	0x2
+ 715 0064 05       		.byte	0x5
+ 716 0065 AB020000 		.4byte	.LASF7
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 20
+
+
+ 717 0069 03       		.uleb128 0x3
+ 718 006a 31000000 		.4byte	.LASF8
+ 719 006e 02       		.byte	0x2
+ 720 006f 7C       		.byte	0x7c
+ 721 0070 74000000 		.4byte	0x74
+ 722 0074 02       		.uleb128 0x2
+ 723 0075 04       		.byte	0x4
+ 724 0076 07       		.byte	0x7
+ 725 0077 BA010000 		.4byte	.LASF9
+ 726 007b 03       		.uleb128 0x3
+ 727 007c 26000000 		.4byte	.LASF10
+ 728 0080 02       		.byte	0x2
+ 729 0081 7D       		.byte	0x7d
+ 730 0082 86000000 		.4byte	0x86
+ 731 0086 04       		.uleb128 0x4
+ 732 0087 04       		.byte	0x4
+ 733 0088 05       		.byte	0x5
+ 734 0089 696E7400 		.ascii	"int\000"
+ 735 008d 02       		.uleb128 0x2
+ 736 008e 08       		.byte	0x8
+ 737 008f 07       		.byte	0x7
+ 738 0090 4C000000 		.4byte	.LASF11
+ 739 0094 02       		.uleb128 0x2
+ 740 0095 08       		.byte	0x8
+ 741 0096 05       		.byte	0x5
+ 742 0097 63000000 		.4byte	.LASF12
+ 743 009b 02       		.uleb128 0x2
+ 744 009c 04       		.byte	0x4
+ 745 009d 04       		.byte	0x4
+ 746 009e 97020000 		.4byte	.LASF13
+ 747 00a2 02       		.uleb128 0x2
+ 748 00a3 08       		.byte	0x8
+ 749 00a4 04       		.byte	0x4
+ 750 00a5 62010000 		.4byte	.LASF14
+ 751 00a9 02       		.uleb128 0x2
+ 752 00aa 04       		.byte	0x4
+ 753 00ab 05       		.byte	0x5
+ 754 00ac 16010000 		.4byte	.LASF15
+ 755 00b0 02       		.uleb128 0x2
+ 756 00b1 04       		.byte	0x4
+ 757 00b2 07       		.byte	0x7
+ 758 00b3 E5010000 		.4byte	.LASF16
+ 759 00b7 02       		.uleb128 0x2
+ 760 00b8 08       		.byte	0x8
+ 761 00b9 04       		.byte	0x4
+ 762 00ba 6D020000 		.4byte	.LASF17
+ 763 00be 02       		.uleb128 0x2
+ 764 00bf 04       		.byte	0x4
+ 765 00c0 07       		.byte	0x7
+ 766 00c1 54020000 		.4byte	.LASF18
+ 767 00c5 05       		.uleb128 0x5
+ 768 00c6 F3030000 		.4byte	.LASF72
+ 769 00ca 08       		.byte	0x8
+ 770 00cb 03       		.byte	0x3
+ 771 00cc 4F       		.byte	0x4f
+ 772 00cd EA000000 		.4byte	0xea
+ 773 00d1 06       		.uleb128 0x6
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 21
+
+
+ 774 00d2 97010000 		.4byte	.LASF19
+ 775 00d6 03       		.byte	0x3
+ 776 00d7 50       		.byte	0x50
+ 777 00d8 7B000000 		.4byte	0x7b
+ 778 00dc 00       		.byte	0
+ 779 00dd 06       		.uleb128 0x6
+ 780 00de 15020000 		.4byte	.LASF20
+ 781 00e2 03       		.byte	0x3
+ 782 00e3 51       		.byte	0x51
+ 783 00e4 69000000 		.4byte	0x69
+ 784 00e8 04       		.byte	0x4
+ 785 00e9 00       		.byte	0
+ 786 00ea 03       		.uleb128 0x3
+ 787 00eb 9C010000 		.4byte	.LASF21
+ 788 00ef 03       		.byte	0x3
+ 789 00f0 52       		.byte	0x52
+ 790 00f1 C5000000 		.4byte	0xc5
+ 791 00f5 07       		.uleb128 0x7
+ 792 00f6 5D020000 		.4byte	.LASF36
+ 793 00fa 01       		.byte	0x1
+ 794 00fb 23       		.byte	0x23
+ 795 00fc 33000000 		.4byte	0x33
+ 796 0100 00000000 		.4byte	.LFB0
+ 797 0104 1C000000 		.4byte	.LFE0-.LFB0
+ 798 0108 01       		.uleb128 0x1
+ 799 0109 9C       		.byte	0x9c
+ 800 010a 55010000 		.4byte	0x155
+ 801 010e 08       		.uleb128 0x8
+ 802 010f 67030000 		.4byte	.LASF22
+ 803 0113 01       		.byte	0x1
+ 804 0114 23       		.byte	0x23
+ 805 0115 33000000 		.4byte	0x33
+ 806 0119 00000000 		.4byte	.LLST0
+ 807 011d 09       		.uleb128 0x9
+ 808 011e 08000000 		.4byte	.LVL1
+ 809 0122 FA050000 		.4byte	0x5fa
+ 810 0126 0A       		.uleb128 0xa
+ 811 0127 12000000 		.4byte	.LVL2
+ 812 012b 05060000 		.4byte	0x605
+ 813 012f 42010000 		.4byte	0x142
+ 814 0133 0B       		.uleb128 0xb
+ 815 0134 01       		.uleb128 0x1
+ 816 0135 50       		.byte	0x50
+ 817 0136 05       		.uleb128 0x5
+ 818 0137 74       		.byte	0x74
+ 819 0138 00       		.sleb128 0
+ 820 0139 08       		.byte	0x8
+ 821 013a 80       		.byte	0x80
+ 822 013b 21       		.byte	0x21
+ 823 013c 0B       		.uleb128 0xb
+ 824 013d 01       		.uleb128 0x1
+ 825 013e 51       		.byte	0x51
+ 826 013f 01       		.uleb128 0x1
+ 827 0140 32       		.byte	0x32
+ 828 0141 00       		.byte	0
+ 829 0142 09       		.uleb128 0x9
+ 830 0143 16000000 		.4byte	.LVL3
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 22
+
+
+ 831 0147 10060000 		.4byte	0x610
+ 832 014b 09       		.uleb128 0x9
+ 833 014c 1A000000 		.4byte	.LVL4
+ 834 0150 1B060000 		.4byte	0x61b
+ 835 0154 00       		.byte	0
+ 836 0155 0C       		.uleb128 0xc
+ 837 0156 A0000000 		.4byte	.LASF25
+ 838 015a 01       		.byte	0x1
+ 839 015b 48       		.byte	0x48
+ 840 015c 00000000 		.4byte	.LFB1
+ 841 0160 26000000 		.4byte	.LFE1-.LFB1
+ 842 0164 01       		.uleb128 0x1
+ 843 0165 9C       		.byte	0x9c
+ 844 0166 DD010000 		.4byte	0x1dd
+ 845 016a 08       		.uleb128 0x8
+ 846 016b 67030000 		.4byte	.LASF22
+ 847 016f 01       		.byte	0x1
+ 848 0170 48       		.byte	0x48
+ 849 0171 33000000 		.4byte	0x33
+ 850 0175 21000000 		.4byte	.LLST1
+ 851 0179 08       		.uleb128 0x8
+ 852 017a 3A020000 		.4byte	.LASF23
+ 853 017e 01       		.byte	0x1
+ 854 017f 48       		.byte	0x48
+ 855 0180 DD010000 		.4byte	0x1dd
+ 856 0184 42000000 		.4byte	.LLST2
+ 857 0188 08       		.uleb128 0x8
+ 858 0189 D3030000 		.4byte	.LASF24
+ 859 018d 01       		.byte	0x1
+ 860 018e 48       		.byte	0x48
+ 861 018f 33000000 		.4byte	0x33
+ 862 0193 60000000 		.4byte	.LLST3
+ 863 0197 09       		.uleb128 0x9
+ 864 0198 0C000000 		.4byte	.LVL6
+ 865 019c FA050000 		.4byte	0x5fa
+ 866 01a0 0A       		.uleb128 0xa
+ 867 01a1 18000000 		.4byte	.LVL7
+ 868 01a5 05060000 		.4byte	0x605
+ 869 01a9 BD010000 		.4byte	0x1bd
+ 870 01ad 0B       		.uleb128 0xb
+ 871 01ae 01       		.uleb128 0x1
+ 872 01af 50       		.byte	0x50
+ 873 01b0 05       		.uleb128 0x5
+ 874 01b1 76       		.byte	0x76
+ 875 01b2 00       		.sleb128 0
+ 876 01b3 08       		.byte	0x8
+ 877 01b4 80       		.byte	0x80
+ 878 01b5 21       		.byte	0x21
+ 879 01b6 0B       		.uleb128 0xb
+ 880 01b7 01       		.uleb128 0x1
+ 881 01b8 51       		.byte	0x51
+ 882 01b9 02       		.uleb128 0x2
+ 883 01ba 74       		.byte	0x74
+ 884 01bb 01       		.sleb128 1
+ 885 01bc 00       		.byte	0
+ 886 01bd 09       		.uleb128 0x9
+ 887 01be 1C000000 		.4byte	.LVL8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 23
+
+
+ 888 01c2 10060000 		.4byte	0x610
+ 889 01c6 0D       		.uleb128 0xd
+ 890 01c7 24000000 		.4byte	.LVL9
+ 891 01cb 26060000 		.4byte	0x626
+ 892 01cf 0B       		.uleb128 0xb
+ 893 01d0 01       		.uleb128 0x1
+ 894 01d1 50       		.byte	0x50
+ 895 01d2 02       		.uleb128 0x2
+ 896 01d3 75       		.byte	0x75
+ 897 01d4 00       		.sleb128 0
+ 898 01d5 0B       		.uleb128 0xb
+ 899 01d6 01       		.uleb128 0x1
+ 900 01d7 51       		.byte	0x51
+ 901 01d8 02       		.uleb128 0x2
+ 902 01d9 74       		.byte	0x74
+ 903 01da 00       		.sleb128 0
+ 904 01db 00       		.byte	0
+ 905 01dc 00       		.byte	0
+ 906 01dd 0E       		.uleb128 0xe
+ 907 01de 04       		.byte	0x4
+ 908 01df 33000000 		.4byte	0x33
+ 909 01e3 0C       		.uleb128 0xc
+ 910 01e4 07040000 		.4byte	.LASF26
+ 911 01e8 01       		.byte	0x1
+ 912 01e9 65       		.byte	0x65
+ 913 01ea 00000000 		.4byte	.LFB2
+ 914 01ee 18000000 		.4byte	.LFE2-.LFB2
+ 915 01f2 01       		.uleb128 0x1
+ 916 01f3 9C       		.byte	0x9c
+ 917 01f4 3F020000 		.4byte	0x23f
+ 918 01f8 08       		.uleb128 0x8
+ 919 01f9 67030000 		.4byte	.LASF22
+ 920 01fd 01       		.byte	0x1
+ 921 01fe 65       		.byte	0x65
+ 922 01ff 33000000 		.4byte	0x33
+ 923 0203 81000000 		.4byte	.LLST4
+ 924 0207 08       		.uleb128 0x8
+ 925 0208 10000000 		.4byte	.LASF27
+ 926 020c 01       		.byte	0x1
+ 927 020d 65       		.byte	0x65
+ 928 020e 33000000 		.4byte	0x33
+ 929 0212 A2000000 		.4byte	.LLST5
+ 930 0216 0A       		.uleb128 0xa
+ 931 0217 0E000000 		.4byte	.LVL13
+ 932 021b 05060000 		.4byte	0x605
+ 933 021f 29020000 		.4byte	0x229
+ 934 0223 0B       		.uleb128 0xb
+ 935 0224 01       		.uleb128 0x1
+ 936 0225 51       		.byte	0x51
+ 937 0226 01       		.uleb128 0x1
+ 938 0227 31       		.byte	0x31
+ 939 0228 00       		.byte	0
+ 940 0229 0D       		.uleb128 0xd
+ 941 022a 16000000 		.4byte	.LVL14
+ 942 022e 05060000 		.4byte	0x605
+ 943 0232 0B       		.uleb128 0xb
+ 944 0233 01       		.uleb128 0x1
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 24
+
+
+ 945 0234 50       		.byte	0x50
+ 946 0235 02       		.uleb128 0x2
+ 947 0236 74       		.byte	0x74
+ 948 0237 00       		.sleb128 0
+ 949 0238 0B       		.uleb128 0xb
+ 950 0239 01       		.uleb128 0x1
+ 951 023a 51       		.byte	0x51
+ 952 023b 01       		.uleb128 0x1
+ 953 023c 31       		.byte	0x31
+ 954 023d 00       		.byte	0
+ 955 023e 00       		.byte	0
+ 956 023f 0C       		.uleb128 0xc
+ 957 0240 85010000 		.4byte	.LASF28
+ 958 0244 01       		.byte	0x1
+ 959 0245 81       		.byte	0x81
+ 960 0246 00000000 		.4byte	.LFB3
+ 961 024a 5A000000 		.4byte	.LFE3-.LFB3
+ 962 024e 01       		.uleb128 0x1
+ 963 024f 9C       		.byte	0x9c
+ 964 0250 4B030000 		.4byte	0x34b
+ 965 0254 08       		.uleb128 0x8
+ 966 0255 BC020000 		.4byte	.LASF29
+ 967 0259 01       		.byte	0x1
+ 968 025a 81       		.byte	0x81
+ 969 025b 33000000 		.4byte	0x33
+ 970 025f C3000000 		.4byte	.LLST6
+ 971 0263 08       		.uleb128 0x8
+ 972 0264 B5020000 		.4byte	.LASF30
+ 973 0268 01       		.byte	0x1
+ 974 0269 81       		.byte	0x81
+ 975 026a 33000000 		.4byte	0x33
+ 976 026e E4000000 		.4byte	.LLST7
+ 977 0272 08       		.uleb128 0x8
+ 978 0273 8C020000 		.4byte	.LASF31
+ 979 0277 01       		.byte	0x1
+ 980 0278 82       		.byte	0x82
+ 981 0279 33000000 		.4byte	0x33
+ 982 027d 05010000 		.4byte	.LLST8
+ 983 0281 08       		.uleb128 0x8
+ 984 0282 D1010000 		.4byte	.LASF32
+ 985 0286 01       		.byte	0x1
+ 986 0287 82       		.byte	0x82
+ 987 0288 33000000 		.4byte	0x33
+ 988 028c 26010000 		.4byte	.LLST9
+ 989 0290 0F       		.uleb128 0xf
+ 990 0291 CC030000 		.4byte	.LASF33
+ 991 0295 01       		.byte	0x1
+ 992 0296 83       		.byte	0x83
+ 993 0297 33000000 		.4byte	0x33
+ 994 029b 02       		.uleb128 0x2
+ 995 029c 91       		.byte	0x91
+ 996 029d 00       		.sleb128 0
+ 997 029e 0F       		.uleb128 0xf
+ 998 029f 1D000000 		.4byte	.LASF34
+ 999 02a3 01       		.byte	0x1
+ 1000 02a4 83       		.byte	0x83
+ 1001 02a5 33000000 		.4byte	0x33
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 25
+
+
+ 1002 02a9 02       		.uleb128 0x2
+ 1003 02aa 91       		.byte	0x91
+ 1004 02ab 04       		.sleb128 4
+ 1005 02ac 09       		.uleb128 0x9
+ 1006 02ad 0E000000 		.4byte	.LVL16
+ 1007 02b1 FA050000 		.4byte	0x5fa
+ 1008 02b5 0A       		.uleb128 0xa
+ 1009 02b6 20000000 		.4byte	.LVL17
+ 1010 02ba E3010000 		.4byte	0x1e3
+ 1011 02be D2020000 		.4byte	0x2d2
+ 1012 02c2 0B       		.uleb128 0xb
+ 1013 02c3 01       		.uleb128 0x1
+ 1014 02c4 50       		.byte	0x50
+ 1015 02c5 02       		.uleb128 0x2
+ 1016 02c6 09       		.byte	0x9
+ 1017 02c7 F4       		.byte	0xf4
+ 1018 02c8 0B       		.uleb128 0xb
+ 1019 02c9 01       		.uleb128 0x1
+ 1020 02ca 51       		.byte	0x51
+ 1021 02cb 05       		.uleb128 0x5
+ 1022 02cc 74       		.byte	0x74
+ 1023 02cd 00       		.sleb128 0
+ 1024 02ce 08       		.byte	0x8
+ 1025 02cf FC       		.byte	0xfc
+ 1026 02d0 1A       		.byte	0x1a
+ 1027 02d1 00       		.byte	0
+ 1028 02d2 09       		.uleb128 0x9
+ 1029 02d3 24000000 		.4byte	.LVL18
+ 1030 02d7 10060000 		.4byte	0x610
+ 1031 02db 09       		.uleb128 0x9
+ 1032 02dc 28000000 		.4byte	.LVL19
+ 1033 02e0 FA050000 		.4byte	0x5fa
+ 1034 02e4 0A       		.uleb128 0xa
+ 1035 02e5 40000000 		.4byte	.LVL20
+ 1036 02e9 E3010000 		.4byte	0x1e3
+ 1037 02ed 12030000 		.4byte	0x312
+ 1038 02f1 0B       		.uleb128 0xb
+ 1039 02f2 01       		.uleb128 0x1
+ 1040 02f3 50       		.byte	0x50
+ 1041 02f4 02       		.uleb128 0x2
+ 1042 02f5 09       		.byte	0x9
+ 1043 02f6 F5       		.byte	0xf5
+ 1044 02f7 0B       		.uleb128 0xb
+ 1045 02f8 01       		.uleb128 0x1
+ 1046 02f9 51       		.byte	0x51
+ 1047 02fa 16       		.uleb128 0x16
+ 1048 02fb 77       		.byte	0x77
+ 1049 02fc 00       		.sleb128 0
+ 1050 02fd 35       		.byte	0x35
+ 1051 02fe 24       		.byte	0x24
+ 1052 02ff 91       		.byte	0x91
+ 1053 0300 00       		.sleb128 0
+ 1054 0301 94       		.byte	0x94
+ 1055 0302 01       		.byte	0x1
+ 1056 0303 08       		.byte	0x8
+ 1057 0304 FF       		.byte	0xff
+ 1058 0305 1A       		.byte	0x1a
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 26
+
+
+ 1059 0306 32       		.byte	0x32
+ 1060 0307 24       		.byte	0x24
+ 1061 0308 21       		.byte	0x21
+ 1062 0309 91       		.byte	0x91
+ 1063 030a 04       		.sleb128 4
+ 1064 030b 94       		.byte	0x94
+ 1065 030c 01       		.byte	0x1
+ 1066 030d 08       		.byte	0x8
+ 1067 030e FF       		.byte	0xff
+ 1068 030f 1A       		.byte	0x1a
+ 1069 0310 21       		.byte	0x21
+ 1070 0311 00       		.byte	0
+ 1071 0312 09       		.uleb128 0x9
+ 1072 0313 44000000 		.4byte	.LVL21
+ 1073 0317 10060000 		.4byte	0x610
+ 1074 031b 09       		.uleb128 0x9
+ 1075 031c 48000000 		.4byte	.LVL22
+ 1076 0320 FA050000 		.4byte	0x5fa
+ 1077 0324 0A       		.uleb128 0xa
+ 1078 0325 54000000 		.4byte	.LVL23
+ 1079 0329 E3010000 		.4byte	0x1e3
+ 1080 032d 41030000 		.4byte	0x341
+ 1081 0331 0B       		.uleb128 0xb
+ 1082 0332 01       		.uleb128 0x1
+ 1083 0333 50       		.byte	0x50
+ 1084 0334 02       		.uleb128 0x2
+ 1085 0335 09       		.byte	0x9
+ 1086 0336 F4       		.byte	0xf4
+ 1087 0337 0B       		.uleb128 0xb
+ 1088 0338 01       		.uleb128 0x1
+ 1089 0339 51       		.byte	0x51
+ 1090 033a 05       		.uleb128 0x5
+ 1091 033b 74       		.byte	0x74
+ 1092 033c 00       		.sleb128 0
+ 1093 033d 76       		.byte	0x76
+ 1094 033e 00       		.sleb128 0
+ 1095 033f 21       		.byte	0x21
+ 1096 0340 00       		.byte	0
+ 1097 0341 09       		.uleb128 0x9
+ 1098 0342 58000000 		.4byte	.LVL24
+ 1099 0346 10060000 		.4byte	0x610
+ 1100 034a 00       		.byte	0
+ 1101 034b 0C       		.uleb128 0xc
+ 1102 034c 7D000000 		.4byte	.LASF35
+ 1103 0350 01       		.byte	0x1
+ 1104 0351 B3       		.byte	0xb3
+ 1105 0352 00000000 		.4byte	.LFB4
+ 1106 0356 2A000000 		.4byte	.LFE4-.LFB4
+ 1107 035a 01       		.uleb128 0x1
+ 1108 035b 9C       		.byte	0x9c
+ 1109 035c B6030000 		.4byte	0x3b6
+ 1110 0360 10       		.uleb128 0x10
+ 1111 0361 C7010000 		.4byte	.LASF41
+ 1112 0365 01       		.byte	0x1
+ 1113 0366 B5       		.byte	0xb5
+ 1114 0367 33000000 		.4byte	0x33
+ 1115 036b 47010000 		.4byte	.LLST10
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 27
+
+
+ 1116 036f 09       		.uleb128 0x9
+ 1117 0370 08000000 		.4byte	.LVL27
+ 1118 0374 FA050000 		.4byte	0x5fa
+ 1119 0378 0A       		.uleb128 0xa
+ 1120 0379 10000000 		.4byte	.LVL28
+ 1121 037d 05060000 		.4byte	0x605
+ 1122 0381 91030000 		.4byte	0x391
+ 1123 0385 0B       		.uleb128 0xb
+ 1124 0386 01       		.uleb128 0x1
+ 1125 0387 50       		.byte	0x50
+ 1126 0388 02       		.uleb128 0x2
+ 1127 0389 09       		.byte	0x9
+ 1128 038a D0       		.byte	0xd0
+ 1129 038b 0B       		.uleb128 0xb
+ 1130 038c 01       		.uleb128 0x1
+ 1131 038d 51       		.byte	0x51
+ 1132 038e 01       		.uleb128 0x1
+ 1133 038f 32       		.byte	0x32
+ 1134 0390 00       		.byte	0
+ 1135 0391 09       		.uleb128 0x9
+ 1136 0392 14000000 		.4byte	.LVL29
+ 1137 0396 10060000 		.4byte	0x610
+ 1138 039a 09       		.uleb128 0x9
+ 1139 039b 18000000 		.4byte	.LVL30
+ 1140 039f 31060000 		.4byte	0x631
+ 1141 03a3 09       		.uleb128 0x9
+ 1142 03a4 1E000000 		.4byte	.LVL31
+ 1143 03a8 3C060000 		.4byte	0x63c
+ 1144 03ac 09       		.uleb128 0x9
+ 1145 03ad 22000000 		.4byte	.LVL32
+ 1146 03b1 3C060000 		.4byte	0x63c
+ 1147 03b5 00       		.byte	0
+ 1148 03b6 07       		.uleb128 0x7
+ 1149 03b7 79020000 		.4byte	.LASF37
+ 1150 03bb 01       		.byte	0x1
+ 1151 03bc D6       		.byte	0xd6
+ 1152 03bd 33000000 		.4byte	0x33
+ 1153 03c1 00000000 		.4byte	.LFB5
+ 1154 03c5 0A000000 		.4byte	.LFE5-.LFB5
+ 1155 03c9 01       		.uleb128 0x1
+ 1156 03ca 9C       		.byte	0x9c
+ 1157 03cb E0030000 		.4byte	0x3e0
+ 1158 03cf 0D       		.uleb128 0xd
+ 1159 03d0 08000000 		.4byte	.LVL34
+ 1160 03d4 F5000000 		.4byte	0xf5
+ 1161 03d8 0B       		.uleb128 0xb
+ 1162 03d9 01       		.uleb128 0x1
+ 1163 03da 50       		.byte	0x50
+ 1164 03db 02       		.uleb128 0x2
+ 1165 03dc 09       		.byte	0x9
+ 1166 03dd D0       		.byte	0xd0
+ 1167 03de 00       		.byte	0
+ 1168 03df 00       		.byte	0
+ 1169 03e0 0C       		.uleb128 0xc
+ 1170 03e1 18040000 		.4byte	.LASF38
+ 1171 03e5 01       		.byte	0x1
+ 1172 03e6 ED       		.byte	0xed
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 28
+
+
+ 1173 03e7 00000000 		.4byte	.LFB6
+ 1174 03eb 0E000000 		.4byte	.LFE6-.LFB6
+ 1175 03ef 01       		.uleb128 0x1
+ 1176 03f0 9C       		.byte	0x9c
+ 1177 03f1 21040000 		.4byte	0x421
+ 1178 03f5 08       		.uleb128 0x8
+ 1179 03f6 3A020000 		.4byte	.LASF23
+ 1180 03fa 01       		.byte	0x1
+ 1181 03fb ED       		.byte	0xed
+ 1182 03fc DD010000 		.4byte	0x1dd
+ 1183 0400 66010000 		.4byte	.LLST11
+ 1184 0404 0D       		.uleb128 0xd
+ 1185 0405 0C000000 		.4byte	.LVL37
+ 1186 0409 55010000 		.4byte	0x155
+ 1187 040d 0B       		.uleb128 0xb
+ 1188 040e 01       		.uleb128 0x1
+ 1189 040f 50       		.byte	0x50
+ 1190 0410 02       		.uleb128 0x2
+ 1191 0411 09       		.byte	0x9
+ 1192 0412 F7       		.byte	0xf7
+ 1193 0413 0B       		.uleb128 0xb
+ 1194 0414 01       		.uleb128 0x1
+ 1195 0415 51       		.byte	0x51
+ 1196 0416 03       		.uleb128 0x3
+ 1197 0417 F3       		.byte	0xf3
+ 1198 0418 01       		.uleb128 0x1
+ 1199 0419 50       		.byte	0x50
+ 1200 041a 0B       		.uleb128 0xb
+ 1201 041b 01       		.uleb128 0x1
+ 1202 041c 52       		.byte	0x52
+ 1203 041d 01       		.uleb128 0x1
+ 1204 041e 36       		.byte	0x36
+ 1205 041f 00       		.byte	0
+ 1206 0420 00       		.byte	0
+ 1207 0421 11       		.uleb128 0x11
+ 1208 0422 36010000 		.4byte	.LASF39
+ 1209 0426 01       		.byte	0x1
+ 1210 0427 0401     		.2byte	0x104
+ 1211 0429 00000000 		.4byte	.LFB7
+ 1212 042d 0E000000 		.4byte	.LFE7-.LFB7
+ 1213 0431 01       		.uleb128 0x1
+ 1214 0432 9C       		.byte	0x9c
+ 1215 0433 64040000 		.4byte	0x464
+ 1216 0437 12       		.uleb128 0x12
+ 1217 0438 3A020000 		.4byte	.LASF23
+ 1218 043c 01       		.byte	0x1
+ 1219 043d 0401     		.2byte	0x104
+ 1220 043f DD010000 		.4byte	0x1dd
+ 1221 0443 92010000 		.4byte	.LLST12
+ 1222 0447 0D       		.uleb128 0xd
+ 1223 0448 0C000000 		.4byte	.LVL40
+ 1224 044c 55010000 		.4byte	0x155
+ 1225 0450 0B       		.uleb128 0xb
+ 1226 0451 01       		.uleb128 0x1
+ 1227 0452 50       		.byte	0x50
+ 1228 0453 02       		.uleb128 0x2
+ 1229 0454 09       		.byte	0x9
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 29
+
+
+ 1230 0455 88       		.byte	0x88
+ 1231 0456 0B       		.uleb128 0xb
+ 1232 0457 01       		.uleb128 0x1
+ 1233 0458 51       		.byte	0x51
+ 1234 0459 03       		.uleb128 0x3
+ 1235 045a F3       		.byte	0xf3
+ 1236 045b 01       		.uleb128 0x1
+ 1237 045c 50       		.byte	0x50
+ 1238 045d 0B       		.uleb128 0xb
+ 1239 045e 01       		.uleb128 0x1
+ 1240 045f 52       		.byte	0x52
+ 1241 0460 01       		.uleb128 0x1
+ 1242 0461 48       		.byte	0x48
+ 1243 0462 00       		.byte	0
+ 1244 0463 00       		.byte	0
+ 1245 0464 13       		.uleb128 0x13
+ 1246 0465 51030000 		.4byte	.LASF40
+ 1247 0469 01       		.byte	0x1
+ 1248 046a 1A01     		.2byte	0x11a
+ 1249 046c EA000000 		.4byte	0xea
+ 1250 0470 00000000 		.4byte	.LFB8
+ 1251 0474 40020000 		.4byte	.LFE8-.LFB8
+ 1252 0478 01       		.uleb128 0x1
+ 1253 0479 9C       		.byte	0x9c
+ 1254 047a DA050000 		.4byte	0x5da
+ 1255 047e 14       		.uleb128 0x14
+ 1256 047f 45020000 		.4byte	.LASF42
+ 1257 0483 01       		.byte	0x1
+ 1258 0484 1C01     		.2byte	0x11c
+ 1259 0486 DA050000 		.4byte	0x5da
+ 1260 048a 02       		.uleb128 0x2
+ 1261 048b 91       		.byte	0x91
+ 1262 048c 50       		.sleb128 -48
+ 1263 048d 14       		.uleb128 0x14
+ 1264 048e C2030000 		.4byte	.LASF43
+ 1265 0492 01       		.byte	0x1
+ 1266 0493 1D01     		.2byte	0x11d
+ 1267 0495 EA050000 		.4byte	0x5ea
+ 1268 0499 03       		.uleb128 0x3
+ 1269 049a 91       		.byte	0x91
+ 1270 049b B87F     		.sleb128 -72
+ 1271 049d 15       		.uleb128 0x15
+ 1272 049e BF000000 		.4byte	.LASF44
+ 1273 04a2 01       		.byte	0x1
+ 1274 04a3 1F01     		.2byte	0x11f
+ 1275 04a5 69000000 		.4byte	0x69
+ 1276 04a9 BE010000 		.4byte	.LLST13
+ 1277 04ad 15       		.uleb128 0x15
+ 1278 04ae 70010000 		.4byte	.LASF45
+ 1279 04b2 01       		.byte	0x1
+ 1280 04b3 2001     		.2byte	0x120
+ 1281 04b5 45000000 		.4byte	0x45
+ 1282 04b9 F9010000 		.4byte	.LLST14
+ 1283 04bd 15       		.uleb128 0x15
+ 1284 04be 77010000 		.4byte	.LASF46
+ 1285 04c2 01       		.byte	0x1
+ 1286 04c3 2101     		.2byte	0x121
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 30
+
+
+ 1287 04c5 57000000 		.4byte	0x57
+ 1288 04c9 47020000 		.4byte	.LLST15
+ 1289 04cd 15       		.uleb128 0x15
+ 1290 04ce 7E010000 		.4byte	.LASF47
+ 1291 04d2 01       		.byte	0x1
+ 1292 04d3 2201     		.2byte	0x122
+ 1293 04d5 57000000 		.4byte	0x57
+ 1294 04d9 78020000 		.4byte	.LLST16
+ 1295 04dd 15       		.uleb128 0x15
+ 1296 04de DB010000 		.4byte	.LASF48
+ 1297 04e2 01       		.byte	0x1
+ 1298 04e3 2301     		.2byte	0x123
+ 1299 04e5 7B000000 		.4byte	0x7b
+ 1300 04e9 A9020000 		.4byte	.LLST17
+ 1301 04ed 15       		.uleb128 0x15
+ 1302 04ee E0010000 		.4byte	.LASF49
+ 1303 04f2 01       		.byte	0x1
+ 1304 04f3 2301     		.2byte	0x123
+ 1305 04f5 7B000000 		.4byte	0x7b
+ 1306 04f9 CA050000 		.4byte	.LLST18
+ 1307 04fd 15       		.uleb128 0x15
+ 1308 04fe 00000000 		.4byte	.LASF50
+ 1309 0502 01       		.byte	0x1
+ 1310 0503 2301     		.2byte	0x123
+ 1311 0505 7B000000 		.4byte	0x7b
+ 1312 0509 58070000 		.4byte	.LLST19
+ 1313 050d 15       		.uleb128 0x15
+ 1314 050e B9000000 		.4byte	.LASF51
+ 1315 0512 01       		.byte	0x1
+ 1316 0513 2501     		.2byte	0x125
+ 1317 0515 69000000 		.4byte	0x69
+ 1318 0519 3C090000 		.4byte	.LLST20
+ 1319 051d 15       		.uleb128 0x15
+ 1320 051e 85030000 		.4byte	.LASF52
+ 1321 0522 01       		.byte	0x1
+ 1322 0523 2601     		.2byte	0x126
+ 1323 0525 45000000 		.4byte	0x45
+ 1324 0529 85090000 		.4byte	.LLST21
+ 1325 052d 14       		.uleb128 0x14
+ 1326 052e 69010000 		.4byte	.LASF53
+ 1327 0532 01       		.byte	0x1
+ 1328 0533 2701     		.2byte	0x127
+ 1329 0535 57000000 		.4byte	0x57
+ 1330 0539 01       		.uleb128 0x1
+ 1331 053a 5E       		.byte	0x5e
+ 1332 053b 14       		.uleb128 0x14
+ 1333 053c 91030000 		.4byte	.LASF54
+ 1334 0540 01       		.byte	0x1
+ 1335 0541 2801     		.2byte	0x128
+ 1336 0543 57000000 		.4byte	0x57
+ 1337 0547 01       		.uleb128 0x1
+ 1338 0548 59       		.byte	0x59
+ 1339 0549 15       		.uleb128 0x15
+ 1340 054a 98030000 		.4byte	.LASF55
+ 1341 054e 01       		.byte	0x1
+ 1342 054f 2901     		.2byte	0x129
+ 1343 0551 57000000 		.4byte	0x57
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 31
+
+
+ 1344 0555 B6090000 		.4byte	.LLST22
+ 1345 0559 15       		.uleb128 0x15
+ 1346 055a 9F030000 		.4byte	.LASF56
+ 1347 055e 01       		.byte	0x1
+ 1348 055f 2A01     		.2byte	0x12a
+ 1349 0561 57000000 		.4byte	0x57
+ 1350 0565 E5090000 		.4byte	.LLST23
+ 1351 0569 14       		.uleb128 0x14
+ 1352 056a A6030000 		.4byte	.LASF57
+ 1353 056e 01       		.byte	0x1
+ 1354 056f 2B01     		.2byte	0x12b
+ 1355 0571 57000000 		.4byte	0x57
+ 1356 0575 01       		.uleb128 0x1
+ 1357 0576 5B       		.byte	0x5b
+ 1358 0577 14       		.uleb128 0x14
+ 1359 0578 AD030000 		.4byte	.LASF58
+ 1360 057c 01       		.byte	0x1
+ 1361 057d 2C01     		.2byte	0x12c
+ 1362 057f 57000000 		.4byte	0x57
+ 1363 0583 01       		.uleb128 0x1
+ 1364 0584 56       		.byte	0x56
+ 1365 0585 15       		.uleb128 0x15
+ 1366 0586 B4030000 		.4byte	.LASF59
+ 1367 058a 01       		.byte	0x1
+ 1368 058b 2D01     		.2byte	0x12d
+ 1369 058d 57000000 		.4byte	0x57
+ 1370 0591 140A0000 		.4byte	.LLST24
+ 1371 0595 15       		.uleb128 0x15
+ 1372 0596 BB030000 		.4byte	.LASF60
+ 1373 059a 01       		.byte	0x1
+ 1374 059b 2E01     		.2byte	0x12e
+ 1375 059d 57000000 		.4byte	0x57
+ 1376 05a1 430A0000 		.4byte	.LLST25
+ 1377 05a5 15       		.uleb128 0x15
+ 1378 05a6 94000000 		.4byte	.LASF61
+ 1379 05aa 01       		.byte	0x1
+ 1380 05ab 3001     		.2byte	0x130
+ 1381 05ad EA000000 		.4byte	0xea
+ 1382 05b1 720A0000 		.4byte	.LLST26
+ 1383 05b5 0A       		.uleb128 0xa
+ 1384 05b6 22000000 		.4byte	.LVL43
+ 1385 05ba E0030000 		.4byte	0x3e0
+ 1386 05be C9050000 		.4byte	0x5c9
+ 1387 05c2 0B       		.uleb128 0xb
+ 1388 05c3 01       		.uleb128 0x1
+ 1389 05c4 50       		.byte	0x50
+ 1390 05c5 02       		.uleb128 0x2
+ 1391 05c6 91       		.byte	0x91
+ 1392 05c7 50       		.sleb128 -48
+ 1393 05c8 00       		.byte	0
+ 1394 05c9 0D       		.uleb128 0xd
+ 1395 05ca 28000000 		.4byte	.LVL44
+ 1396 05ce 21040000 		.4byte	0x421
+ 1397 05d2 0B       		.uleb128 0xb
+ 1398 05d3 01       		.uleb128 0x1
+ 1399 05d4 50       		.byte	0x50
+ 1400 05d5 02       		.uleb128 0x2
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 32
+
+
+ 1401 05d6 7D       		.byte	0x7d
+ 1402 05d7 00       		.sleb128 0
+ 1403 05d8 00       		.byte	0
+ 1404 05d9 00       		.byte	0
+ 1405 05da 16       		.uleb128 0x16
+ 1406 05db 33000000 		.4byte	0x33
+ 1407 05df EA050000 		.4byte	0x5ea
+ 1408 05e3 17       		.uleb128 0x17
+ 1409 05e4 BE000000 		.4byte	0xbe
+ 1410 05e8 05       		.byte	0x5
+ 1411 05e9 00       		.byte	0
+ 1412 05ea 16       		.uleb128 0x16
+ 1413 05eb 33000000 		.4byte	0x33
+ 1414 05ef FA050000 		.4byte	0x5fa
+ 1415 05f3 17       		.uleb128 0x17
+ 1416 05f4 BE000000 		.4byte	0xbe
+ 1417 05f8 17       		.byte	0x17
+ 1418 05f9 00       		.byte	0
+ 1419 05fa 18       		.uleb128 0x18
+ 1420 05fb 48010000 		.4byte	.LASF62
+ 1421 05ff 48010000 		.4byte	.LASF62
+ 1422 0603 04       		.byte	0x4
+ 1423 0604 12       		.byte	0x12
+ 1424 0605 18       		.uleb128 0x18
+ 1425 0606 74030000 		.4byte	.LASF63
+ 1426 060a 74030000 		.4byte	.LASF63
+ 1427 060e 04       		.byte	0x4
+ 1428 060f 13       		.byte	0x13
+ 1429 0610 18       		.uleb128 0x18
+ 1430 0611 AE010000 		.4byte	.LASF64
+ 1431 0615 AE010000 		.4byte	.LASF64
+ 1432 0619 04       		.byte	0x4
+ 1433 061a 14       		.byte	0x14
+ 1434 061b 18       		.uleb128 0x18
+ 1435 061c 1B020000 		.4byte	.LASF65
+ 1436 0620 1B020000 		.4byte	.LASF65
+ 1437 0624 04       		.byte	0x4
+ 1438 0625 15       		.byte	0x15
+ 1439 0626 18       		.uleb128 0x18
+ 1440 0627 3C000000 		.4byte	.LASF66
+ 1441 062b 3C000000 		.4byte	.LASF66
+ 1442 062f 04       		.byte	0x4
+ 1443 0630 16       		.byte	0x16
+ 1444 0631 18       		.uleb128 0x18
+ 1445 0632 1F010000 		.4byte	.LASF67
+ 1446 0636 1F010000 		.4byte	.LASF67
+ 1447 063a 05       		.byte	0x5
+ 1448 063b 62       		.byte	0x62
+ 1449 063c 18       		.uleb128 0x18
+ 1450 063d 28020000 		.4byte	.LASF68
+ 1451 0641 28020000 		.4byte	.LASF68
+ 1452 0645 05       		.byte	0x5
+ 1453 0646 60       		.byte	0x60
+ 1454 0647 00       		.byte	0
+ 1455              		.section	.debug_abbrev,"",%progbits
+ 1456              	.Ldebug_abbrev0:
+ 1457 0000 01       		.uleb128 0x1
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 33
+
+
+ 1458 0001 11       		.uleb128 0x11
+ 1459 0002 01       		.byte	0x1
+ 1460 0003 25       		.uleb128 0x25
+ 1461 0004 0E       		.uleb128 0xe
+ 1462 0005 13       		.uleb128 0x13
+ 1463 0006 0B       		.uleb128 0xb
+ 1464 0007 03       		.uleb128 0x3
+ 1465 0008 0E       		.uleb128 0xe
+ 1466 0009 1B       		.uleb128 0x1b
+ 1467 000a 0E       		.uleb128 0xe
+ 1468 000b 55       		.uleb128 0x55
+ 1469 000c 17       		.uleb128 0x17
+ 1470 000d 11       		.uleb128 0x11
+ 1471 000e 01       		.uleb128 0x1
+ 1472 000f 10       		.uleb128 0x10
+ 1473 0010 17       		.uleb128 0x17
+ 1474 0011 00       		.byte	0
+ 1475 0012 00       		.byte	0
+ 1476 0013 02       		.uleb128 0x2
+ 1477 0014 24       		.uleb128 0x24
+ 1478 0015 00       		.byte	0
+ 1479 0016 0B       		.uleb128 0xb
+ 1480 0017 0B       		.uleb128 0xb
+ 1481 0018 3E       		.uleb128 0x3e
+ 1482 0019 0B       		.uleb128 0xb
+ 1483 001a 03       		.uleb128 0x3
+ 1484 001b 0E       		.uleb128 0xe
+ 1485 001c 00       		.byte	0
+ 1486 001d 00       		.byte	0
+ 1487 001e 03       		.uleb128 0x3
+ 1488 001f 16       		.uleb128 0x16
+ 1489 0020 00       		.byte	0
+ 1490 0021 03       		.uleb128 0x3
+ 1491 0022 0E       		.uleb128 0xe
+ 1492 0023 3A       		.uleb128 0x3a
+ 1493 0024 0B       		.uleb128 0xb
+ 1494 0025 3B       		.uleb128 0x3b
+ 1495 0026 0B       		.uleb128 0xb
+ 1496 0027 49       		.uleb128 0x49
+ 1497 0028 13       		.uleb128 0x13
+ 1498 0029 00       		.byte	0
+ 1499 002a 00       		.byte	0
+ 1500 002b 04       		.uleb128 0x4
+ 1501 002c 24       		.uleb128 0x24
+ 1502 002d 00       		.byte	0
+ 1503 002e 0B       		.uleb128 0xb
+ 1504 002f 0B       		.uleb128 0xb
+ 1505 0030 3E       		.uleb128 0x3e
+ 1506 0031 0B       		.uleb128 0xb
+ 1507 0032 03       		.uleb128 0x3
+ 1508 0033 08       		.uleb128 0x8
+ 1509 0034 00       		.byte	0
+ 1510 0035 00       		.byte	0
+ 1511 0036 05       		.uleb128 0x5
+ 1512 0037 13       		.uleb128 0x13
+ 1513 0038 01       		.byte	0x1
+ 1514 0039 03       		.uleb128 0x3
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 34
+
+
+ 1515 003a 0E       		.uleb128 0xe
+ 1516 003b 0B       		.uleb128 0xb
+ 1517 003c 0B       		.uleb128 0xb
+ 1518 003d 3A       		.uleb128 0x3a
+ 1519 003e 0B       		.uleb128 0xb
+ 1520 003f 3B       		.uleb128 0x3b
+ 1521 0040 0B       		.uleb128 0xb
+ 1522 0041 01       		.uleb128 0x1
+ 1523 0042 13       		.uleb128 0x13
+ 1524 0043 00       		.byte	0
+ 1525 0044 00       		.byte	0
+ 1526 0045 06       		.uleb128 0x6
+ 1527 0046 0D       		.uleb128 0xd
+ 1528 0047 00       		.byte	0
+ 1529 0048 03       		.uleb128 0x3
+ 1530 0049 0E       		.uleb128 0xe
+ 1531 004a 3A       		.uleb128 0x3a
+ 1532 004b 0B       		.uleb128 0xb
+ 1533 004c 3B       		.uleb128 0x3b
+ 1534 004d 0B       		.uleb128 0xb
+ 1535 004e 49       		.uleb128 0x49
+ 1536 004f 13       		.uleb128 0x13
+ 1537 0050 38       		.uleb128 0x38
+ 1538 0051 0B       		.uleb128 0xb
+ 1539 0052 00       		.byte	0
+ 1540 0053 00       		.byte	0
+ 1541 0054 07       		.uleb128 0x7
+ 1542 0055 2E       		.uleb128 0x2e
+ 1543 0056 01       		.byte	0x1
+ 1544 0057 3F       		.uleb128 0x3f
+ 1545 0058 19       		.uleb128 0x19
+ 1546 0059 03       		.uleb128 0x3
+ 1547 005a 0E       		.uleb128 0xe
+ 1548 005b 3A       		.uleb128 0x3a
+ 1549 005c 0B       		.uleb128 0xb
+ 1550 005d 3B       		.uleb128 0x3b
+ 1551 005e 0B       		.uleb128 0xb
+ 1552 005f 27       		.uleb128 0x27
+ 1553 0060 19       		.uleb128 0x19
+ 1554 0061 49       		.uleb128 0x49
+ 1555 0062 13       		.uleb128 0x13
+ 1556 0063 11       		.uleb128 0x11
+ 1557 0064 01       		.uleb128 0x1
+ 1558 0065 12       		.uleb128 0x12
+ 1559 0066 06       		.uleb128 0x6
+ 1560 0067 40       		.uleb128 0x40
+ 1561 0068 18       		.uleb128 0x18
+ 1562 0069 9742     		.uleb128 0x2117
+ 1563 006b 19       		.uleb128 0x19
+ 1564 006c 01       		.uleb128 0x1
+ 1565 006d 13       		.uleb128 0x13
+ 1566 006e 00       		.byte	0
+ 1567 006f 00       		.byte	0
+ 1568 0070 08       		.uleb128 0x8
+ 1569 0071 05       		.uleb128 0x5
+ 1570 0072 00       		.byte	0
+ 1571 0073 03       		.uleb128 0x3
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 35
+
+
+ 1572 0074 0E       		.uleb128 0xe
+ 1573 0075 3A       		.uleb128 0x3a
+ 1574 0076 0B       		.uleb128 0xb
+ 1575 0077 3B       		.uleb128 0x3b
+ 1576 0078 0B       		.uleb128 0xb
+ 1577 0079 49       		.uleb128 0x49
+ 1578 007a 13       		.uleb128 0x13
+ 1579 007b 02       		.uleb128 0x2
+ 1580 007c 17       		.uleb128 0x17
+ 1581 007d 00       		.byte	0
+ 1582 007e 00       		.byte	0
+ 1583 007f 09       		.uleb128 0x9
+ 1584 0080 898201   		.uleb128 0x4109
+ 1585 0083 00       		.byte	0
+ 1586 0084 11       		.uleb128 0x11
+ 1587 0085 01       		.uleb128 0x1
+ 1588 0086 31       		.uleb128 0x31
+ 1589 0087 13       		.uleb128 0x13
+ 1590 0088 00       		.byte	0
+ 1591 0089 00       		.byte	0
+ 1592 008a 0A       		.uleb128 0xa
+ 1593 008b 898201   		.uleb128 0x4109
+ 1594 008e 01       		.byte	0x1
+ 1595 008f 11       		.uleb128 0x11
+ 1596 0090 01       		.uleb128 0x1
+ 1597 0091 31       		.uleb128 0x31
+ 1598 0092 13       		.uleb128 0x13
+ 1599 0093 01       		.uleb128 0x1
+ 1600 0094 13       		.uleb128 0x13
+ 1601 0095 00       		.byte	0
+ 1602 0096 00       		.byte	0
+ 1603 0097 0B       		.uleb128 0xb
+ 1604 0098 8A8201   		.uleb128 0x410a
+ 1605 009b 00       		.byte	0
+ 1606 009c 02       		.uleb128 0x2
+ 1607 009d 18       		.uleb128 0x18
+ 1608 009e 9142     		.uleb128 0x2111
+ 1609 00a0 18       		.uleb128 0x18
+ 1610 00a1 00       		.byte	0
+ 1611 00a2 00       		.byte	0
+ 1612 00a3 0C       		.uleb128 0xc
+ 1613 00a4 2E       		.uleb128 0x2e
+ 1614 00a5 01       		.byte	0x1
+ 1615 00a6 3F       		.uleb128 0x3f
+ 1616 00a7 19       		.uleb128 0x19
+ 1617 00a8 03       		.uleb128 0x3
+ 1618 00a9 0E       		.uleb128 0xe
+ 1619 00aa 3A       		.uleb128 0x3a
+ 1620 00ab 0B       		.uleb128 0xb
+ 1621 00ac 3B       		.uleb128 0x3b
+ 1622 00ad 0B       		.uleb128 0xb
+ 1623 00ae 27       		.uleb128 0x27
+ 1624 00af 19       		.uleb128 0x19
+ 1625 00b0 11       		.uleb128 0x11
+ 1626 00b1 01       		.uleb128 0x1
+ 1627 00b2 12       		.uleb128 0x12
+ 1628 00b3 06       		.uleb128 0x6
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 36
+
+
+ 1629 00b4 40       		.uleb128 0x40
+ 1630 00b5 18       		.uleb128 0x18
+ 1631 00b6 9742     		.uleb128 0x2117
+ 1632 00b8 19       		.uleb128 0x19
+ 1633 00b9 01       		.uleb128 0x1
+ 1634 00ba 13       		.uleb128 0x13
+ 1635 00bb 00       		.byte	0
+ 1636 00bc 00       		.byte	0
+ 1637 00bd 0D       		.uleb128 0xd
+ 1638 00be 898201   		.uleb128 0x4109
+ 1639 00c1 01       		.byte	0x1
+ 1640 00c2 11       		.uleb128 0x11
+ 1641 00c3 01       		.uleb128 0x1
+ 1642 00c4 31       		.uleb128 0x31
+ 1643 00c5 13       		.uleb128 0x13
+ 1644 00c6 00       		.byte	0
+ 1645 00c7 00       		.byte	0
+ 1646 00c8 0E       		.uleb128 0xe
+ 1647 00c9 0F       		.uleb128 0xf
+ 1648 00ca 00       		.byte	0
+ 1649 00cb 0B       		.uleb128 0xb
+ 1650 00cc 0B       		.uleb128 0xb
+ 1651 00cd 49       		.uleb128 0x49
+ 1652 00ce 13       		.uleb128 0x13
+ 1653 00cf 00       		.byte	0
+ 1654 00d0 00       		.byte	0
+ 1655 00d1 0F       		.uleb128 0xf
+ 1656 00d2 05       		.uleb128 0x5
+ 1657 00d3 00       		.byte	0
+ 1658 00d4 03       		.uleb128 0x3
+ 1659 00d5 0E       		.uleb128 0xe
+ 1660 00d6 3A       		.uleb128 0x3a
+ 1661 00d7 0B       		.uleb128 0xb
+ 1662 00d8 3B       		.uleb128 0x3b
+ 1663 00d9 0B       		.uleb128 0xb
+ 1664 00da 49       		.uleb128 0x49
+ 1665 00db 13       		.uleb128 0x13
+ 1666 00dc 02       		.uleb128 0x2
+ 1667 00dd 18       		.uleb128 0x18
+ 1668 00de 00       		.byte	0
+ 1669 00df 00       		.byte	0
+ 1670 00e0 10       		.uleb128 0x10
+ 1671 00e1 34       		.uleb128 0x34
+ 1672 00e2 00       		.byte	0
+ 1673 00e3 03       		.uleb128 0x3
+ 1674 00e4 0E       		.uleb128 0xe
+ 1675 00e5 3A       		.uleb128 0x3a
+ 1676 00e6 0B       		.uleb128 0xb
+ 1677 00e7 3B       		.uleb128 0x3b
+ 1678 00e8 0B       		.uleb128 0xb
+ 1679 00e9 49       		.uleb128 0x49
+ 1680 00ea 13       		.uleb128 0x13
+ 1681 00eb 02       		.uleb128 0x2
+ 1682 00ec 17       		.uleb128 0x17
+ 1683 00ed 00       		.byte	0
+ 1684 00ee 00       		.byte	0
+ 1685 00ef 11       		.uleb128 0x11
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 37
+
+
+ 1686 00f0 2E       		.uleb128 0x2e
+ 1687 00f1 01       		.byte	0x1
+ 1688 00f2 3F       		.uleb128 0x3f
+ 1689 00f3 19       		.uleb128 0x19
+ 1690 00f4 03       		.uleb128 0x3
+ 1691 00f5 0E       		.uleb128 0xe
+ 1692 00f6 3A       		.uleb128 0x3a
+ 1693 00f7 0B       		.uleb128 0xb
+ 1694 00f8 3B       		.uleb128 0x3b
+ 1695 00f9 05       		.uleb128 0x5
+ 1696 00fa 27       		.uleb128 0x27
+ 1697 00fb 19       		.uleb128 0x19
+ 1698 00fc 11       		.uleb128 0x11
+ 1699 00fd 01       		.uleb128 0x1
+ 1700 00fe 12       		.uleb128 0x12
+ 1701 00ff 06       		.uleb128 0x6
+ 1702 0100 40       		.uleb128 0x40
+ 1703 0101 18       		.uleb128 0x18
+ 1704 0102 9742     		.uleb128 0x2117
+ 1705 0104 19       		.uleb128 0x19
+ 1706 0105 01       		.uleb128 0x1
+ 1707 0106 13       		.uleb128 0x13
+ 1708 0107 00       		.byte	0
+ 1709 0108 00       		.byte	0
+ 1710 0109 12       		.uleb128 0x12
+ 1711 010a 05       		.uleb128 0x5
+ 1712 010b 00       		.byte	0
+ 1713 010c 03       		.uleb128 0x3
+ 1714 010d 0E       		.uleb128 0xe
+ 1715 010e 3A       		.uleb128 0x3a
+ 1716 010f 0B       		.uleb128 0xb
+ 1717 0110 3B       		.uleb128 0x3b
+ 1718 0111 05       		.uleb128 0x5
+ 1719 0112 49       		.uleb128 0x49
+ 1720 0113 13       		.uleb128 0x13
+ 1721 0114 02       		.uleb128 0x2
+ 1722 0115 17       		.uleb128 0x17
+ 1723 0116 00       		.byte	0
+ 1724 0117 00       		.byte	0
+ 1725 0118 13       		.uleb128 0x13
+ 1726 0119 2E       		.uleb128 0x2e
+ 1727 011a 01       		.byte	0x1
+ 1728 011b 3F       		.uleb128 0x3f
+ 1729 011c 19       		.uleb128 0x19
+ 1730 011d 03       		.uleb128 0x3
+ 1731 011e 0E       		.uleb128 0xe
+ 1732 011f 3A       		.uleb128 0x3a
+ 1733 0120 0B       		.uleb128 0xb
+ 1734 0121 3B       		.uleb128 0x3b
+ 1735 0122 05       		.uleb128 0x5
+ 1736 0123 49       		.uleb128 0x49
+ 1737 0124 13       		.uleb128 0x13
+ 1738 0125 11       		.uleb128 0x11
+ 1739 0126 01       		.uleb128 0x1
+ 1740 0127 12       		.uleb128 0x12
+ 1741 0128 06       		.uleb128 0x6
+ 1742 0129 40       		.uleb128 0x40
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 38
+
+
+ 1743 012a 18       		.uleb128 0x18
+ 1744 012b 9742     		.uleb128 0x2117
+ 1745 012d 19       		.uleb128 0x19
+ 1746 012e 01       		.uleb128 0x1
+ 1747 012f 13       		.uleb128 0x13
+ 1748 0130 00       		.byte	0
+ 1749 0131 00       		.byte	0
+ 1750 0132 14       		.uleb128 0x14
+ 1751 0133 34       		.uleb128 0x34
+ 1752 0134 00       		.byte	0
+ 1753 0135 03       		.uleb128 0x3
+ 1754 0136 0E       		.uleb128 0xe
+ 1755 0137 3A       		.uleb128 0x3a
+ 1756 0138 0B       		.uleb128 0xb
+ 1757 0139 3B       		.uleb128 0x3b
+ 1758 013a 05       		.uleb128 0x5
+ 1759 013b 49       		.uleb128 0x49
+ 1760 013c 13       		.uleb128 0x13
+ 1761 013d 02       		.uleb128 0x2
+ 1762 013e 18       		.uleb128 0x18
+ 1763 013f 00       		.byte	0
+ 1764 0140 00       		.byte	0
+ 1765 0141 15       		.uleb128 0x15
+ 1766 0142 34       		.uleb128 0x34
+ 1767 0143 00       		.byte	0
+ 1768 0144 03       		.uleb128 0x3
+ 1769 0145 0E       		.uleb128 0xe
+ 1770 0146 3A       		.uleb128 0x3a
+ 1771 0147 0B       		.uleb128 0xb
+ 1772 0148 3B       		.uleb128 0x3b
+ 1773 0149 05       		.uleb128 0x5
+ 1774 014a 49       		.uleb128 0x49
+ 1775 014b 13       		.uleb128 0x13
+ 1776 014c 02       		.uleb128 0x2
+ 1777 014d 17       		.uleb128 0x17
+ 1778 014e 00       		.byte	0
+ 1779 014f 00       		.byte	0
+ 1780 0150 16       		.uleb128 0x16
+ 1781 0151 01       		.uleb128 0x1
+ 1782 0152 01       		.byte	0x1
+ 1783 0153 49       		.uleb128 0x49
+ 1784 0154 13       		.uleb128 0x13
+ 1785 0155 01       		.uleb128 0x1
+ 1786 0156 13       		.uleb128 0x13
+ 1787 0157 00       		.byte	0
+ 1788 0158 00       		.byte	0
+ 1789 0159 17       		.uleb128 0x17
+ 1790 015a 21       		.uleb128 0x21
+ 1791 015b 00       		.byte	0
+ 1792 015c 49       		.uleb128 0x49
+ 1793 015d 13       		.uleb128 0x13
+ 1794 015e 2F       		.uleb128 0x2f
+ 1795 015f 0B       		.uleb128 0xb
+ 1796 0160 00       		.byte	0
+ 1797 0161 00       		.byte	0
+ 1798 0162 18       		.uleb128 0x18
+ 1799 0163 2E       		.uleb128 0x2e
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 39
+
+
+ 1800 0164 00       		.byte	0
+ 1801 0165 3F       		.uleb128 0x3f
+ 1802 0166 19       		.uleb128 0x19
+ 1803 0167 3C       		.uleb128 0x3c
+ 1804 0168 19       		.uleb128 0x19
+ 1805 0169 6E       		.uleb128 0x6e
+ 1806 016a 0E       		.uleb128 0xe
+ 1807 016b 03       		.uleb128 0x3
+ 1808 016c 0E       		.uleb128 0xe
+ 1809 016d 3A       		.uleb128 0x3a
+ 1810 016e 0B       		.uleb128 0xb
+ 1811 016f 3B       		.uleb128 0x3b
+ 1812 0170 0B       		.uleb128 0xb
+ 1813 0171 00       		.byte	0
+ 1814 0172 00       		.byte	0
+ 1815 0173 00       		.byte	0
+ 1816              		.section	.debug_loc,"",%progbits
+ 1817              	.Ldebug_loc0:
+ 1818              	.LLST0:
+ 1819 0000 00000000 		.4byte	.LVL0
+ 1820 0004 07000000 		.4byte	.LVL1-1
+ 1821 0008 0100     		.2byte	0x1
+ 1822 000a 50       		.byte	0x50
+ 1823 000b 07000000 		.4byte	.LVL1-1
+ 1824 000f 1C000000 		.4byte	.LFE0
+ 1825 0013 0400     		.2byte	0x4
+ 1826 0015 F3       		.byte	0xf3
+ 1827 0016 01       		.uleb128 0x1
+ 1828 0017 50       		.byte	0x50
+ 1829 0018 9F       		.byte	0x9f
+ 1830 0019 00000000 		.4byte	0
+ 1831 001d 00000000 		.4byte	0
+ 1832              	.LLST1:
+ 1833 0021 00000000 		.4byte	.LVL5
+ 1834 0025 0B000000 		.4byte	.LVL6-1
+ 1835 0029 0100     		.2byte	0x1
+ 1836 002b 50       		.byte	0x50
+ 1837 002c 0B000000 		.4byte	.LVL6-1
+ 1838 0030 26000000 		.4byte	.LFE1
+ 1839 0034 0400     		.2byte	0x4
+ 1840 0036 F3       		.byte	0xf3
+ 1841 0037 01       		.uleb128 0x1
+ 1842 0038 50       		.byte	0x50
+ 1843 0039 9F       		.byte	0x9f
+ 1844 003a 00000000 		.4byte	0
+ 1845 003e 00000000 		.4byte	0
+ 1846              	.LLST2:
+ 1847 0042 00000000 		.4byte	.LVL5
+ 1848 0046 0B000000 		.4byte	.LVL6-1
+ 1849 004a 0100     		.2byte	0x1
+ 1850 004c 51       		.byte	0x51
+ 1851 004d 0B000000 		.4byte	.LVL6-1
+ 1852 0051 26000000 		.4byte	.LFE1
+ 1853 0055 0100     		.2byte	0x1
+ 1854 0057 55       		.byte	0x55
+ 1855 0058 00000000 		.4byte	0
+ 1856 005c 00000000 		.4byte	0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 40
+
+
+ 1857              	.LLST3:
+ 1858 0060 00000000 		.4byte	.LVL5
+ 1859 0064 0B000000 		.4byte	.LVL6-1
+ 1860 0068 0100     		.2byte	0x1
+ 1861 006a 52       		.byte	0x52
+ 1862 006b 0B000000 		.4byte	.LVL6-1
+ 1863 006f 26000000 		.4byte	.LFE1
+ 1864 0073 0400     		.2byte	0x4
+ 1865 0075 F3       		.byte	0xf3
+ 1866 0076 01       		.uleb128 0x1
+ 1867 0077 52       		.byte	0x52
+ 1868 0078 9F       		.byte	0x9f
+ 1869 0079 00000000 		.4byte	0
+ 1870 007d 00000000 		.4byte	0
+ 1871              	.LLST4:
+ 1872 0081 00000000 		.4byte	.LVL10
+ 1873 0085 0A000000 		.4byte	.LVL12
+ 1874 0089 0100     		.2byte	0x1
+ 1875 008b 50       		.byte	0x50
+ 1876 008c 0A000000 		.4byte	.LVL12
+ 1877 0090 18000000 		.4byte	.LFE2
+ 1878 0094 0400     		.2byte	0x4
+ 1879 0096 F3       		.byte	0xf3
+ 1880 0097 01       		.uleb128 0x1
+ 1881 0098 50       		.byte	0x50
+ 1882 0099 9F       		.byte	0x9f
+ 1883 009a 00000000 		.4byte	0
+ 1884 009e 00000000 		.4byte	0
+ 1885              	.LLST5:
+ 1886 00a2 00000000 		.4byte	.LVL10
+ 1887 00a6 06000000 		.4byte	.LVL11
+ 1888 00aa 0100     		.2byte	0x1
+ 1889 00ac 51       		.byte	0x51
+ 1890 00ad 06000000 		.4byte	.LVL11
+ 1891 00b1 18000000 		.4byte	.LFE2
+ 1892 00b5 0400     		.2byte	0x4
+ 1893 00b7 F3       		.byte	0xf3
+ 1894 00b8 01       		.uleb128 0x1
+ 1895 00b9 51       		.byte	0x51
+ 1896 00ba 9F       		.byte	0x9f
+ 1897 00bb 00000000 		.4byte	0
+ 1898 00bf 00000000 		.4byte	0
+ 1899              	.LLST6:
+ 1900 00c3 00000000 		.4byte	.LVL15
+ 1901 00c7 0D000000 		.4byte	.LVL16-1
+ 1902 00cb 0100     		.2byte	0x1
+ 1903 00cd 50       		.byte	0x50
+ 1904 00ce 0D000000 		.4byte	.LVL16-1
+ 1905 00d2 5A000000 		.4byte	.LFE3
+ 1906 00d6 0400     		.2byte	0x4
+ 1907 00d8 F3       		.byte	0xf3
+ 1908 00d9 01       		.uleb128 0x1
+ 1909 00da 50       		.byte	0x50
+ 1910 00db 9F       		.byte	0x9f
+ 1911 00dc 00000000 		.4byte	0
+ 1912 00e0 00000000 		.4byte	0
+ 1913              	.LLST7:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 41
+
+
+ 1914 00e4 00000000 		.4byte	.LVL15
+ 1915 00e8 0D000000 		.4byte	.LVL16-1
+ 1916 00ec 0100     		.2byte	0x1
+ 1917 00ee 51       		.byte	0x51
+ 1918 00ef 0D000000 		.4byte	.LVL16-1
+ 1919 00f3 5A000000 		.4byte	.LFE3
+ 1920 00f7 0400     		.2byte	0x4
+ 1921 00f9 F3       		.byte	0xf3
+ 1922 00fa 01       		.uleb128 0x1
+ 1923 00fb 51       		.byte	0x51
+ 1924 00fc 9F       		.byte	0x9f
+ 1925 00fd 00000000 		.4byte	0
+ 1926 0101 00000000 		.4byte	0
+ 1927              	.LLST8:
+ 1928 0105 00000000 		.4byte	.LVL15
+ 1929 0109 0D000000 		.4byte	.LVL16-1
+ 1930 010d 0100     		.2byte	0x1
+ 1931 010f 52       		.byte	0x52
+ 1932 0110 0D000000 		.4byte	.LVL16-1
+ 1933 0114 5A000000 		.4byte	.LFE3
+ 1934 0118 0400     		.2byte	0x4
+ 1935 011a F3       		.byte	0xf3
+ 1936 011b 01       		.uleb128 0x1
+ 1937 011c 52       		.byte	0x52
+ 1938 011d 9F       		.byte	0x9f
+ 1939 011e 00000000 		.4byte	0
+ 1940 0122 00000000 		.4byte	0
+ 1941              	.LLST9:
+ 1942 0126 00000000 		.4byte	.LVL15
+ 1943 012a 0D000000 		.4byte	.LVL16-1
+ 1944 012e 0100     		.2byte	0x1
+ 1945 0130 53       		.byte	0x53
+ 1946 0131 0D000000 		.4byte	.LVL16-1
+ 1947 0135 5A000000 		.4byte	.LFE3
+ 1948 0139 0400     		.2byte	0x4
+ 1949 013b F3       		.byte	0xf3
+ 1950 013c 01       		.uleb128 0x1
+ 1951 013d 53       		.byte	0x53
+ 1952 013e 9F       		.byte	0x9f
+ 1953 013f 00000000 		.4byte	0
+ 1954 0143 00000000 		.4byte	0
+ 1955              	.LLST10:
+ 1956 0147 02000000 		.4byte	.LVL25
+ 1957 014b 04000000 		.4byte	.LVL26
+ 1958 014f 0200     		.2byte	0x2
+ 1959 0151 30       		.byte	0x30
+ 1960 0152 9F       		.byte	0x9f
+ 1961 0153 04000000 		.4byte	.LVL26
+ 1962 0157 2A000000 		.4byte	.LFE4
+ 1963 015b 0100     		.2byte	0x1
+ 1964 015d 54       		.byte	0x54
+ 1965 015e 00000000 		.4byte	0
+ 1966 0162 00000000 		.4byte	0
+ 1967              	.LLST11:
+ 1968 0166 00000000 		.4byte	.LVL35
+ 1969 016a 08000000 		.4byte	.LVL36
+ 1970 016e 0100     		.2byte	0x1
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 42
+
+
+ 1971 0170 50       		.byte	0x50
+ 1972 0171 08000000 		.4byte	.LVL36
+ 1973 0175 0B000000 		.4byte	.LVL37-1
+ 1974 0179 0100     		.2byte	0x1
+ 1975 017b 51       		.byte	0x51
+ 1976 017c 0B000000 		.4byte	.LVL37-1
+ 1977 0180 0E000000 		.4byte	.LFE6
+ 1978 0184 0400     		.2byte	0x4
+ 1979 0186 F3       		.byte	0xf3
+ 1980 0187 01       		.uleb128 0x1
+ 1981 0188 50       		.byte	0x50
+ 1982 0189 9F       		.byte	0x9f
+ 1983 018a 00000000 		.4byte	0
+ 1984 018e 00000000 		.4byte	0
+ 1985              	.LLST12:
+ 1986 0192 00000000 		.4byte	.LVL38
+ 1987 0196 08000000 		.4byte	.LVL39
+ 1988 019a 0100     		.2byte	0x1
+ 1989 019c 50       		.byte	0x50
+ 1990 019d 08000000 		.4byte	.LVL39
+ 1991 01a1 0B000000 		.4byte	.LVL40-1
+ 1992 01a5 0100     		.2byte	0x1
+ 1993 01a7 51       		.byte	0x51
+ 1994 01a8 0B000000 		.4byte	.LVL40-1
+ 1995 01ac 0E000000 		.4byte	.LFE7
+ 1996 01b0 0400     		.2byte	0x4
+ 1997 01b2 F3       		.byte	0xf3
+ 1998 01b3 01       		.uleb128 0x1
+ 1999 01b4 50       		.byte	0x50
+ 2000 01b5 9F       		.byte	0x9f
+ 2001 01b6 00000000 		.4byte	0
+ 2002 01ba 00000000 		.4byte	0
+ 2003              	.LLST13:
+ 2004 01be 3E000000 		.4byte	.LVL45
+ 2005 01c2 1E010000 		.4byte	.LVL64
+ 2006 01c6 0100     		.2byte	0x1
+ 2007 01c8 55       		.byte	0x55
+ 2008 01c9 1E010000 		.4byte	.LVL64
+ 2009 01cd 40020000 		.4byte	.LFE8
+ 2010 01d1 1E00     		.2byte	0x1e
+ 2011 01d3 91       		.byte	0x91
+ 2012 01d4 53       		.sleb128 -45
+ 2013 01d5 94       		.byte	0x94
+ 2014 01d6 01       		.byte	0x1
+ 2015 01d7 08       		.byte	0x8
+ 2016 01d8 FF       		.byte	0xff
+ 2017 01d9 1A       		.byte	0x1a
+ 2018 01da 3C       		.byte	0x3c
+ 2019 01db 24       		.byte	0x24
+ 2020 01dc 91       		.byte	0x91
+ 2021 01dd 54       		.sleb128 -44
+ 2022 01de 94       		.byte	0x94
+ 2023 01df 01       		.byte	0x1
+ 2024 01e0 08       		.byte	0x8
+ 2025 01e1 FF       		.byte	0xff
+ 2026 01e2 1A       		.byte	0x1a
+ 2027 01e3 34       		.byte	0x34
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 43
+
+
+ 2028 01e4 24       		.byte	0x24
+ 2029 01e5 21       		.byte	0x21
+ 2030 01e6 91       		.byte	0x91
+ 2031 01e7 55       		.sleb128 -43
+ 2032 01e8 94       		.byte	0x94
+ 2033 01e9 01       		.byte	0x1
+ 2034 01ea 08       		.byte	0x8
+ 2035 01eb FF       		.byte	0xff
+ 2036 01ec 1A       		.byte	0x1a
+ 2037 01ed 34       		.byte	0x34
+ 2038 01ee 25       		.byte	0x25
+ 2039 01ef 21       		.byte	0x21
+ 2040 01f0 9F       		.byte	0x9f
+ 2041 01f1 00000000 		.4byte	0
+ 2042 01f5 00000000 		.4byte	0
+ 2043              	.LLST14:
+ 2044 01f9 4C000000 		.4byte	.LVL46
+ 2045 01fd 9C000000 		.4byte	.LVL53
+ 2046 0201 0100     		.2byte	0x1
+ 2047 0203 50       		.byte	0x50
+ 2048 0204 9C000000 		.4byte	.LVL53
+ 2049 0208 3C020000 		.4byte	.LVL93
+ 2050 020c 1300     		.2byte	0x13
+ 2051 020e 91       		.byte	0x91
+ 2052 020f B97F     		.sleb128 -71
+ 2053 0211 94       		.byte	0x94
+ 2054 0212 01       		.byte	0x1
+ 2055 0213 08       		.byte	0x8
+ 2056 0214 FF       		.byte	0xff
+ 2057 0215 1A       		.byte	0x1a
+ 2058 0216 38       		.byte	0x38
+ 2059 0217 24       		.byte	0x24
+ 2060 0218 7D       		.byte	0x7d
+ 2061 0219 00       		.sleb128 0
+ 2062 021a 94       		.byte	0x94
+ 2063 021b 01       		.byte	0x1
+ 2064 021c 08       		.byte	0x8
+ 2065 021d FF       		.byte	0xff
+ 2066 021e 1A       		.byte	0x1a
+ 2067 021f 22       		.byte	0x22
+ 2068 0220 9F       		.byte	0x9f
+ 2069 0221 3C020000 		.4byte	.LVL93
+ 2070 0225 40020000 		.4byte	.LFE8
+ 2071 0229 1400     		.2byte	0x14
+ 2072 022b 91       		.byte	0x91
+ 2073 022c B97F     		.sleb128 -71
+ 2074 022e 94       		.byte	0x94
+ 2075 022f 01       		.byte	0x1
+ 2076 0230 08       		.byte	0x8
+ 2077 0231 FF       		.byte	0xff
+ 2078 0232 1A       		.byte	0x1a
+ 2079 0233 38       		.byte	0x38
+ 2080 0234 24       		.byte	0x24
+ 2081 0235 91       		.byte	0x91
+ 2082 0236 B87F     		.sleb128 -72
+ 2083 0238 94       		.byte	0x94
+ 2084 0239 01       		.byte	0x1
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 44
+
+
+ 2085 023a 08       		.byte	0x8
+ 2086 023b FF       		.byte	0xff
+ 2087 023c 1A       		.byte	0x1a
+ 2088 023d 22       		.byte	0x22
+ 2089 023e 9F       		.byte	0x9f
+ 2090 023f 00000000 		.4byte	0
+ 2091 0243 00000000 		.4byte	0
+ 2092              	.LLST15:
+ 2093 0247 5A000000 		.4byte	.LVL47
+ 2094 024b 72000000 		.4byte	.LVL49
+ 2095 024f 0100     		.2byte	0x1
+ 2096 0251 52       		.byte	0x52
+ 2097 0252 72000000 		.4byte	.LVL49
+ 2098 0256 40020000 		.4byte	.LFE8
+ 2099 025a 1400     		.2byte	0x14
+ 2100 025c 91       		.byte	0x91
+ 2101 025d BB7F     		.sleb128 -69
+ 2102 025f 94       		.byte	0x94
+ 2103 0260 01       		.byte	0x1
+ 2104 0261 08       		.byte	0x8
+ 2105 0262 FF       		.byte	0xff
+ 2106 0263 1A       		.byte	0x1a
+ 2107 0264 38       		.byte	0x38
+ 2108 0265 24       		.byte	0x24
+ 2109 0266 91       		.byte	0x91
+ 2110 0267 BA7F     		.sleb128 -70
+ 2111 0269 94       		.byte	0x94
+ 2112 026a 01       		.byte	0x1
+ 2113 026b 08       		.byte	0x8
+ 2114 026c FF       		.byte	0xff
+ 2115 026d 1A       		.byte	0x1a
+ 2116 026e 22       		.byte	0x22
+ 2117 026f 9F       		.byte	0x9f
+ 2118 0270 00000000 		.4byte	0
+ 2119 0274 00000000 		.4byte	0
+ 2120              	.LLST16:
+ 2121 0278 68000000 		.4byte	.LVL48
+ 2122 027c 10010000 		.4byte	.LVL62
+ 2123 0280 0100     		.2byte	0x1
+ 2124 0282 56       		.byte	0x56
+ 2125 0283 10010000 		.4byte	.LVL62
+ 2126 0287 40020000 		.4byte	.LFE8
+ 2127 028b 1400     		.2byte	0x14
+ 2128 028d 91       		.byte	0x91
+ 2129 028e BD7F     		.sleb128 -67
+ 2130 0290 94       		.byte	0x94
+ 2131 0291 01       		.byte	0x1
+ 2132 0292 08       		.byte	0x8
+ 2133 0293 FF       		.byte	0xff
+ 2134 0294 1A       		.byte	0x1a
+ 2135 0295 38       		.byte	0x38
+ 2136 0296 24       		.byte	0x24
+ 2137 0297 91       		.byte	0x91
+ 2138 0298 BC7F     		.sleb128 -68
+ 2139 029a 94       		.byte	0x94
+ 2140 029b 01       		.byte	0x1
+ 2141 029c 08       		.byte	0x8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 45
+
+
+ 2142 029d FF       		.byte	0xff
+ 2143 029e 1A       		.byte	0x1a
+ 2144 029f 22       		.byte	0x22
+ 2145 02a0 9F       		.byte	0x9f
+ 2146 02a1 00000000 		.4byte	0
+ 2147 02a5 00000000 		.4byte	0
+ 2148              	.LLST17:
+ 2149 02a9 72000000 		.4byte	.LVL49
+ 2150 02ad 86000000 		.4byte	.LVL51
+ 2151 02b1 0500     		.2byte	0x5
+ 2152 02b3 72       		.byte	0x72
+ 2153 02b4 00       		.sleb128 0
+ 2154 02b5 3B       		.byte	0x3b
+ 2155 02b6 25       		.byte	0x25
+ 2156 02b7 9F       		.byte	0x9f
+ 2157 02b8 86000000 		.4byte	.LVL51
+ 2158 02bc 8A000000 		.4byte	.LVL52
+ 2159 02c0 1D00     		.2byte	0x1d
+ 2160 02c2 91       		.byte	0x91
+ 2161 02c3 BB7F     		.sleb128 -69
+ 2162 02c5 94       		.byte	0x94
+ 2163 02c6 01       		.byte	0x1
+ 2164 02c7 08       		.byte	0x8
+ 2165 02c8 FF       		.byte	0xff
+ 2166 02c9 1A       		.byte	0x1a
+ 2167 02ca 38       		.byte	0x38
+ 2168 02cb 24       		.byte	0x24
+ 2169 02cc 91       		.byte	0x91
+ 2170 02cd BA7F     		.sleb128 -70
+ 2171 02cf 94       		.byte	0x94
+ 2172 02d0 01       		.byte	0x1
+ 2173 02d1 08       		.byte	0x8
+ 2174 02d2 FF       		.byte	0xff
+ 2175 02d3 1A       		.byte	0x1a
+ 2176 02d4 22       		.byte	0x22
+ 2177 02d5 40       		.byte	0x40
+ 2178 02d6 24       		.byte	0x24
+ 2179 02d7 40       		.byte	0x40
+ 2180 02d8 26       		.byte	0x26
+ 2181 02d9 73       		.byte	0x73
+ 2182 02da 00       		.sleb128 0
+ 2183 02db 1E       		.byte	0x1e
+ 2184 02dc 3B       		.byte	0x3b
+ 2185 02dd 25       		.byte	0x25
+ 2186 02de 9F       		.byte	0x9f
+ 2187 02df 8A000000 		.4byte	.LVL52
+ 2188 02e3 9C000000 		.4byte	.LVL53
+ 2189 02e7 2400     		.2byte	0x24
+ 2190 02e9 75       		.byte	0x75
+ 2191 02ea 00       		.sleb128 0
+ 2192 02eb 33       		.byte	0x33
+ 2193 02ec 25       		.byte	0x25
+ 2194 02ed 70       		.byte	0x70
+ 2195 02ee 00       		.sleb128 0
+ 2196 02ef 31       		.byte	0x31
+ 2197 02f0 24       		.byte	0x24
+ 2198 02f1 1C       		.byte	0x1c
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 46
+
+
+ 2199 02f2 91       		.byte	0x91
+ 2200 02f3 BB7F     		.sleb128 -69
+ 2201 02f5 94       		.byte	0x94
+ 2202 02f6 01       		.byte	0x1
+ 2203 02f7 08       		.byte	0x8
+ 2204 02f8 FF       		.byte	0xff
+ 2205 02f9 1A       		.byte	0x1a
+ 2206 02fa 38       		.byte	0x38
+ 2207 02fb 24       		.byte	0x24
+ 2208 02fc 91       		.byte	0x91
+ 2209 02fd BA7F     		.sleb128 -70
+ 2210 02ff 94       		.byte	0x94
+ 2211 0300 01       		.byte	0x1
+ 2212 0301 08       		.byte	0x8
+ 2213 0302 FF       		.byte	0xff
+ 2214 0303 1A       		.byte	0x1a
+ 2215 0304 22       		.byte	0x22
+ 2216 0305 40       		.byte	0x40
+ 2217 0306 24       		.byte	0x24
+ 2218 0307 40       		.byte	0x40
+ 2219 0308 26       		.byte	0x26
+ 2220 0309 1E       		.byte	0x1e
+ 2221 030a 3B       		.byte	0x3b
+ 2222 030b 25       		.byte	0x25
+ 2223 030c 9F       		.byte	0x9f
+ 2224 030d 9C000000 		.4byte	.LVL53
+ 2225 0311 1E010000 		.4byte	.LVL64
+ 2226 0315 3800     		.2byte	0x38
+ 2227 0317 75       		.byte	0x75
+ 2228 0318 00       		.sleb128 0
+ 2229 0319 33       		.byte	0x33
+ 2230 031a 25       		.byte	0x25
+ 2231 031b 91       		.byte	0x91
+ 2232 031c B97F     		.sleb128 -71
+ 2233 031e 94       		.byte	0x94
+ 2234 031f 01       		.byte	0x1
+ 2235 0320 08       		.byte	0x8
+ 2236 0321 FF       		.byte	0xff
+ 2237 0322 1A       		.byte	0x1a
+ 2238 0323 38       		.byte	0x38
+ 2239 0324 24       		.byte	0x24
+ 2240 0325 7D       		.byte	0x7d
+ 2241 0326 00       		.sleb128 0
+ 2242 0327 94       		.byte	0x94
+ 2243 0328 01       		.byte	0x1
+ 2244 0329 08       		.byte	0x8
+ 2245 032a FF       		.byte	0xff
+ 2246 032b 1A       		.byte	0x1a
+ 2247 032c 22       		.byte	0x22
+ 2248 032d 0A       		.byte	0xa
+ 2249 032e FFFF     		.2byte	0xffff
+ 2250 0330 1A       		.byte	0x1a
+ 2251 0331 31       		.byte	0x31
+ 2252 0332 24       		.byte	0x24
+ 2253 0333 1C       		.byte	0x1c
+ 2254 0334 91       		.byte	0x91
+ 2255 0335 BB7F     		.sleb128 -69
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 47
+
+
+ 2256 0337 94       		.byte	0x94
+ 2257 0338 01       		.byte	0x1
+ 2258 0339 08       		.byte	0x8
+ 2259 033a FF       		.byte	0xff
+ 2260 033b 1A       		.byte	0x1a
+ 2261 033c 38       		.byte	0x38
+ 2262 033d 24       		.byte	0x24
+ 2263 033e 91       		.byte	0x91
+ 2264 033f BA7F     		.sleb128 -70
+ 2265 0341 94       		.byte	0x94
+ 2266 0342 01       		.byte	0x1
+ 2267 0343 08       		.byte	0x8
+ 2268 0344 FF       		.byte	0xff
+ 2269 0345 1A       		.byte	0x1a
+ 2270 0346 22       		.byte	0x22
+ 2271 0347 40       		.byte	0x40
+ 2272 0348 24       		.byte	0x24
+ 2273 0349 40       		.byte	0x40
+ 2274 034a 26       		.byte	0x26
+ 2275 034b 1E       		.byte	0x1e
+ 2276 034c 3B       		.byte	0x3b
+ 2277 034d 25       		.byte	0x25
+ 2278 034e 9F       		.byte	0x9f
+ 2279 034f 1E010000 		.4byte	.LVL64
+ 2280 0353 3C010000 		.4byte	.LVL67
+ 2281 0357 5300     		.2byte	0x53
+ 2282 0359 91       		.byte	0x91
+ 2283 035a 53       		.sleb128 -45
+ 2284 035b 94       		.byte	0x94
+ 2285 035c 01       		.byte	0x1
+ 2286 035d 08       		.byte	0x8
+ 2287 035e FF       		.byte	0xff
+ 2288 035f 1A       		.byte	0x1a
+ 2289 0360 3C       		.byte	0x3c
+ 2290 0361 24       		.byte	0x24
+ 2291 0362 91       		.byte	0x91
+ 2292 0363 54       		.sleb128 -44
+ 2293 0364 94       		.byte	0x94
+ 2294 0365 01       		.byte	0x1
+ 2295 0366 08       		.byte	0x8
+ 2296 0367 FF       		.byte	0xff
+ 2297 0368 1A       		.byte	0x1a
+ 2298 0369 34       		.byte	0x34
+ 2299 036a 24       		.byte	0x24
+ 2300 036b 21       		.byte	0x21
+ 2301 036c 91       		.byte	0x91
+ 2302 036d 55       		.sleb128 -43
+ 2303 036e 94       		.byte	0x94
+ 2304 036f 01       		.byte	0x1
+ 2305 0370 08       		.byte	0x8
+ 2306 0371 FF       		.byte	0xff
+ 2307 0372 1A       		.byte	0x1a
+ 2308 0373 34       		.byte	0x34
+ 2309 0374 25       		.byte	0x25
+ 2310 0375 21       		.byte	0x21
+ 2311 0376 33       		.byte	0x33
+ 2312 0377 25       		.byte	0x25
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 48
+
+
+ 2313 0378 91       		.byte	0x91
+ 2314 0379 B97F     		.sleb128 -71
+ 2315 037b 94       		.byte	0x94
+ 2316 037c 01       		.byte	0x1
+ 2317 037d 08       		.byte	0x8
+ 2318 037e FF       		.byte	0xff
+ 2319 037f 1A       		.byte	0x1a
+ 2320 0380 38       		.byte	0x38
+ 2321 0381 24       		.byte	0x24
+ 2322 0382 7D       		.byte	0x7d
+ 2323 0383 00       		.sleb128 0
+ 2324 0384 94       		.byte	0x94
+ 2325 0385 01       		.byte	0x1
+ 2326 0386 08       		.byte	0x8
+ 2327 0387 FF       		.byte	0xff
+ 2328 0388 1A       		.byte	0x1a
+ 2329 0389 22       		.byte	0x22
+ 2330 038a 0A       		.byte	0xa
+ 2331 038b FFFF     		.2byte	0xffff
+ 2332 038d 1A       		.byte	0x1a
+ 2333 038e 31       		.byte	0x31
+ 2334 038f 24       		.byte	0x24
+ 2335 0390 1C       		.byte	0x1c
+ 2336 0391 91       		.byte	0x91
+ 2337 0392 BB7F     		.sleb128 -69
+ 2338 0394 94       		.byte	0x94
+ 2339 0395 01       		.byte	0x1
+ 2340 0396 08       		.byte	0x8
+ 2341 0397 FF       		.byte	0xff
+ 2342 0398 1A       		.byte	0x1a
+ 2343 0399 38       		.byte	0x38
+ 2344 039a 24       		.byte	0x24
+ 2345 039b 91       		.byte	0x91
+ 2346 039c BA7F     		.sleb128 -70
+ 2347 039e 94       		.byte	0x94
+ 2348 039f 01       		.byte	0x1
+ 2349 03a0 08       		.byte	0x8
+ 2350 03a1 FF       		.byte	0xff
+ 2351 03a2 1A       		.byte	0x1a
+ 2352 03a3 22       		.byte	0x22
+ 2353 03a4 40       		.byte	0x40
+ 2354 03a5 24       		.byte	0x24
+ 2355 03a6 40       		.byte	0x40
+ 2356 03a7 26       		.byte	0x26
+ 2357 03a8 1E       		.byte	0x1e
+ 2358 03a9 3B       		.byte	0x3b
+ 2359 03aa 25       		.byte	0x25
+ 2360 03ab 9F       		.byte	0x9f
+ 2361 03ac 3C010000 		.4byte	.LVL67
+ 2362 03b0 9C010000 		.4byte	.LVL74
+ 2363 03b4 0100     		.2byte	0x1
+ 2364 03b6 53       		.byte	0x53
+ 2365 03b7 9C010000 		.4byte	.LVL74
+ 2366 03bb B2010000 		.4byte	.LVL75
+ 2367 03bf C201     		.2byte	0x1c2
+ 2368 03c1 91       		.byte	0x91
+ 2369 03c2 53       		.sleb128 -45
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 49
+
+
+ 2370 03c3 94       		.byte	0x94
+ 2371 03c4 01       		.byte	0x1
+ 2372 03c5 08       		.byte	0x8
+ 2373 03c6 FF       		.byte	0xff
+ 2374 03c7 1A       		.byte	0x1a
+ 2375 03c8 3C       		.byte	0x3c
+ 2376 03c9 24       		.byte	0x24
+ 2377 03ca 91       		.byte	0x91
+ 2378 03cb 54       		.sleb128 -44
+ 2379 03cc 94       		.byte	0x94
+ 2380 03cd 01       		.byte	0x1
+ 2381 03ce 08       		.byte	0x8
+ 2382 03cf FF       		.byte	0xff
+ 2383 03d0 1A       		.byte	0x1a
+ 2384 03d1 34       		.byte	0x34
+ 2385 03d2 24       		.byte	0x24
+ 2386 03d3 21       		.byte	0x21
+ 2387 03d4 91       		.byte	0x91
+ 2388 03d5 55       		.sleb128 -43
+ 2389 03d6 94       		.byte	0x94
+ 2390 03d7 01       		.byte	0x1
+ 2391 03d8 08       		.byte	0x8
+ 2392 03d9 FF       		.byte	0xff
+ 2393 03da 1A       		.byte	0x1a
+ 2394 03db 34       		.byte	0x34
+ 2395 03dc 25       		.byte	0x25
+ 2396 03dd 21       		.byte	0x21
+ 2397 03de 33       		.byte	0x33
+ 2398 03df 25       		.byte	0x25
+ 2399 03e0 91       		.byte	0x91
+ 2400 03e1 B97F     		.sleb128 -71
+ 2401 03e3 94       		.byte	0x94
+ 2402 03e4 01       		.byte	0x1
+ 2403 03e5 08       		.byte	0x8
+ 2404 03e6 FF       		.byte	0xff
+ 2405 03e7 1A       		.byte	0x1a
+ 2406 03e8 38       		.byte	0x38
+ 2407 03e9 24       		.byte	0x24
+ 2408 03ea 7D       		.byte	0x7d
+ 2409 03eb 00       		.sleb128 0
+ 2410 03ec 94       		.byte	0x94
+ 2411 03ed 01       		.byte	0x1
+ 2412 03ee 08       		.byte	0x8
+ 2413 03ef FF       		.byte	0xff
+ 2414 03f0 1A       		.byte	0x1a
+ 2415 03f1 22       		.byte	0x22
+ 2416 03f2 0A       		.byte	0xa
+ 2417 03f3 FFFF     		.2byte	0xffff
+ 2418 03f5 1A       		.byte	0x1a
+ 2419 03f6 31       		.byte	0x31
+ 2420 03f7 24       		.byte	0x24
+ 2421 03f8 1C       		.byte	0x1c
+ 2422 03f9 91       		.byte	0x91
+ 2423 03fa BB7F     		.sleb128 -69
+ 2424 03fc 94       		.byte	0x94
+ 2425 03fd 01       		.byte	0x1
+ 2426 03fe 08       		.byte	0x8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 50
+
+
+ 2427 03ff FF       		.byte	0xff
+ 2428 0400 1A       		.byte	0x1a
+ 2429 0401 38       		.byte	0x38
+ 2430 0402 24       		.byte	0x24
+ 2431 0403 91       		.byte	0x91
+ 2432 0404 BA7F     		.sleb128 -70
+ 2433 0406 94       		.byte	0x94
+ 2434 0407 01       		.byte	0x1
+ 2435 0408 08       		.byte	0x8
+ 2436 0409 FF       		.byte	0xff
+ 2437 040a 1A       		.byte	0x1a
+ 2438 040b 22       		.byte	0x22
+ 2439 040c 40       		.byte	0x40
+ 2440 040d 24       		.byte	0x24
+ 2441 040e 40       		.byte	0x40
+ 2442 040f 26       		.byte	0x26
+ 2443 0410 1E       		.byte	0x1e
+ 2444 0411 3B       		.byte	0x3b
+ 2445 0412 25       		.byte	0x25
+ 2446 0413 91       		.byte	0x91
+ 2447 0414 53       		.sleb128 -45
+ 2448 0415 94       		.byte	0x94
+ 2449 0416 01       		.byte	0x1
+ 2450 0417 08       		.byte	0x8
+ 2451 0418 FF       		.byte	0xff
+ 2452 0419 1A       		.byte	0x1a
+ 2453 041a 3C       		.byte	0x3c
+ 2454 041b 24       		.byte	0x24
+ 2455 041c 91       		.byte	0x91
+ 2456 041d 54       		.sleb128 -44
+ 2457 041e 94       		.byte	0x94
+ 2458 041f 01       		.byte	0x1
+ 2459 0420 08       		.byte	0x8
+ 2460 0421 FF       		.byte	0xff
+ 2461 0422 1A       		.byte	0x1a
+ 2462 0423 34       		.byte	0x34
+ 2463 0424 24       		.byte	0x24
+ 2464 0425 21       		.byte	0x21
+ 2465 0426 91       		.byte	0x91
+ 2466 0427 55       		.sleb128 -43
+ 2467 0428 94       		.byte	0x94
+ 2468 0429 01       		.byte	0x1
+ 2469 042a 08       		.byte	0x8
+ 2470 042b FF       		.byte	0xff
+ 2471 042c 1A       		.byte	0x1a
+ 2472 042d 34       		.byte	0x34
+ 2473 042e 25       		.byte	0x25
+ 2474 042f 21       		.byte	0x21
+ 2475 0430 33       		.byte	0x33
+ 2476 0431 25       		.byte	0x25
+ 2477 0432 91       		.byte	0x91
+ 2478 0433 B97F     		.sleb128 -71
+ 2479 0435 94       		.byte	0x94
+ 2480 0436 01       		.byte	0x1
+ 2481 0437 08       		.byte	0x8
+ 2482 0438 FF       		.byte	0xff
+ 2483 0439 1A       		.byte	0x1a
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 51
+
+
+ 2484 043a 38       		.byte	0x38
+ 2485 043b 24       		.byte	0x24
+ 2486 043c 7D       		.byte	0x7d
+ 2487 043d 00       		.sleb128 0
+ 2488 043e 94       		.byte	0x94
+ 2489 043f 01       		.byte	0x1
+ 2490 0440 08       		.byte	0x8
+ 2491 0441 FF       		.byte	0xff
+ 2492 0442 1A       		.byte	0x1a
+ 2493 0443 22       		.byte	0x22
+ 2494 0444 0A       		.byte	0xa
+ 2495 0445 FFFF     		.2byte	0xffff
+ 2496 0447 1A       		.byte	0x1a
+ 2497 0448 31       		.byte	0x31
+ 2498 0449 24       		.byte	0x24
+ 2499 044a 1C       		.byte	0x1c
+ 2500 044b 91       		.byte	0x91
+ 2501 044c BB7F     		.sleb128 -69
+ 2502 044e 94       		.byte	0x94
+ 2503 044f 01       		.byte	0x1
+ 2504 0450 08       		.byte	0x8
+ 2505 0451 FF       		.byte	0xff
+ 2506 0452 1A       		.byte	0x1a
+ 2507 0453 38       		.byte	0x38
+ 2508 0454 24       		.byte	0x24
+ 2509 0455 91       		.byte	0x91
+ 2510 0456 BA7F     		.sleb128 -70
+ 2511 0458 94       		.byte	0x94
+ 2512 0459 01       		.byte	0x1
+ 2513 045a 08       		.byte	0x8
+ 2514 045b FF       		.byte	0xff
+ 2515 045c 1A       		.byte	0x1a
+ 2516 045d 22       		.byte	0x22
+ 2517 045e 40       		.byte	0x40
+ 2518 045f 24       		.byte	0x24
+ 2519 0460 40       		.byte	0x40
+ 2520 0461 26       		.byte	0x26
+ 2521 0462 1E       		.byte	0x1e
+ 2522 0463 3B       		.byte	0x3b
+ 2523 0464 25       		.byte	0x25
+ 2524 0465 91       		.byte	0x91
+ 2525 0466 53       		.sleb128 -45
+ 2526 0467 94       		.byte	0x94
+ 2527 0468 01       		.byte	0x1
+ 2528 0469 08       		.byte	0x8
+ 2529 046a FF       		.byte	0xff
+ 2530 046b 1A       		.byte	0x1a
+ 2531 046c 3C       		.byte	0x3c
+ 2532 046d 24       		.byte	0x24
+ 2533 046e 91       		.byte	0x91
+ 2534 046f 54       		.sleb128 -44
+ 2535 0470 94       		.byte	0x94
+ 2536 0471 01       		.byte	0x1
+ 2537 0472 08       		.byte	0x8
+ 2538 0473 FF       		.byte	0xff
+ 2539 0474 1A       		.byte	0x1a
+ 2540 0475 34       		.byte	0x34
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 52
+
+
+ 2541 0476 24       		.byte	0x24
+ 2542 0477 21       		.byte	0x21
+ 2543 0478 91       		.byte	0x91
+ 2544 0479 55       		.sleb128 -43
+ 2545 047a 94       		.byte	0x94
+ 2546 047b 01       		.byte	0x1
+ 2547 047c 08       		.byte	0x8
+ 2548 047d FF       		.byte	0xff
+ 2549 047e 1A       		.byte	0x1a
+ 2550 047f 34       		.byte	0x34
+ 2551 0480 25       		.byte	0x25
+ 2552 0481 21       		.byte	0x21
+ 2553 0482 34       		.byte	0x34
+ 2554 0483 25       		.byte	0x25
+ 2555 0484 91       		.byte	0x91
+ 2556 0485 B97F     		.sleb128 -71
+ 2557 0487 94       		.byte	0x94
+ 2558 0488 01       		.byte	0x1
+ 2559 0489 08       		.byte	0x8
+ 2560 048a FF       		.byte	0xff
+ 2561 048b 1A       		.byte	0x1a
+ 2562 048c 38       		.byte	0x38
+ 2563 048d 24       		.byte	0x24
+ 2564 048e 7D       		.byte	0x7d
+ 2565 048f 00       		.sleb128 0
+ 2566 0490 94       		.byte	0x94
+ 2567 0491 01       		.byte	0x1
+ 2568 0492 08       		.byte	0x8
+ 2569 0493 FF       		.byte	0xff
+ 2570 0494 1A       		.byte	0x1a
+ 2571 0495 22       		.byte	0x22
+ 2572 0496 0A       		.byte	0xa
+ 2573 0497 FFFF     		.2byte	0xffff
+ 2574 0499 1A       		.byte	0x1a
+ 2575 049a 1C       		.byte	0x1c
+ 2576 049b 91       		.byte	0x91
+ 2577 049c 53       		.sleb128 -45
+ 2578 049d 94       		.byte	0x94
+ 2579 049e 01       		.byte	0x1
+ 2580 049f 08       		.byte	0x8
+ 2581 04a0 FF       		.byte	0xff
+ 2582 04a1 1A       		.byte	0x1a
+ 2583 04a2 3C       		.byte	0x3c
+ 2584 04a3 24       		.byte	0x24
+ 2585 04a4 91       		.byte	0x91
+ 2586 04a5 54       		.sleb128 -44
+ 2587 04a6 94       		.byte	0x94
+ 2588 04a7 01       		.byte	0x1
+ 2589 04a8 08       		.byte	0x8
+ 2590 04a9 FF       		.byte	0xff
+ 2591 04aa 1A       		.byte	0x1a
+ 2592 04ab 34       		.byte	0x34
+ 2593 04ac 24       		.byte	0x24
+ 2594 04ad 21       		.byte	0x21
+ 2595 04ae 91       		.byte	0x91
+ 2596 04af 55       		.sleb128 -43
+ 2597 04b0 94       		.byte	0x94
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 53
+
+
+ 2598 04b1 01       		.byte	0x1
+ 2599 04b2 08       		.byte	0x8
+ 2600 04b3 FF       		.byte	0xff
+ 2601 04b4 1A       		.byte	0x1a
+ 2602 04b5 34       		.byte	0x34
+ 2603 04b6 25       		.byte	0x25
+ 2604 04b7 21       		.byte	0x21
+ 2605 04b8 34       		.byte	0x34
+ 2606 04b9 25       		.byte	0x25
+ 2607 04ba 91       		.byte	0x91
+ 2608 04bb B97F     		.sleb128 -71
+ 2609 04bd 94       		.byte	0x94
+ 2610 04be 01       		.byte	0x1
+ 2611 04bf 08       		.byte	0x8
+ 2612 04c0 FF       		.byte	0xff
+ 2613 04c1 1A       		.byte	0x1a
+ 2614 04c2 38       		.byte	0x38
+ 2615 04c3 24       		.byte	0x24
+ 2616 04c4 7D       		.byte	0x7d
+ 2617 04c5 00       		.sleb128 0
+ 2618 04c6 94       		.byte	0x94
+ 2619 04c7 01       		.byte	0x1
+ 2620 04c8 08       		.byte	0x8
+ 2621 04c9 FF       		.byte	0xff
+ 2622 04ca 1A       		.byte	0x1a
+ 2623 04cb 22       		.byte	0x22
+ 2624 04cc 0A       		.byte	0xa
+ 2625 04cd FFFF     		.2byte	0xffff
+ 2626 04cf 1A       		.byte	0x1a
+ 2627 04d0 1C       		.byte	0x1c
+ 2628 04d1 1E       		.byte	0x1e
+ 2629 04d2 3C       		.byte	0x3c
+ 2630 04d3 25       		.byte	0x25
+ 2631 04d4 91       		.byte	0x91
+ 2632 04d5 BD7F     		.sleb128 -67
+ 2633 04d7 94       		.byte	0x94
+ 2634 04d8 01       		.byte	0x1
+ 2635 04d9 08       		.byte	0x8
+ 2636 04da FF       		.byte	0xff
+ 2637 04db 1A       		.byte	0x1a
+ 2638 04dc 38       		.byte	0x38
+ 2639 04dd 24       		.byte	0x24
+ 2640 04de 91       		.byte	0x91
+ 2641 04df BC7F     		.sleb128 -68
+ 2642 04e1 94       		.byte	0x94
+ 2643 04e2 01       		.byte	0x1
+ 2644 04e3 08       		.byte	0x8
+ 2645 04e4 FF       		.byte	0xff
+ 2646 04e5 1A       		.byte	0x1a
+ 2647 04e6 22       		.byte	0x22
+ 2648 04e7 40       		.byte	0x40
+ 2649 04e8 24       		.byte	0x24
+ 2650 04e9 40       		.byte	0x40
+ 2651 04ea 26       		.byte	0x26
+ 2652 04eb 1E       		.byte	0x1e
+ 2653 04ec 3E       		.byte	0x3e
+ 2654 04ed 25       		.byte	0x25
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 54
+
+
+ 2655 04ee 22       		.byte	0x22
+ 2656 04ef 4F       		.byte	0x4f
+ 2657 04f0 25       		.byte	0x25
+ 2658 04f1 22       		.byte	0x22
+ 2659 04f2 91       		.byte	0x91
+ 2660 04f3 53       		.sleb128 -45
+ 2661 04f4 94       		.byte	0x94
+ 2662 04f5 01       		.byte	0x1
+ 2663 04f6 08       		.byte	0x8
+ 2664 04f7 FF       		.byte	0xff
+ 2665 04f8 1A       		.byte	0x1a
+ 2666 04f9 3C       		.byte	0x3c
+ 2667 04fa 24       		.byte	0x24
+ 2668 04fb 91       		.byte	0x91
+ 2669 04fc 54       		.sleb128 -44
+ 2670 04fd 94       		.byte	0x94
+ 2671 04fe 01       		.byte	0x1
+ 2672 04ff 08       		.byte	0x8
+ 2673 0500 FF       		.byte	0xff
+ 2674 0501 1A       		.byte	0x1a
+ 2675 0502 34       		.byte	0x34
+ 2676 0503 24       		.byte	0x24
+ 2677 0504 21       		.byte	0x21
+ 2678 0505 91       		.byte	0x91
+ 2679 0506 55       		.sleb128 -43
+ 2680 0507 94       		.byte	0x94
+ 2681 0508 01       		.byte	0x1
+ 2682 0509 08       		.byte	0x8
+ 2683 050a FF       		.byte	0xff
+ 2684 050b 1A       		.byte	0x1a
+ 2685 050c 34       		.byte	0x34
+ 2686 050d 25       		.byte	0x25
+ 2687 050e 21       		.byte	0x21
+ 2688 050f 34       		.byte	0x34
+ 2689 0510 25       		.byte	0x25
+ 2690 0511 91       		.byte	0x91
+ 2691 0512 B97F     		.sleb128 -71
+ 2692 0514 94       		.byte	0x94
+ 2693 0515 01       		.byte	0x1
+ 2694 0516 08       		.byte	0x8
+ 2695 0517 FF       		.byte	0xff
+ 2696 0518 1A       		.byte	0x1a
+ 2697 0519 38       		.byte	0x38
+ 2698 051a 24       		.byte	0x24
+ 2699 051b 7D       		.byte	0x7d
+ 2700 051c 00       		.sleb128 0
+ 2701 051d 94       		.byte	0x94
+ 2702 051e 01       		.byte	0x1
+ 2703 051f 08       		.byte	0x8
+ 2704 0520 FF       		.byte	0xff
+ 2705 0521 1A       		.byte	0x1a
+ 2706 0522 22       		.byte	0x22
+ 2707 0523 0A       		.byte	0xa
+ 2708 0524 FFFF     		.2byte	0xffff
+ 2709 0526 1A       		.byte	0x1a
+ 2710 0527 1C       		.byte	0x1c
+ 2711 0528 91       		.byte	0x91
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 55
+
+
+ 2712 0529 53       		.sleb128 -45
+ 2713 052a 94       		.byte	0x94
+ 2714 052b 01       		.byte	0x1
+ 2715 052c 08       		.byte	0x8
+ 2716 052d FF       		.byte	0xff
+ 2717 052e 1A       		.byte	0x1a
+ 2718 052f 3C       		.byte	0x3c
+ 2719 0530 24       		.byte	0x24
+ 2720 0531 91       		.byte	0x91
+ 2721 0532 54       		.sleb128 -44
+ 2722 0533 94       		.byte	0x94
+ 2723 0534 01       		.byte	0x1
+ 2724 0535 08       		.byte	0x8
+ 2725 0536 FF       		.byte	0xff
+ 2726 0537 1A       		.byte	0x1a
+ 2727 0538 34       		.byte	0x34
+ 2728 0539 24       		.byte	0x24
+ 2729 053a 21       		.byte	0x21
+ 2730 053b 91       		.byte	0x91
+ 2731 053c 55       		.sleb128 -43
+ 2732 053d 94       		.byte	0x94
+ 2733 053e 01       		.byte	0x1
+ 2734 053f 08       		.byte	0x8
+ 2735 0540 FF       		.byte	0xff
+ 2736 0541 1A       		.byte	0x1a
+ 2737 0542 34       		.byte	0x34
+ 2738 0543 25       		.byte	0x25
+ 2739 0544 21       		.byte	0x21
+ 2740 0545 34       		.byte	0x34
+ 2741 0546 25       		.byte	0x25
+ 2742 0547 91       		.byte	0x91
+ 2743 0548 B97F     		.sleb128 -71
+ 2744 054a 94       		.byte	0x94
+ 2745 054b 01       		.byte	0x1
+ 2746 054c 08       		.byte	0x8
+ 2747 054d FF       		.byte	0xff
+ 2748 054e 1A       		.byte	0x1a
+ 2749 054f 38       		.byte	0x38
+ 2750 0550 24       		.byte	0x24
+ 2751 0551 7D       		.byte	0x7d
+ 2752 0552 00       		.sleb128 0
+ 2753 0553 94       		.byte	0x94
+ 2754 0554 01       		.byte	0x1
+ 2755 0555 08       		.byte	0x8
+ 2756 0556 FF       		.byte	0xff
+ 2757 0557 1A       		.byte	0x1a
+ 2758 0558 22       		.byte	0x22
+ 2759 0559 0A       		.byte	0xa
+ 2760 055a FFFF     		.2byte	0xffff
+ 2761 055c 1A       		.byte	0x1a
+ 2762 055d 1C       		.byte	0x1c
+ 2763 055e 1E       		.byte	0x1e
+ 2764 055f 3C       		.byte	0x3c
+ 2765 0560 25       		.byte	0x25
+ 2766 0561 91       		.byte	0x91
+ 2767 0562 BD7F     		.sleb128 -67
+ 2768 0564 94       		.byte	0x94
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 56
+
+
+ 2769 0565 01       		.byte	0x1
+ 2770 0566 08       		.byte	0x8
+ 2771 0567 FF       		.byte	0xff
+ 2772 0568 1A       		.byte	0x1a
+ 2773 0569 38       		.byte	0x38
+ 2774 056a 24       		.byte	0x24
+ 2775 056b 91       		.byte	0x91
+ 2776 056c BC7F     		.sleb128 -68
+ 2777 056e 94       		.byte	0x94
+ 2778 056f 01       		.byte	0x1
+ 2779 0570 08       		.byte	0x8
+ 2780 0571 FF       		.byte	0xff
+ 2781 0572 1A       		.byte	0x1a
+ 2782 0573 22       		.byte	0x22
+ 2783 0574 40       		.byte	0x40
+ 2784 0575 24       		.byte	0x24
+ 2785 0576 40       		.byte	0x40
+ 2786 0577 26       		.byte	0x26
+ 2787 0578 1E       		.byte	0x1e
+ 2788 0579 3E       		.byte	0x3e
+ 2789 057a 25       		.byte	0x25
+ 2790 057b 22       		.byte	0x22
+ 2791 057c 31       		.byte	0x31
+ 2792 057d 26       		.byte	0x26
+ 2793 057e 0A       		.byte	0xa
+ 2794 057f 00FA     		.2byte	0xfa00
+ 2795 0581 1C       		.byte	0x1c
+ 2796 0582 9F       		.byte	0x9f
+ 2797 0583 B2010000 		.4byte	.LVL75
+ 2798 0587 B6010000 		.4byte	.LVL76
+ 2799 058b 0100     		.2byte	0x1
+ 2800 058d 53       		.byte	0x53
+ 2801 058e B6010000 		.4byte	.LVL76
+ 2802 0592 BA010000 		.4byte	.LVL77
+ 2803 0596 0500     		.2byte	0x5
+ 2804 0598 73       		.byte	0x73
+ 2805 0599 80807E   		.sleb128 -32768
+ 2806 059c 9F       		.byte	0x9f
+ 2807 059d C4010000 		.4byte	.LVL78
+ 2808 05a1 C6010000 		.4byte	.LVL79
+ 2809 05a5 0500     		.2byte	0x5
+ 2810 05a7 73       		.byte	0x73
+ 2811 05a8 00       		.sleb128 0
+ 2812 05a9 3F       		.byte	0x3f
+ 2813 05aa 26       		.byte	0x26
+ 2814 05ab 9F       		.byte	0x9f
+ 2815 05ac C6010000 		.4byte	.LVL79
+ 2816 05b0 04020000 		.4byte	.LVL86
+ 2817 05b4 0100     		.2byte	0x1
+ 2818 05b6 53       		.byte	0x53
+ 2819 05b7 18020000 		.4byte	.LVL88
+ 2820 05bb 2C020000 		.4byte	.LVL91
+ 2821 05bf 0100     		.2byte	0x1
+ 2822 05c1 57       		.byte	0x57
+ 2823 05c2 00000000 		.4byte	0
+ 2824 05c6 00000000 		.4byte	0
+ 2825              	.LLST18:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 57
+
+
+ 2826 05ca 82000000 		.4byte	.LVL50
+ 2827 05ce B2000000 		.4byte	.LVL55
+ 2828 05d2 0100     		.2byte	0x1
+ 2829 05d4 51       		.byte	0x51
+ 2830 05d5 B2000000 		.4byte	.LVL55
+ 2831 05d9 10010000 		.4byte	.LVL62
+ 2832 05dd 3F00     		.2byte	0x3f
+ 2833 05df 75       		.byte	0x75
+ 2834 05e0 00       		.sleb128 0
+ 2835 05e1 34       		.byte	0x34
+ 2836 05e2 25       		.byte	0x25
+ 2837 05e3 91       		.byte	0x91
+ 2838 05e4 B97F     		.sleb128 -71
+ 2839 05e6 94       		.byte	0x94
+ 2840 05e7 01       		.byte	0x1
+ 2841 05e8 08       		.byte	0x8
+ 2842 05e9 FF       		.byte	0xff
+ 2843 05ea 1A       		.byte	0x1a
+ 2844 05eb 38       		.byte	0x38
+ 2845 05ec 24       		.byte	0x24
+ 2846 05ed 7D       		.byte	0x7d
+ 2847 05ee 00       		.sleb128 0
+ 2848 05ef 94       		.byte	0x94
+ 2849 05f0 01       		.byte	0x1
+ 2850 05f1 08       		.byte	0x8
+ 2851 05f2 FF       		.byte	0xff
+ 2852 05f3 1A       		.byte	0x1a
+ 2853 05f4 22       		.byte	0x22
+ 2854 05f5 0A       		.byte	0xa
+ 2855 05f6 FFFF     		.2byte	0xffff
+ 2856 05f8 1A       		.byte	0x1a
+ 2857 05f9 1C       		.byte	0x1c
+ 2858 05fa 75       		.byte	0x75
+ 2859 05fb 00       		.sleb128 0
+ 2860 05fc 34       		.byte	0x34
+ 2861 05fd 25       		.byte	0x25
+ 2862 05fe 91       		.byte	0x91
+ 2863 05ff B97F     		.sleb128 -71
+ 2864 0601 94       		.byte	0x94
+ 2865 0602 01       		.byte	0x1
+ 2866 0603 08       		.byte	0x8
+ 2867 0604 FF       		.byte	0xff
+ 2868 0605 1A       		.byte	0x1a
+ 2869 0606 38       		.byte	0x38
+ 2870 0607 24       		.byte	0x24
+ 2871 0608 7D       		.byte	0x7d
+ 2872 0609 00       		.sleb128 0
+ 2873 060a 94       		.byte	0x94
+ 2874 060b 01       		.byte	0x1
+ 2875 060c 08       		.byte	0x8
+ 2876 060d FF       		.byte	0xff
+ 2877 060e 1A       		.byte	0x1a
+ 2878 060f 22       		.byte	0x22
+ 2879 0610 0A       		.byte	0xa
+ 2880 0611 FFFF     		.2byte	0xffff
+ 2881 0613 1A       		.byte	0x1a
+ 2882 0614 1C       		.byte	0x1c
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 58
+
+
+ 2883 0615 1E       		.byte	0x1e
+ 2884 0616 3C       		.byte	0x3c
+ 2885 0617 25       		.byte	0x25
+ 2886 0618 76       		.byte	0x76
+ 2887 0619 00       		.sleb128 0
+ 2888 061a 1E       		.byte	0x1e
+ 2889 061b 3E       		.byte	0x3e
+ 2890 061c 25       		.byte	0x25
+ 2891 061d 9F       		.byte	0x9f
+ 2892 061e 10010000 		.4byte	.LVL62
+ 2893 0622 1E010000 		.4byte	.LVL64
+ 2894 0626 5400     		.2byte	0x54
+ 2895 0628 75       		.byte	0x75
+ 2896 0629 00       		.sleb128 0
+ 2897 062a 34       		.byte	0x34
+ 2898 062b 25       		.byte	0x25
+ 2899 062c 91       		.byte	0x91
+ 2900 062d B97F     		.sleb128 -71
+ 2901 062f 94       		.byte	0x94
+ 2902 0630 01       		.byte	0x1
+ 2903 0631 08       		.byte	0x8
+ 2904 0632 FF       		.byte	0xff
+ 2905 0633 1A       		.byte	0x1a
+ 2906 0634 38       		.byte	0x38
+ 2907 0635 24       		.byte	0x24
+ 2908 0636 7D       		.byte	0x7d
+ 2909 0637 00       		.sleb128 0
+ 2910 0638 94       		.byte	0x94
+ 2911 0639 01       		.byte	0x1
+ 2912 063a 08       		.byte	0x8
+ 2913 063b FF       		.byte	0xff
+ 2914 063c 1A       		.byte	0x1a
+ 2915 063d 22       		.byte	0x22
+ 2916 063e 0A       		.byte	0xa
+ 2917 063f FFFF     		.2byte	0xffff
+ 2918 0641 1A       		.byte	0x1a
+ 2919 0642 1C       		.byte	0x1c
+ 2920 0643 75       		.byte	0x75
+ 2921 0644 00       		.sleb128 0
+ 2922 0645 34       		.byte	0x34
+ 2923 0646 25       		.byte	0x25
+ 2924 0647 91       		.byte	0x91
+ 2925 0648 B97F     		.sleb128 -71
+ 2926 064a 94       		.byte	0x94
+ 2927 064b 01       		.byte	0x1
+ 2928 064c 08       		.byte	0x8
+ 2929 064d FF       		.byte	0xff
+ 2930 064e 1A       		.byte	0x1a
+ 2931 064f 38       		.byte	0x38
+ 2932 0650 24       		.byte	0x24
+ 2933 0651 7D       		.byte	0x7d
+ 2934 0652 00       		.sleb128 0
+ 2935 0653 94       		.byte	0x94
+ 2936 0654 01       		.byte	0x1
+ 2937 0655 08       		.byte	0x8
+ 2938 0656 FF       		.byte	0xff
+ 2939 0657 1A       		.byte	0x1a
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 59
+
+
+ 2940 0658 22       		.byte	0x22
+ 2941 0659 0A       		.byte	0xa
+ 2942 065a FFFF     		.2byte	0xffff
+ 2943 065c 1A       		.byte	0x1a
+ 2944 065d 1C       		.byte	0x1c
+ 2945 065e 1E       		.byte	0x1e
+ 2946 065f 3C       		.byte	0x3c
+ 2947 0660 25       		.byte	0x25
+ 2948 0661 91       		.byte	0x91
+ 2949 0662 BD7F     		.sleb128 -67
+ 2950 0664 94       		.byte	0x94
+ 2951 0665 01       		.byte	0x1
+ 2952 0666 08       		.byte	0x8
+ 2953 0667 FF       		.byte	0xff
+ 2954 0668 1A       		.byte	0x1a
+ 2955 0669 38       		.byte	0x38
+ 2956 066a 24       		.byte	0x24
+ 2957 066b 91       		.byte	0x91
+ 2958 066c BC7F     		.sleb128 -68
+ 2959 066e 94       		.byte	0x94
+ 2960 066f 01       		.byte	0x1
+ 2961 0670 08       		.byte	0x8
+ 2962 0671 FF       		.byte	0xff
+ 2963 0672 1A       		.byte	0x1a
+ 2964 0673 22       		.byte	0x22
+ 2965 0674 40       		.byte	0x40
+ 2966 0675 24       		.byte	0x24
+ 2967 0676 40       		.byte	0x40
+ 2968 0677 26       		.byte	0x26
+ 2969 0678 1E       		.byte	0x1e
+ 2970 0679 3E       		.byte	0x3e
+ 2971 067a 25       		.byte	0x25
+ 2972 067b 9F       		.byte	0x9f
+ 2973 067c 1E010000 		.4byte	.LVL64
+ 2974 0680 5C010000 		.4byte	.LVL69
+ 2975 0684 8A00     		.2byte	0x8a
+ 2976 0686 91       		.byte	0x91
+ 2977 0687 53       		.sleb128 -45
+ 2978 0688 94       		.byte	0x94
+ 2979 0689 01       		.byte	0x1
+ 2980 068a 08       		.byte	0x8
+ 2981 068b FF       		.byte	0xff
+ 2982 068c 1A       		.byte	0x1a
+ 2983 068d 3C       		.byte	0x3c
+ 2984 068e 24       		.byte	0x24
+ 2985 068f 91       		.byte	0x91
+ 2986 0690 54       		.sleb128 -44
+ 2987 0691 94       		.byte	0x94
+ 2988 0692 01       		.byte	0x1
+ 2989 0693 08       		.byte	0x8
+ 2990 0694 FF       		.byte	0xff
+ 2991 0695 1A       		.byte	0x1a
+ 2992 0696 34       		.byte	0x34
+ 2993 0697 24       		.byte	0x24
+ 2994 0698 21       		.byte	0x21
+ 2995 0699 91       		.byte	0x91
+ 2996 069a 55       		.sleb128 -43
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 60
+
+
+ 2997 069b 94       		.byte	0x94
+ 2998 069c 01       		.byte	0x1
+ 2999 069d 08       		.byte	0x8
+ 3000 069e FF       		.byte	0xff
+ 3001 069f 1A       		.byte	0x1a
+ 3002 06a0 34       		.byte	0x34
+ 3003 06a1 25       		.byte	0x25
+ 3004 06a2 21       		.byte	0x21
+ 3005 06a3 34       		.byte	0x34
+ 3006 06a4 25       		.byte	0x25
+ 3007 06a5 91       		.byte	0x91
+ 3008 06a6 B97F     		.sleb128 -71
+ 3009 06a8 94       		.byte	0x94
+ 3010 06a9 01       		.byte	0x1
+ 3011 06aa 08       		.byte	0x8
+ 3012 06ab FF       		.byte	0xff
+ 3013 06ac 1A       		.byte	0x1a
+ 3014 06ad 38       		.byte	0x38
+ 3015 06ae 24       		.byte	0x24
+ 3016 06af 7D       		.byte	0x7d
+ 3017 06b0 00       		.sleb128 0
+ 3018 06b1 94       		.byte	0x94
+ 3019 06b2 01       		.byte	0x1
+ 3020 06b3 08       		.byte	0x8
+ 3021 06b4 FF       		.byte	0xff
+ 3022 06b5 1A       		.byte	0x1a
+ 3023 06b6 22       		.byte	0x22
+ 3024 06b7 0A       		.byte	0xa
+ 3025 06b8 FFFF     		.2byte	0xffff
+ 3026 06ba 1A       		.byte	0x1a
+ 3027 06bb 1C       		.byte	0x1c
+ 3028 06bc 91       		.byte	0x91
+ 3029 06bd 53       		.sleb128 -45
+ 3030 06be 94       		.byte	0x94
+ 3031 06bf 01       		.byte	0x1
+ 3032 06c0 08       		.byte	0x8
+ 3033 06c1 FF       		.byte	0xff
+ 3034 06c2 1A       		.byte	0x1a
+ 3035 06c3 3C       		.byte	0x3c
+ 3036 06c4 24       		.byte	0x24
+ 3037 06c5 91       		.byte	0x91
+ 3038 06c6 54       		.sleb128 -44
+ 3039 06c7 94       		.byte	0x94
+ 3040 06c8 01       		.byte	0x1
+ 3041 06c9 08       		.byte	0x8
+ 3042 06ca FF       		.byte	0xff
+ 3043 06cb 1A       		.byte	0x1a
+ 3044 06cc 34       		.byte	0x34
+ 3045 06cd 24       		.byte	0x24
+ 3046 06ce 21       		.byte	0x21
+ 3047 06cf 91       		.byte	0x91
+ 3048 06d0 55       		.sleb128 -43
+ 3049 06d1 94       		.byte	0x94
+ 3050 06d2 01       		.byte	0x1
+ 3051 06d3 08       		.byte	0x8
+ 3052 06d4 FF       		.byte	0xff
+ 3053 06d5 1A       		.byte	0x1a
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 61
+
+
+ 3054 06d6 34       		.byte	0x34
+ 3055 06d7 25       		.byte	0x25
+ 3056 06d8 21       		.byte	0x21
+ 3057 06d9 34       		.byte	0x34
+ 3058 06da 25       		.byte	0x25
+ 3059 06db 91       		.byte	0x91
+ 3060 06dc B97F     		.sleb128 -71
+ 3061 06de 94       		.byte	0x94
+ 3062 06df 01       		.byte	0x1
+ 3063 06e0 08       		.byte	0x8
+ 3064 06e1 FF       		.byte	0xff
+ 3065 06e2 1A       		.byte	0x1a
+ 3066 06e3 38       		.byte	0x38
+ 3067 06e4 24       		.byte	0x24
+ 3068 06e5 7D       		.byte	0x7d
+ 3069 06e6 00       		.sleb128 0
+ 3070 06e7 94       		.byte	0x94
+ 3071 06e8 01       		.byte	0x1
+ 3072 06e9 08       		.byte	0x8
+ 3073 06ea FF       		.byte	0xff
+ 3074 06eb 1A       		.byte	0x1a
+ 3075 06ec 22       		.byte	0x22
+ 3076 06ed 0A       		.byte	0xa
+ 3077 06ee FFFF     		.2byte	0xffff
+ 3078 06f0 1A       		.byte	0x1a
+ 3079 06f1 1C       		.byte	0x1c
+ 3080 06f2 1E       		.byte	0x1e
+ 3081 06f3 3C       		.byte	0x3c
+ 3082 06f4 25       		.byte	0x25
+ 3083 06f5 91       		.byte	0x91
+ 3084 06f6 BD7F     		.sleb128 -67
+ 3085 06f8 94       		.byte	0x94
+ 3086 06f9 01       		.byte	0x1
+ 3087 06fa 08       		.byte	0x8
+ 3088 06fb FF       		.byte	0xff
+ 3089 06fc 1A       		.byte	0x1a
+ 3090 06fd 38       		.byte	0x38
+ 3091 06fe 24       		.byte	0x24
+ 3092 06ff 91       		.byte	0x91
+ 3093 0700 BC7F     		.sleb128 -68
+ 3094 0702 94       		.byte	0x94
+ 3095 0703 01       		.byte	0x1
+ 3096 0704 08       		.byte	0x8
+ 3097 0705 FF       		.byte	0xff
+ 3098 0706 1A       		.byte	0x1a
+ 3099 0707 22       		.byte	0x22
+ 3100 0708 40       		.byte	0x40
+ 3101 0709 24       		.byte	0x24
+ 3102 070a 40       		.byte	0x40
+ 3103 070b 26       		.byte	0x26
+ 3104 070c 1E       		.byte	0x1e
+ 3105 070d 3E       		.byte	0x3e
+ 3106 070e 25       		.byte	0x25
+ 3107 070f 9F       		.byte	0x9f
+ 3108 0710 5C010000 		.4byte	.LVL69
+ 3109 0714 68010000 		.4byte	.LVL71
+ 3110 0718 0600     		.2byte	0x6
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 62
+
+
+ 3111 071a 7B       		.byte	0x7b
+ 3112 071b 00       		.sleb128 0
+ 3113 071c 72       		.byte	0x72
+ 3114 071d 00       		.sleb128 0
+ 3115 071e 1E       		.byte	0x1e
+ 3116 071f 9F       		.byte	0x9f
+ 3117 0720 76010000 		.4byte	.LVL73
+ 3118 0724 CE010000 		.4byte	.LVL81
+ 3119 0728 0100     		.2byte	0x1
+ 3120 072a 52       		.byte	0x52
+ 3121 072b CE010000 		.4byte	.LVL81
+ 3122 072f D2010000 		.4byte	.LVL82
+ 3123 0733 0100     		.2byte	0x1
+ 3124 0735 51       		.byte	0x51
+ 3125 0736 D2010000 		.4byte	.LVL82
+ 3126 073a DC010000 		.4byte	.LVL85
+ 3127 073e 0100     		.2byte	0x1
+ 3128 0740 52       		.byte	0x52
+ 3129 0741 28020000 		.4byte	.LVL90
+ 3130 0745 38020000 		.4byte	.LVL92
+ 3131 0749 0500     		.2byte	0x5
+ 3132 074b 75       		.byte	0x75
+ 3133 074c 00       		.sleb128 0
+ 3134 074d 3D       		.byte	0x3d
+ 3135 074e 26       		.byte	0x26
+ 3136 074f 9F       		.byte	0x9f
+ 3137 0750 00000000 		.4byte	0
+ 3138 0754 00000000 		.4byte	0
+ 3139              	.LLST19:
+ 3140 0758 86000000 		.4byte	.LVL51
+ 3141 075c 50010000 		.4byte	.LVL68
+ 3142 0760 0100     		.2byte	0x1
+ 3143 0762 52       		.byte	0x52
+ 3144 0763 50010000 		.4byte	.LVL68
+ 3145 0767 3C020000 		.4byte	.LVL93
+ 3146 076b DD00     		.2byte	0xdd
+ 3147 076d 91       		.byte	0x91
+ 3148 076e 53       		.sleb128 -45
+ 3149 076f 94       		.byte	0x94
+ 3150 0770 01       		.byte	0x1
+ 3151 0771 08       		.byte	0x8
+ 3152 0772 FF       		.byte	0xff
+ 3153 0773 1A       		.byte	0x1a
+ 3154 0774 3C       		.byte	0x3c
+ 3155 0775 24       		.byte	0x24
+ 3156 0776 91       		.byte	0x91
+ 3157 0777 54       		.sleb128 -44
+ 3158 0778 94       		.byte	0x94
+ 3159 0779 01       		.byte	0x1
+ 3160 077a 08       		.byte	0x8
+ 3161 077b FF       		.byte	0xff
+ 3162 077c 1A       		.byte	0x1a
+ 3163 077d 34       		.byte	0x34
+ 3164 077e 24       		.byte	0x24
+ 3165 077f 21       		.byte	0x21
+ 3166 0780 91       		.byte	0x91
+ 3167 0781 55       		.sleb128 -43
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 63
+
+
+ 3168 0782 94       		.byte	0x94
+ 3169 0783 01       		.byte	0x1
+ 3170 0784 08       		.byte	0x8
+ 3171 0785 FF       		.byte	0xff
+ 3172 0786 1A       		.byte	0x1a
+ 3173 0787 34       		.byte	0x34
+ 3174 0788 25       		.byte	0x25
+ 3175 0789 21       		.byte	0x21
+ 3176 078a 33       		.byte	0x33
+ 3177 078b 25       		.byte	0x25
+ 3178 078c 91       		.byte	0x91
+ 3179 078d B97F     		.sleb128 -71
+ 3180 078f 94       		.byte	0x94
+ 3181 0790 01       		.byte	0x1
+ 3182 0791 08       		.byte	0x8
+ 3183 0792 FF       		.byte	0xff
+ 3184 0793 1A       		.byte	0x1a
+ 3185 0794 38       		.byte	0x38
+ 3186 0795 24       		.byte	0x24
+ 3187 0796 7D       		.byte	0x7d
+ 3188 0797 00       		.sleb128 0
+ 3189 0798 94       		.byte	0x94
+ 3190 0799 01       		.byte	0x1
+ 3191 079a 08       		.byte	0x8
+ 3192 079b FF       		.byte	0xff
+ 3193 079c 1A       		.byte	0x1a
+ 3194 079d 22       		.byte	0x22
+ 3195 079e 0A       		.byte	0xa
+ 3196 079f FFFF     		.2byte	0xffff
+ 3197 07a1 1A       		.byte	0x1a
+ 3198 07a2 31       		.byte	0x31
+ 3199 07a3 24       		.byte	0x24
+ 3200 07a4 1C       		.byte	0x1c
+ 3201 07a5 91       		.byte	0x91
+ 3202 07a6 BB7F     		.sleb128 -69
+ 3203 07a8 94       		.byte	0x94
+ 3204 07a9 01       		.byte	0x1
+ 3205 07aa 08       		.byte	0x8
+ 3206 07ab FF       		.byte	0xff
+ 3207 07ac 1A       		.byte	0x1a
+ 3208 07ad 38       		.byte	0x38
+ 3209 07ae 24       		.byte	0x24
+ 3210 07af 91       		.byte	0x91
+ 3211 07b0 BA7F     		.sleb128 -70
+ 3212 07b2 94       		.byte	0x94
+ 3213 07b3 01       		.byte	0x1
+ 3214 07b4 08       		.byte	0x8
+ 3215 07b5 FF       		.byte	0xff
+ 3216 07b6 1A       		.byte	0x1a
+ 3217 07b7 22       		.byte	0x22
+ 3218 07b8 40       		.byte	0x40
+ 3219 07b9 24       		.byte	0x24
+ 3220 07ba 40       		.byte	0x40
+ 3221 07bb 26       		.byte	0x26
+ 3222 07bc 1E       		.byte	0x1e
+ 3223 07bd 3B       		.byte	0x3b
+ 3224 07be 25       		.byte	0x25
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 64
+
+
+ 3225 07bf 91       		.byte	0x91
+ 3226 07c0 53       		.sleb128 -45
+ 3227 07c1 94       		.byte	0x94
+ 3228 07c2 01       		.byte	0x1
+ 3229 07c3 08       		.byte	0x8
+ 3230 07c4 FF       		.byte	0xff
+ 3231 07c5 1A       		.byte	0x1a
+ 3232 07c6 3C       		.byte	0x3c
+ 3233 07c7 24       		.byte	0x24
+ 3234 07c8 91       		.byte	0x91
+ 3235 07c9 54       		.sleb128 -44
+ 3236 07ca 94       		.byte	0x94
+ 3237 07cb 01       		.byte	0x1
+ 3238 07cc 08       		.byte	0x8
+ 3239 07cd FF       		.byte	0xff
+ 3240 07ce 1A       		.byte	0x1a
+ 3241 07cf 34       		.byte	0x34
+ 3242 07d0 24       		.byte	0x24
+ 3243 07d1 21       		.byte	0x21
+ 3244 07d2 91       		.byte	0x91
+ 3245 07d3 55       		.sleb128 -43
+ 3246 07d4 94       		.byte	0x94
+ 3247 07d5 01       		.byte	0x1
+ 3248 07d6 08       		.byte	0x8
+ 3249 07d7 FF       		.byte	0xff
+ 3250 07d8 1A       		.byte	0x1a
+ 3251 07d9 34       		.byte	0x34
+ 3252 07da 25       		.byte	0x25
+ 3253 07db 21       		.byte	0x21
+ 3254 07dc 34       		.byte	0x34
+ 3255 07dd 25       		.byte	0x25
+ 3256 07de 91       		.byte	0x91
+ 3257 07df B97F     		.sleb128 -71
+ 3258 07e1 94       		.byte	0x94
+ 3259 07e2 01       		.byte	0x1
+ 3260 07e3 08       		.byte	0x8
+ 3261 07e4 FF       		.byte	0xff
+ 3262 07e5 1A       		.byte	0x1a
+ 3263 07e6 38       		.byte	0x38
+ 3264 07e7 24       		.byte	0x24
+ 3265 07e8 7D       		.byte	0x7d
+ 3266 07e9 00       		.sleb128 0
+ 3267 07ea 94       		.byte	0x94
+ 3268 07eb 01       		.byte	0x1
+ 3269 07ec 08       		.byte	0x8
+ 3270 07ed FF       		.byte	0xff
+ 3271 07ee 1A       		.byte	0x1a
+ 3272 07ef 22       		.byte	0x22
+ 3273 07f0 0A       		.byte	0xa
+ 3274 07f1 FFFF     		.2byte	0xffff
+ 3275 07f3 1A       		.byte	0x1a
+ 3276 07f4 1C       		.byte	0x1c
+ 3277 07f5 91       		.byte	0x91
+ 3278 07f6 53       		.sleb128 -45
+ 3279 07f7 94       		.byte	0x94
+ 3280 07f8 01       		.byte	0x1
+ 3281 07f9 08       		.byte	0x8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 65
+
+
+ 3282 07fa FF       		.byte	0xff
+ 3283 07fb 1A       		.byte	0x1a
+ 3284 07fc 3C       		.byte	0x3c
+ 3285 07fd 24       		.byte	0x24
+ 3286 07fe 91       		.byte	0x91
+ 3287 07ff 54       		.sleb128 -44
+ 3288 0800 94       		.byte	0x94
+ 3289 0801 01       		.byte	0x1
+ 3290 0802 08       		.byte	0x8
+ 3291 0803 FF       		.byte	0xff
+ 3292 0804 1A       		.byte	0x1a
+ 3293 0805 34       		.byte	0x34
+ 3294 0806 24       		.byte	0x24
+ 3295 0807 21       		.byte	0x21
+ 3296 0808 91       		.byte	0x91
+ 3297 0809 55       		.sleb128 -43
+ 3298 080a 94       		.byte	0x94
+ 3299 080b 01       		.byte	0x1
+ 3300 080c 08       		.byte	0x8
+ 3301 080d FF       		.byte	0xff
+ 3302 080e 1A       		.byte	0x1a
+ 3303 080f 34       		.byte	0x34
+ 3304 0810 25       		.byte	0x25
+ 3305 0811 21       		.byte	0x21
+ 3306 0812 34       		.byte	0x34
+ 3307 0813 25       		.byte	0x25
+ 3308 0814 91       		.byte	0x91
+ 3309 0815 B97F     		.sleb128 -71
+ 3310 0817 94       		.byte	0x94
+ 3311 0818 01       		.byte	0x1
+ 3312 0819 08       		.byte	0x8
+ 3313 081a FF       		.byte	0xff
+ 3314 081b 1A       		.byte	0x1a
+ 3315 081c 38       		.byte	0x38
+ 3316 081d 24       		.byte	0x24
+ 3317 081e 7D       		.byte	0x7d
+ 3318 081f 00       		.sleb128 0
+ 3319 0820 94       		.byte	0x94
+ 3320 0821 01       		.byte	0x1
+ 3321 0822 08       		.byte	0x8
+ 3322 0823 FF       		.byte	0xff
+ 3323 0824 1A       		.byte	0x1a
+ 3324 0825 22       		.byte	0x22
+ 3325 0826 0A       		.byte	0xa
+ 3326 0827 FFFF     		.2byte	0xffff
+ 3327 0829 1A       		.byte	0x1a
+ 3328 082a 1C       		.byte	0x1c
+ 3329 082b 1E       		.byte	0x1e
+ 3330 082c 3C       		.byte	0x3c
+ 3331 082d 25       		.byte	0x25
+ 3332 082e 91       		.byte	0x91
+ 3333 082f BD7F     		.sleb128 -67
+ 3334 0831 94       		.byte	0x94
+ 3335 0832 01       		.byte	0x1
+ 3336 0833 08       		.byte	0x8
+ 3337 0834 FF       		.byte	0xff
+ 3338 0835 1A       		.byte	0x1a
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 66
+
+
+ 3339 0836 38       		.byte	0x38
+ 3340 0837 24       		.byte	0x24
+ 3341 0838 91       		.byte	0x91
+ 3342 0839 BC7F     		.sleb128 -68
+ 3343 083b 94       		.byte	0x94
+ 3344 083c 01       		.byte	0x1
+ 3345 083d 08       		.byte	0x8
+ 3346 083e FF       		.byte	0xff
+ 3347 083f 1A       		.byte	0x1a
+ 3348 0840 22       		.byte	0x22
+ 3349 0841 40       		.byte	0x40
+ 3350 0842 24       		.byte	0x24
+ 3351 0843 40       		.byte	0x40
+ 3352 0844 26       		.byte	0x26
+ 3353 0845 1E       		.byte	0x1e
+ 3354 0846 3E       		.byte	0x3e
+ 3355 0847 25       		.byte	0x25
+ 3356 0848 22       		.byte	0x22
+ 3357 0849 9F       		.byte	0x9f
+ 3358 084a 3C020000 		.4byte	.LVL93
+ 3359 084e 40020000 		.4byte	.LFE8
+ 3360 0852 E000     		.2byte	0xe0
+ 3361 0854 91       		.byte	0x91
+ 3362 0855 53       		.sleb128 -45
+ 3363 0856 94       		.byte	0x94
+ 3364 0857 01       		.byte	0x1
+ 3365 0858 08       		.byte	0x8
+ 3366 0859 FF       		.byte	0xff
+ 3367 085a 1A       		.byte	0x1a
+ 3368 085b 3C       		.byte	0x3c
+ 3369 085c 24       		.byte	0x24
+ 3370 085d 91       		.byte	0x91
+ 3371 085e 54       		.sleb128 -44
+ 3372 085f 94       		.byte	0x94
+ 3373 0860 01       		.byte	0x1
+ 3374 0861 08       		.byte	0x8
+ 3375 0862 FF       		.byte	0xff
+ 3376 0863 1A       		.byte	0x1a
+ 3377 0864 34       		.byte	0x34
+ 3378 0865 24       		.byte	0x24
+ 3379 0866 21       		.byte	0x21
+ 3380 0867 91       		.byte	0x91
+ 3381 0868 55       		.sleb128 -43
+ 3382 0869 94       		.byte	0x94
+ 3383 086a 01       		.byte	0x1
+ 3384 086b 08       		.byte	0x8
+ 3385 086c FF       		.byte	0xff
+ 3386 086d 1A       		.byte	0x1a
+ 3387 086e 34       		.byte	0x34
+ 3388 086f 25       		.byte	0x25
+ 3389 0870 21       		.byte	0x21
+ 3390 0871 33       		.byte	0x33
+ 3391 0872 25       		.byte	0x25
+ 3392 0873 91       		.byte	0x91
+ 3393 0874 B97F     		.sleb128 -71
+ 3394 0876 94       		.byte	0x94
+ 3395 0877 01       		.byte	0x1
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 67
+
+
+ 3396 0878 08       		.byte	0x8
+ 3397 0879 FF       		.byte	0xff
+ 3398 087a 1A       		.byte	0x1a
+ 3399 087b 38       		.byte	0x38
+ 3400 087c 24       		.byte	0x24
+ 3401 087d 91       		.byte	0x91
+ 3402 087e B87F     		.sleb128 -72
+ 3403 0880 94       		.byte	0x94
+ 3404 0881 01       		.byte	0x1
+ 3405 0882 08       		.byte	0x8
+ 3406 0883 FF       		.byte	0xff
+ 3407 0884 1A       		.byte	0x1a
+ 3408 0885 22       		.byte	0x22
+ 3409 0886 0A       		.byte	0xa
+ 3410 0887 FFFF     		.2byte	0xffff
+ 3411 0889 1A       		.byte	0x1a
+ 3412 088a 31       		.byte	0x31
+ 3413 088b 24       		.byte	0x24
+ 3414 088c 1C       		.byte	0x1c
+ 3415 088d 91       		.byte	0x91
+ 3416 088e BB7F     		.sleb128 -69
+ 3417 0890 94       		.byte	0x94
+ 3418 0891 01       		.byte	0x1
+ 3419 0892 08       		.byte	0x8
+ 3420 0893 FF       		.byte	0xff
+ 3421 0894 1A       		.byte	0x1a
+ 3422 0895 38       		.byte	0x38
+ 3423 0896 24       		.byte	0x24
+ 3424 0897 91       		.byte	0x91
+ 3425 0898 BA7F     		.sleb128 -70
+ 3426 089a 94       		.byte	0x94
+ 3427 089b 01       		.byte	0x1
+ 3428 089c 08       		.byte	0x8
+ 3429 089d FF       		.byte	0xff
+ 3430 089e 1A       		.byte	0x1a
+ 3431 089f 22       		.byte	0x22
+ 3432 08a0 40       		.byte	0x40
+ 3433 08a1 24       		.byte	0x24
+ 3434 08a2 40       		.byte	0x40
+ 3435 08a3 26       		.byte	0x26
+ 3436 08a4 1E       		.byte	0x1e
+ 3437 08a5 3B       		.byte	0x3b
+ 3438 08a6 25       		.byte	0x25
+ 3439 08a7 91       		.byte	0x91
+ 3440 08a8 53       		.sleb128 -45
+ 3441 08a9 94       		.byte	0x94
+ 3442 08aa 01       		.byte	0x1
+ 3443 08ab 08       		.byte	0x8
+ 3444 08ac FF       		.byte	0xff
+ 3445 08ad 1A       		.byte	0x1a
+ 3446 08ae 3C       		.byte	0x3c
+ 3447 08af 24       		.byte	0x24
+ 3448 08b0 91       		.byte	0x91
+ 3449 08b1 54       		.sleb128 -44
+ 3450 08b2 94       		.byte	0x94
+ 3451 08b3 01       		.byte	0x1
+ 3452 08b4 08       		.byte	0x8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 68
+
+
+ 3453 08b5 FF       		.byte	0xff
+ 3454 08b6 1A       		.byte	0x1a
+ 3455 08b7 34       		.byte	0x34
+ 3456 08b8 24       		.byte	0x24
+ 3457 08b9 21       		.byte	0x21
+ 3458 08ba 91       		.byte	0x91
+ 3459 08bb 55       		.sleb128 -43
+ 3460 08bc 94       		.byte	0x94
+ 3461 08bd 01       		.byte	0x1
+ 3462 08be 08       		.byte	0x8
+ 3463 08bf FF       		.byte	0xff
+ 3464 08c0 1A       		.byte	0x1a
+ 3465 08c1 34       		.byte	0x34
+ 3466 08c2 25       		.byte	0x25
+ 3467 08c3 21       		.byte	0x21
+ 3468 08c4 34       		.byte	0x34
+ 3469 08c5 25       		.byte	0x25
+ 3470 08c6 91       		.byte	0x91
+ 3471 08c7 B97F     		.sleb128 -71
+ 3472 08c9 94       		.byte	0x94
+ 3473 08ca 01       		.byte	0x1
+ 3474 08cb 08       		.byte	0x8
+ 3475 08cc FF       		.byte	0xff
+ 3476 08cd 1A       		.byte	0x1a
+ 3477 08ce 38       		.byte	0x38
+ 3478 08cf 24       		.byte	0x24
+ 3479 08d0 91       		.byte	0x91
+ 3480 08d1 B87F     		.sleb128 -72
+ 3481 08d3 94       		.byte	0x94
+ 3482 08d4 01       		.byte	0x1
+ 3483 08d5 08       		.byte	0x8
+ 3484 08d6 FF       		.byte	0xff
+ 3485 08d7 1A       		.byte	0x1a
+ 3486 08d8 22       		.byte	0x22
+ 3487 08d9 0A       		.byte	0xa
+ 3488 08da FFFF     		.2byte	0xffff
+ 3489 08dc 1A       		.byte	0x1a
+ 3490 08dd 1C       		.byte	0x1c
+ 3491 08de 91       		.byte	0x91
+ 3492 08df 53       		.sleb128 -45
+ 3493 08e0 94       		.byte	0x94
+ 3494 08e1 01       		.byte	0x1
+ 3495 08e2 08       		.byte	0x8
+ 3496 08e3 FF       		.byte	0xff
+ 3497 08e4 1A       		.byte	0x1a
+ 3498 08e5 3C       		.byte	0x3c
+ 3499 08e6 24       		.byte	0x24
+ 3500 08e7 91       		.byte	0x91
+ 3501 08e8 54       		.sleb128 -44
+ 3502 08e9 94       		.byte	0x94
+ 3503 08ea 01       		.byte	0x1
+ 3504 08eb 08       		.byte	0x8
+ 3505 08ec FF       		.byte	0xff
+ 3506 08ed 1A       		.byte	0x1a
+ 3507 08ee 34       		.byte	0x34
+ 3508 08ef 24       		.byte	0x24
+ 3509 08f0 21       		.byte	0x21
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 69
+
+
+ 3510 08f1 91       		.byte	0x91
+ 3511 08f2 55       		.sleb128 -43
+ 3512 08f3 94       		.byte	0x94
+ 3513 08f4 01       		.byte	0x1
+ 3514 08f5 08       		.byte	0x8
+ 3515 08f6 FF       		.byte	0xff
+ 3516 08f7 1A       		.byte	0x1a
+ 3517 08f8 34       		.byte	0x34
+ 3518 08f9 25       		.byte	0x25
+ 3519 08fa 21       		.byte	0x21
+ 3520 08fb 34       		.byte	0x34
+ 3521 08fc 25       		.byte	0x25
+ 3522 08fd 91       		.byte	0x91
+ 3523 08fe B97F     		.sleb128 -71
+ 3524 0900 94       		.byte	0x94
+ 3525 0901 01       		.byte	0x1
+ 3526 0902 08       		.byte	0x8
+ 3527 0903 FF       		.byte	0xff
+ 3528 0904 1A       		.byte	0x1a
+ 3529 0905 38       		.byte	0x38
+ 3530 0906 24       		.byte	0x24
+ 3531 0907 91       		.byte	0x91
+ 3532 0908 B87F     		.sleb128 -72
+ 3533 090a 94       		.byte	0x94
+ 3534 090b 01       		.byte	0x1
+ 3535 090c 08       		.byte	0x8
+ 3536 090d FF       		.byte	0xff
+ 3537 090e 1A       		.byte	0x1a
+ 3538 090f 22       		.byte	0x22
+ 3539 0910 0A       		.byte	0xa
+ 3540 0911 FFFF     		.2byte	0xffff
+ 3541 0913 1A       		.byte	0x1a
+ 3542 0914 1C       		.byte	0x1c
+ 3543 0915 1E       		.byte	0x1e
+ 3544 0916 3C       		.byte	0x3c
+ 3545 0917 25       		.byte	0x25
+ 3546 0918 91       		.byte	0x91
+ 3547 0919 BD7F     		.sleb128 -67
+ 3548 091b 94       		.byte	0x94
+ 3549 091c 01       		.byte	0x1
+ 3550 091d 08       		.byte	0x8
+ 3551 091e FF       		.byte	0xff
+ 3552 091f 1A       		.byte	0x1a
+ 3553 0920 38       		.byte	0x38
+ 3554 0921 24       		.byte	0x24
+ 3555 0922 91       		.byte	0x91
+ 3556 0923 BC7F     		.sleb128 -68
+ 3557 0925 94       		.byte	0x94
+ 3558 0926 01       		.byte	0x1
+ 3559 0927 08       		.byte	0x8
+ 3560 0928 FF       		.byte	0xff
+ 3561 0929 1A       		.byte	0x1a
+ 3562 092a 22       		.byte	0x22
+ 3563 092b 40       		.byte	0x40
+ 3564 092c 24       		.byte	0x24
+ 3565 092d 40       		.byte	0x40
+ 3566 092e 26       		.byte	0x26
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 70
+
+
+ 3567 092f 1E       		.byte	0x1e
+ 3568 0930 3E       		.byte	0x3e
+ 3569 0931 25       		.byte	0x25
+ 3570 0932 22       		.byte	0x22
+ 3571 0933 9F       		.byte	0x9f
+ 3572 0934 00000000 		.4byte	0
+ 3573 0938 00000000 		.4byte	0
+ 3574              	.LLST20:
+ 3575 093c AA000000 		.4byte	.LVL54
+ 3576 0940 D4010000 		.4byte	.LVL83
+ 3577 0944 0100     		.2byte	0x1
+ 3578 0946 50       		.byte	0x50
+ 3579 0947 D4010000 		.4byte	.LVL83
+ 3580 094b D8010000 		.4byte	.LVL84
+ 3581 094f 0400     		.2byte	0x4
+ 3582 0951 70       		.byte	0x70
+ 3583 0952 00       		.sleb128 0
+ 3584 0953 1F       		.byte	0x1f
+ 3585 0954 9F       		.byte	0x9f
+ 3586 0955 D8010000 		.4byte	.LVL84
+ 3587 0959 40020000 		.4byte	.LFE8
+ 3588 095d 1E00     		.2byte	0x1e
+ 3589 095f 91       		.byte	0x91
+ 3590 0960 50       		.sleb128 -48
+ 3591 0961 94       		.byte	0x94
+ 3592 0962 01       		.byte	0x1
+ 3593 0963 08       		.byte	0x8
+ 3594 0964 FF       		.byte	0xff
+ 3595 0965 1A       		.byte	0x1a
+ 3596 0966 3C       		.byte	0x3c
+ 3597 0967 24       		.byte	0x24
+ 3598 0968 91       		.byte	0x91
+ 3599 0969 51       		.sleb128 -47
+ 3600 096a 94       		.byte	0x94
+ 3601 096b 01       		.byte	0x1
+ 3602 096c 08       		.byte	0x8
+ 3603 096d FF       		.byte	0xff
+ 3604 096e 1A       		.byte	0x1a
+ 3605 096f 34       		.byte	0x34
+ 3606 0970 24       		.byte	0x24
+ 3607 0971 21       		.byte	0x21
+ 3608 0972 91       		.byte	0x91
+ 3609 0973 52       		.sleb128 -46
+ 3610 0974 94       		.byte	0x94
+ 3611 0975 01       		.byte	0x1
+ 3612 0976 08       		.byte	0x8
+ 3613 0977 FF       		.byte	0xff
+ 3614 0978 1A       		.byte	0x1a
+ 3615 0979 34       		.byte	0x34
+ 3616 097a 25       		.byte	0x25
+ 3617 097b 21       		.byte	0x21
+ 3618 097c 9F       		.byte	0x9f
+ 3619 097d 00000000 		.4byte	0
+ 3620 0981 00000000 		.4byte	0
+ 3621              	.LLST21:
+ 3622 0985 B8000000 		.4byte	.LVL56
+ 3623 0989 CA010000 		.4byte	.LVL80
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 71
+
+
+ 3624 098d 0100     		.2byte	0x1
+ 3625 098f 51       		.byte	0x51
+ 3626 0990 CA010000 		.4byte	.LVL80
+ 3627 0994 40020000 		.4byte	.LFE8
+ 3628 0998 1400     		.2byte	0x14
+ 3629 099a 91       		.byte	0x91
+ 3630 099b BF7F     		.sleb128 -65
+ 3631 099d 94       		.byte	0x94
+ 3632 099e 01       		.byte	0x1
+ 3633 099f 08       		.byte	0x8
+ 3634 09a0 FF       		.byte	0xff
+ 3635 09a1 1A       		.byte	0x1a
+ 3636 09a2 38       		.byte	0x38
+ 3637 09a3 24       		.byte	0x24
+ 3638 09a4 91       		.byte	0x91
+ 3639 09a5 BE7F     		.sleb128 -66
+ 3640 09a7 94       		.byte	0x94
+ 3641 09a8 01       		.byte	0x1
+ 3642 09a9 08       		.byte	0x8
+ 3643 09aa FF       		.byte	0xff
+ 3644 09ab 1A       		.byte	0x1a
+ 3645 09ac 22       		.byte	0x22
+ 3646 09ad 9F       		.byte	0x9f
+ 3647 09ae 00000000 		.4byte	0
+ 3648 09b2 00000000 		.4byte	0
+ 3649              	.LLST22:
+ 3650 09b6 E8000000 		.4byte	.LVL59
+ 3651 09ba 72010000 		.4byte	.LVL72
+ 3652 09be 0100     		.2byte	0x1
+ 3653 09c0 5A       		.byte	0x5a
+ 3654 09c1 72010000 		.4byte	.LVL72
+ 3655 09c5 40020000 		.4byte	.LFE8
+ 3656 09c9 1200     		.2byte	0x12
+ 3657 09cb 91       		.byte	0x91
+ 3658 09cc 45       		.sleb128 -59
+ 3659 09cd 94       		.byte	0x94
+ 3660 09ce 01       		.byte	0x1
+ 3661 09cf 08       		.byte	0x8
+ 3662 09d0 FF       		.byte	0xff
+ 3663 09d1 1A       		.byte	0x1a
+ 3664 09d2 38       		.byte	0x38
+ 3665 09d3 24       		.byte	0x24
+ 3666 09d4 91       		.byte	0x91
+ 3667 09d5 44       		.sleb128 -60
+ 3668 09d6 94       		.byte	0x94
+ 3669 09d7 01       		.byte	0x1
+ 3670 09d8 08       		.byte	0x8
+ 3671 09d9 FF       		.byte	0xff
+ 3672 09da 1A       		.byte	0x1a
+ 3673 09db 22       		.byte	0x22
+ 3674 09dc 9F       		.byte	0x9f
+ 3675 09dd 00000000 		.4byte	0
+ 3676 09e1 00000000 		.4byte	0
+ 3677              	.LLST23:
+ 3678 09e5 F8000000 		.4byte	.LVL60
+ 3679 09e9 60010000 		.4byte	.LVL70
+ 3680 09ed 0100     		.2byte	0x1
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 72
+
+
+ 3681 09ef 58       		.byte	0x58
+ 3682 09f0 60010000 		.4byte	.LVL70
+ 3683 09f4 40020000 		.4byte	.LFE8
+ 3684 09f8 1200     		.2byte	0x12
+ 3685 09fa 91       		.byte	0x91
+ 3686 09fb 47       		.sleb128 -57
+ 3687 09fc 94       		.byte	0x94
+ 3688 09fd 01       		.byte	0x1
+ 3689 09fe 08       		.byte	0x8
+ 3690 09ff FF       		.byte	0xff
+ 3691 0a00 1A       		.byte	0x1a
+ 3692 0a01 38       		.byte	0x38
+ 3693 0a02 24       		.byte	0x24
+ 3694 0a03 91       		.byte	0x91
+ 3695 0a04 46       		.sleb128 -58
+ 3696 0a05 94       		.byte	0x94
+ 3697 0a06 01       		.byte	0x1
+ 3698 0a07 08       		.byte	0x8
+ 3699 0a08 FF       		.byte	0xff
+ 3700 0a09 1A       		.byte	0x1a
+ 3701 0a0a 22       		.byte	0x22
+ 3702 0a0b 9F       		.byte	0x9f
+ 3703 0a0c 00000000 		.4byte	0
+ 3704 0a10 00000000 		.4byte	0
+ 3705              	.LLST24:
+ 3706 0a14 24010000 		.4byte	.LVL65
+ 3707 0a18 1E020000 		.4byte	.LVL89
+ 3708 0a1c 0100     		.2byte	0x1
+ 3709 0a1e 55       		.byte	0x55
+ 3710 0a1f 1E020000 		.4byte	.LVL89
+ 3711 0a23 40020000 		.4byte	.LFE8
+ 3712 0a27 1200     		.2byte	0x12
+ 3713 0a29 91       		.byte	0x91
+ 3714 0a2a 4D       		.sleb128 -51
+ 3715 0a2b 94       		.byte	0x94
+ 3716 0a2c 01       		.byte	0x1
+ 3717 0a2d 08       		.byte	0x8
+ 3718 0a2e FF       		.byte	0xff
+ 3719 0a2f 1A       		.byte	0x1a
+ 3720 0a30 38       		.byte	0x38
+ 3721 0a31 24       		.byte	0x24
+ 3722 0a32 91       		.byte	0x91
+ 3723 0a33 4C       		.sleb128 -52
+ 3724 0a34 94       		.byte	0x94
+ 3725 0a35 01       		.byte	0x1
+ 3726 0a36 08       		.byte	0x8
+ 3727 0a37 FF       		.byte	0xff
+ 3728 0a38 1A       		.byte	0x1a
+ 3729 0a39 22       		.byte	0x22
+ 3730 0a3a 9F       		.byte	0x9f
+ 3731 0a3b 00000000 		.4byte	0
+ 3732 0a3f 00000000 		.4byte	0
+ 3733              	.LLST25:
+ 3734 0a43 32010000 		.4byte	.LVL66
+ 3735 0a47 0E020000 		.4byte	.LVL87
+ 3736 0a4b 0100     		.2byte	0x1
+ 3737 0a4d 57       		.byte	0x57
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 73
+
+
+ 3738 0a4e 0E020000 		.4byte	.LVL87
+ 3739 0a52 40020000 		.4byte	.LFE8
+ 3740 0a56 1200     		.2byte	0x12
+ 3741 0a58 91       		.byte	0x91
+ 3742 0a59 4F       		.sleb128 -49
+ 3743 0a5a 94       		.byte	0x94
+ 3744 0a5b 01       		.byte	0x1
+ 3745 0a5c 08       		.byte	0x8
+ 3746 0a5d FF       		.byte	0xff
+ 3747 0a5e 1A       		.byte	0x1a
+ 3748 0a5f 38       		.byte	0x38
+ 3749 0a60 24       		.byte	0x24
+ 3750 0a61 91       		.byte	0x91
+ 3751 0a62 4E       		.sleb128 -50
+ 3752 0a63 94       		.byte	0x94
+ 3753 0a64 01       		.byte	0x1
+ 3754 0a65 08       		.byte	0x8
+ 3755 0a66 FF       		.byte	0xff
+ 3756 0a67 1A       		.byte	0x1a
+ 3757 0a68 22       		.byte	0x22
+ 3758 0a69 9F       		.byte	0x9f
+ 3759 0a6a 00000000 		.4byte	0
+ 3760 0a6e 00000000 		.4byte	0
+ 3761              	.LLST26:
+ 3762 0a72 00000000 		.4byte	.LVL41
+ 3763 0a76 1E000000 		.4byte	.LVL42
+ 3764 0a7a 0200     		.2byte	0x2
+ 3765 0a7c 70       		.byte	0x70
+ 3766 0a7d 00       		.sleb128 0
+ 3767 0a7e 1E000000 		.4byte	.LVL42
+ 3768 0a82 40020000 		.4byte	.LFE8
+ 3769 0a86 0200     		.2byte	0x2
+ 3770 0a88 74       		.byte	0x74
+ 3771 0a89 00       		.sleb128 0
+ 3772 0a8a 00000000 		.4byte	0
+ 3773 0a8e 00000000 		.4byte	0
+ 3774              		.section	.debug_aranges,"",%progbits
+ 3775 0000 5C000000 		.4byte	0x5c
+ 3776 0004 0200     		.2byte	0x2
+ 3777 0006 00000000 		.4byte	.Ldebug_info0
+ 3778 000a 04       		.byte	0x4
+ 3779 000b 00       		.byte	0
+ 3780 000c 0000     		.2byte	0
+ 3781 000e 0000     		.2byte	0
+ 3782 0010 00000000 		.4byte	.LFB0
+ 3783 0014 1C000000 		.4byte	.LFE0-.LFB0
+ 3784 0018 00000000 		.4byte	.LFB1
+ 3785 001c 26000000 		.4byte	.LFE1-.LFB1
+ 3786 0020 00000000 		.4byte	.LFB2
+ 3787 0024 18000000 		.4byte	.LFE2-.LFB2
+ 3788 0028 00000000 		.4byte	.LFB3
+ 3789 002c 5A000000 		.4byte	.LFE3-.LFB3
+ 3790 0030 00000000 		.4byte	.LFB4
+ 3791 0034 2A000000 		.4byte	.LFE4-.LFB4
+ 3792 0038 00000000 		.4byte	.LFB5
+ 3793 003c 0A000000 		.4byte	.LFE5-.LFB5
+ 3794 0040 00000000 		.4byte	.LFB6
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 74
+
+
+ 3795 0044 0E000000 		.4byte	.LFE6-.LFB6
+ 3796 0048 00000000 		.4byte	.LFB7
+ 3797 004c 0E000000 		.4byte	.LFE7-.LFB7
+ 3798 0050 00000000 		.4byte	.LFB8
+ 3799 0054 40020000 		.4byte	.LFE8-.LFB8
+ 3800 0058 00000000 		.4byte	0
+ 3801 005c 00000000 		.4byte	0
+ 3802              		.section	.debug_ranges,"",%progbits
+ 3803              	.Ldebug_ranges0:
+ 3804 0000 00000000 		.4byte	.LFB0
+ 3805 0004 1C000000 		.4byte	.LFE0
+ 3806 0008 00000000 		.4byte	.LFB1
+ 3807 000c 26000000 		.4byte	.LFE1
+ 3808 0010 00000000 		.4byte	.LFB2
+ 3809 0014 18000000 		.4byte	.LFE2
+ 3810 0018 00000000 		.4byte	.LFB3
+ 3811 001c 5A000000 		.4byte	.LFE3
+ 3812 0020 00000000 		.4byte	.LFB4
+ 3813 0024 2A000000 		.4byte	.LFE4
+ 3814 0028 00000000 		.4byte	.LFB5
+ 3815 002c 0A000000 		.4byte	.LFE5
+ 3816 0030 00000000 		.4byte	.LFB6
+ 3817 0034 0E000000 		.4byte	.LFE6
+ 3818 0038 00000000 		.4byte	.LFB7
+ 3819 003c 0E000000 		.4byte	.LFE7
+ 3820 0040 00000000 		.4byte	.LFB8
+ 3821 0044 40020000 		.4byte	.LFE8
+ 3822 0048 00000000 		.4byte	0
+ 3823 004c 00000000 		.4byte	0
+ 3824              		.section	.debug_line,"",%progbits
+ 3825              	.Ldebug_line0:
+ 3826 0000 69010000 		.section	.debug_str,"MS",%progbits,1
+ 3826      02008300 
+ 3826      00000201 
+ 3826      FB0E0D00 
+ 3826      01010101 
+ 3827              	.LASF50:
+ 3828 0000 745F6669 		.ascii	"t_fine\000"
+ 3828      6E6500
+ 3829              	.LASF70:
+ 3830 0007 626D7032 		.ascii	"bmp280.c\000"
+ 3830      38302E63 
+ 3830      00
+ 3831              	.LASF27:
+ 3832 0010 7370695F 		.ascii	"spi_reg_data\000"
+ 3832      7265675F 
+ 3832      64617461 
+ 3832      00
+ 3833              	.LASF34:
+ 3834 001d 73706933 		.ascii	"spi3w_en\000"
+ 3834      775F656E 
+ 3834      00
+ 3835              	.LASF10:
+ 3836 0026 4350555F 		.ascii	"CPU_INT32S\000"
+ 3836      494E5433 
+ 3836      325300
+ 3837              	.LASF8:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 75
+
+
+ 3838 0031 4350555F 		.ascii	"CPU_INT32U\000"
+ 3838      494E5433 
+ 3838      325500
+ 3839              	.LASF66:
+ 3840 003c 7370695F 		.ascii	"spi_get_n_bytes\000"
+ 3840      6765745F 
+ 3840      6E5F6279 
+ 3840      74657300 
+ 3841              	.LASF11:
+ 3842 004c 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3842      206C6F6E 
+ 3842      6720756E 
+ 3842      7369676E 
+ 3842      65642069 
+ 3843              	.LASF12:
+ 3844 0063 6C6F6E67 		.ascii	"long long int\000"
+ 3844      206C6F6E 
+ 3844      6720696E 
+ 3844      7400
+ 3845              	.LASF2:
+ 3846 0071 7369676E 		.ascii	"signed char\000"
+ 3846      65642063 
+ 3846      68617200 
+ 3847              	.LASF35:
+ 3848 007d 77616974 		.ascii	"wait_bmp280_connecting\000"
+ 3848      5F626D70 
+ 3848      3238305F 
+ 3848      636F6E6E 
+ 3848      65637469 
+ 3849              	.LASF61:
+ 3850 0094 72657475 		.ascii	"return_data\000"
+ 3850      726E5F64 
+ 3850      61746100 
+ 3851              	.LASF25:
+ 3852 00a0 626D7032 		.ascii	"bmp280_spi_read_multiple\000"
+ 3852      38305F73 
+ 3852      70695F72 
+ 3852      6561645F 
+ 3852      6D756C74 
+ 3853              	.LASF51:
+ 3854 00b9 6164635F 		.ascii	"adc_P\000"
+ 3854      5000
+ 3855              	.LASF44:
+ 3856 00bf 6164635F 		.ascii	"adc_T\000"
+ 3856      5400
+ 3857              	.LASF71:
+ 3858 00c5 5C5C4D61 		.ascii	"\\\\Mac\\Home\\Documents\\cypress\\esw_bmp280_Petro"
+ 3858      635C486F 
+ 3858      6D655C44 
+ 3858      6F63756D 
+ 3858      656E7473 
+ 3859 00f2 7669635F 		.ascii	"vic_Wagner\\BMP280_CY8CKIT_059.cydsn\000"
+ 3859      5761676E 
+ 3859      65725C42 
+ 3859      4D503238 
+ 3859      305F4359 
+ 3860              	.LASF15:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 76
+
+
+ 3861 0116 6C6F6E67 		.ascii	"long int\000"
+ 3861      20696E74 
+ 3861      00
+ 3862              	.LASF67:
+ 3863 011f 5350494D 		.ascii	"SPIM_1_GetRxBufferSize\000"
+ 3863      5F315F47 
+ 3863      65745278 
+ 3863      42756666 
+ 3863      65725369 
+ 3864              	.LASF39:
+ 3865 0136 72656164 		.ascii	"read_bmp280_calib\000"
+ 3865      5F626D70 
+ 3865      3238305F 
+ 3865      63616C69 
+ 3865      6200
+ 3866              	.LASF62:
+ 3867 0148 70726570 		.ascii	"prepare_and_wait_spi_send\000"
+ 3867      6172655F 
+ 3867      616E645F 
+ 3867      77616974 
+ 3867      5F737069 
+ 3868              	.LASF14:
+ 3869 0162 646F7562 		.ascii	"double\000"
+ 3869      6C6500
+ 3870              	.LASF53:
+ 3871 0169 6469675F 		.ascii	"dig_P2\000"
+ 3871      503200
+ 3872              	.LASF45:
+ 3873 0170 6469675F 		.ascii	"dig_T1\000"
+ 3873      543100
+ 3874              	.LASF46:
+ 3875 0177 6469675F 		.ascii	"dig_T2\000"
+ 3875      543200
+ 3876              	.LASF47:
+ 3877 017e 6469675F 		.ascii	"dig_T3\000"
+ 3877      543300
+ 3878              	.LASF28:
+ 3879 0185 7365745F 		.ascii	"set_bmp280_config\000"
+ 3879      626D7032 
+ 3879      38305F63 
+ 3879      6F6E6669 
+ 3879      6700
+ 3880              	.LASF19:
+ 3881 0197 74656D70 		.ascii	"temp\000"
+ 3881      00
+ 3882              	.LASF21:
+ 3883 019c 426D7032 		.ascii	"Bmp280_press_temp\000"
+ 3883      38305F70 
+ 3883      72657373 
+ 3883      5F74656D 
+ 3883      7000
+ 3884              	.LASF64:
+ 3885 01ae 77616974 		.ascii	"wait_spi_tx\000"
+ 3885      5F737069 
+ 3885      5F747800 
+ 3886              	.LASF9:
+ 3887 01ba 756E7369 		.ascii	"unsigned int\000"
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 77
+
+
+ 3887      676E6564 
+ 3887      20696E74 
+ 3887      00
+ 3888              	.LASF41:
+ 3889 01c7 7265675F 		.ascii	"reg_value\000"
+ 3889      76616C75 
+ 3889      6500
+ 3890              	.LASF32:
+ 3891 01d1 745F7374 		.ascii	"t_standby\000"
+ 3891      616E6462 
+ 3891      7900
+ 3892              	.LASF48:
+ 3893 01db 76617231 		.ascii	"var1\000"
+ 3893      00
+ 3894              	.LASF49:
+ 3895 01e0 76617232 		.ascii	"var2\000"
+ 3895      00
+ 3896              	.LASF16:
+ 3897 01e5 6C6F6E67 		.ascii	"long unsigned int\000"
+ 3897      20756E73 
+ 3897      69676E65 
+ 3897      6420696E 
+ 3897      7400
+ 3898              	.LASF3:
+ 3899 01f7 4350555F 		.ascii	"CPU_INT08U\000"
+ 3899      494E5430 
+ 3899      385500
+ 3900              	.LASF5:
+ 3901 0202 73686F72 		.ascii	"short unsigned int\000"
+ 3901      7420756E 
+ 3901      7369676E 
+ 3901      65642069 
+ 3901      6E7400
+ 3902              	.LASF20:
+ 3903 0215 70726573 		.ascii	"press\000"
+ 3903      7300
+ 3904              	.LASF65:
+ 3905 021b 7370695F 		.ascii	"spi_get_byte\000"
+ 3905      6765745F 
+ 3905      62797465 
+ 3905      00
+ 3906              	.LASF68:
+ 3907 0228 5350494D 		.ascii	"SPIM_1_ReadRxData\000"
+ 3907      5F315F52 
+ 3907      65616452 
+ 3907      78446174 
+ 3907      6100
+ 3908              	.LASF23:
+ 3909 023a 7265675F 		.ascii	"reg_values\000"
+ 3909      76616C75 
+ 3909      657300
+ 3910              	.LASF42:
+ 3911 0245 7265675F 		.ascii	"reg_press_temp\000"
+ 3911      70726573 
+ 3911      735F7465 
+ 3911      6D7000
+ 3912              	.LASF18:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 78
+
+
+ 3913 0254 73697A65 		.ascii	"sizetype\000"
+ 3913      74797065 
+ 3913      00
+ 3914              	.LASF36:
+ 3915 025d 626D7032 		.ascii	"bmp280_spi_read\000"
+ 3915      38305F73 
+ 3915      70695F72 
+ 3915      65616400 
+ 3916              	.LASF17:
+ 3917 026d 6C6F6E67 		.ascii	"long double\000"
+ 3917      20646F75 
+ 3917      626C6500 
+ 3918              	.LASF37:
+ 3919 0279 6765745F 		.ascii	"get_bmp280_chip_id\000"
+ 3919      626D7032 
+ 3919      38305F63 
+ 3919      6869705F 
+ 3919      696400
+ 3920              	.LASF31:
+ 3921 028c 706F7765 		.ascii	"power_mode\000"
+ 3921      725F6D6F 
+ 3921      646500
+ 3922              	.LASF13:
+ 3923 0297 666C6F61 		.ascii	"float\000"
+ 3923      7400
+ 3924              	.LASF1:
+ 3925 029d 756E7369 		.ascii	"unsigned char\000"
+ 3925      676E6564 
+ 3925      20636861 
+ 3925      7200
+ 3926              	.LASF7:
+ 3927 02ab 73686F72 		.ascii	"short int\000"
+ 3927      7420696E 
+ 3927      7400
+ 3928              	.LASF30:
+ 3929 02b5 6F737274 		.ascii	"osrt_p\000"
+ 3929      5F7000
+ 3930              	.LASF29:
+ 3931 02bc 6F737274 		.ascii	"osrt_t\000"
+ 3931      5F7400
+ 3932              	.LASF69:
+ 3933 02c3 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3933      43313120 
+ 3933      352E342E 
+ 3933      31203230 
+ 3933      31363036 
+ 3934 02f6 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 3934      20726576 
+ 3934      6973696F 
+ 3934      6E203233 
+ 3934      37373135 
+ 3935 0329 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 3935      66756E63 
+ 3935      74696F6E 
+ 3935      2D736563 
+ 3935      74696F6E 
+ 3936              	.LASF40:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 79
+
+
+ 3937 0351 6765745F 		.ascii	"get_bmp280_press_temp\000"
+ 3937      626D7032 
+ 3937      38305F70 
+ 3937      72657373 
+ 3937      5F74656D 
+ 3938              	.LASF22:
+ 3939 0367 7370695F 		.ascii	"spi_reg_addr\000"
+ 3939      7265675F 
+ 3939      61646472 
+ 3939      00
+ 3940              	.LASF63:
+ 3941 0374 7370695F 		.ascii	"spi_send_n_bytes\000"
+ 3941      73656E64 
+ 3941      5F6E5F62 
+ 3941      79746573 
+ 3941      00
+ 3942              	.LASF52:
+ 3943 0385 6469675F 		.ascii	"dig_P1\000"
+ 3943      503100
+ 3944              	.LASF0:
+ 3945 038c 63686172 		.ascii	"char\000"
+ 3945      00
+ 3946              	.LASF54:
+ 3947 0391 6469675F 		.ascii	"dig_P3\000"
+ 3947      503300
+ 3948              	.LASF55:
+ 3949 0398 6469675F 		.ascii	"dig_P4\000"
+ 3949      503400
+ 3950              	.LASF56:
+ 3951 039f 6469675F 		.ascii	"dig_P5\000"
+ 3951      503500
+ 3952              	.LASF57:
+ 3953 03a6 6469675F 		.ascii	"dig_P6\000"
+ 3953      503600
+ 3954              	.LASF58:
+ 3955 03ad 6469675F 		.ascii	"dig_P7\000"
+ 3955      503700
+ 3956              	.LASF59:
+ 3957 03b4 6469675F 		.ascii	"dig_P8\000"
+ 3957      503800
+ 3958              	.LASF60:
+ 3959 03bb 6469675F 		.ascii	"dig_P9\000"
+ 3959      503900
+ 3960              	.LASF43:
+ 3961 03c2 7265675F 		.ascii	"reg_calib\000"
+ 3961      63616C69 
+ 3961      6200
+ 3962              	.LASF33:
+ 3963 03cc 66696C74 		.ascii	"filter\000"
+ 3963      657200
+ 3964              	.LASF24:
+ 3965 03d3 72656164 		.ascii	"read_size\000"
+ 3965      5F73697A 
+ 3965      6500
+ 3966              	.LASF6:
+ 3967 03dd 4350555F 		.ascii	"CPU_INT16S\000"
+ 3967      494E5431 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccyO0jjj.s 			page 80
+
+
+ 3967      365300
+ 3968              	.LASF4:
+ 3969 03e8 4350555F 		.ascii	"CPU_INT16U\000"
+ 3969      494E5431 
+ 3969      365500
+ 3970              	.LASF72:
+ 3971 03f3 735F426D 		.ascii	"s_Bmp280_press_temp\000"
+ 3971      70323830 
+ 3971      5F707265 
+ 3971      73735F74 
+ 3971      656D7000 
+ 3972              	.LASF26:
+ 3973 0407 626D7032 		.ascii	"bmp280_spi_write\000"
+ 3973      38305F73 
+ 3973      70695F77 
+ 3973      72697465 
+ 3973      00
+ 3974              	.LASF38:
+ 3975 0418 72656164 		.ascii	"read_bmp280_press_temp\000"
+ 3975      5F626D70 
+ 3975      3238305F 
+ 3975      70726573 
+ 3975      735F7465 
+ 3976              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran

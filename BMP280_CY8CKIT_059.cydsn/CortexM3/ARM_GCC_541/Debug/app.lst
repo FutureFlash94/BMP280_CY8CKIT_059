@@ -1,0 +1,5253 @@
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 1
+
+
+   1              		.syntax unified
+   2              		.cpu cortex-m3
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.thumb
+  14              		.syntax unified
+  15              		.file	"app.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.section	.text.App_TaskCreate,"ax",%progbits
+  20              		.align	2
+  21              		.thumb
+  22              		.thumb_func
+  23              		.type	App_TaskCreate, %function
+  24              	App_TaskCreate:
+  25              	.LFB3:
+  26              		.file 1 "APP\\app.c"
+   1:APP/app.c     **** /*
+   2:APP/app.c     **** ***************************************************************************************************
+   3:APP/app.c     **** *
+   4:APP/app.c     **** *                                       MES1 Embedded Software (RTOS)
+   5:APP/app.c     **** *
+   6:APP/app.c     **** * Filename      : app.c
+   7:APP/app.c     **** * Version       : V1.0
+   8:APP/app.c     **** * Programmer(s) : Mihael Petrovic, Filip Wagner
+   9:APP/app.c     ****                   
+  10:APP/app.c     **** ***************************************************************************************************
+  11:APP/app.c     **** */
+  12:APP/app.c     **** 
+  13:APP/app.c     **** /*
+  14:APP/app.c     **** ***************************************************************************************************
+  15:APP/app.c     **** *                                             INCLUDE FILES
+  16:APP/app.c     **** ***************************************************************************************************
+  17:APP/app.c     **** */
+  18:APP/app.c     **** 
+  19:APP/app.c     **** #include <includes.h>
+  20:APP/app.c     **** #include <cyapicallbacks.h>
+  21:APP/app.c     **** 
+  22:APP/app.c     **** /*
+  23:APP/app.c     **** ***************************************************************************************************
+  24:APP/app.c     **** *                                             LOCAL DEFINES
+  25:APP/app.c     **** ***************************************************************************************************
+  26:APP/app.c     **** */
+  27:APP/app.c     **** 
+  28:APP/app.c     **** #define  BMP280_CONFIG_OSRT_T               BMP280_OSRT_T_X4
+  29:APP/app.c     **** #define  BMP280_CONFIG_OSRT_P               BMP280_OSRT_P_X2
+  30:APP/app.c     **** #define  BMP280_CONFIG_POWER_MODE           BMP280_POWER_MODE_NORMAL
+  31:APP/app.c     **** #define  BMP280_CONFIG_T_STANDBY            BMP280_T_STANDBY_0_5MS
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 2
+
+
+  32:APP/app.c     **** #define  BMP280_CONFIG_FILTER               BMP280_FILTER_COEFF_2
+  33:APP/app.c     **** #define  BMP280_CONFIG_SPI3W_EN             BMP280_SPI3_WIRE_DISENABLE
+  34:APP/app.c     **** 
+  35:APP/app.c     **** /*
+  36:APP/app.c     **** ***************************************************************************************************
+  37:APP/app.c     **** *                                            LOCAL VARIABLES
+  38:APP/app.c     **** ***************************************************************************************************
+  39:APP/app.c     **** */
+  40:APP/app.c     **** 
+  41:APP/app.c     **** static  OS_TCB   App_TaskStartTCB;
+  42:APP/app.c     **** static  CPU_STK  App_TaskStartStk[APP_CFG_TASK_START_STK_SIZE];
+  43:APP/app.c     **** 
+  44:APP/app.c     **** static  OS_TCB   App_TaskCOM_TCB;
+  45:APP/app.c     **** static  CPU_STK  App_TaskCOMStk[APP_CFG_TASK_COM_STK_SIZE];
+  46:APP/app.c     **** 
+  47:APP/app.c     **** static  OS_TCB   App_TaskPRESS_TCB;
+  48:APP/app.c     **** static  CPU_STK  App_TaskPRESSStk[APP_CFG_TASK_PRESS_STK_SIZE];
+  49:APP/app.c     **** 
+  50:APP/app.c     **** 
+  51:APP/app.c     **** /*
+  52:APP/app.c     **** ***************************************************************************************************
+  53:APP/app.c     **** *                                         FUNCTION PROTOTYPES
+  54:APP/app.c     **** ***************************************************************************************************
+  55:APP/app.c     **** */
+  56:APP/app.c     **** 
+  57:APP/app.c     **** static  void  App_TaskStart  (void *p_arg);
+  58:APP/app.c     **** 
+  59:APP/app.c     **** static  void  App_TaskCOM (void *p_arg);
+  60:APP/app.c     **** static  void  App_TaskPRESS (void *p_arg);
+  61:APP/app.c     **** 
+  62:APP/app.c     **** static  void  App_TaskCreate (void);
+  63:APP/app.c     **** 
+  64:APP/app.c     **** /*
+  65:APP/app.c     **** ***************************************************************************************************
+  66:APP/app.c     **** *                                                main()
+  67:APP/app.c     **** *
+  68:APP/app.c     **** * Description : This is the standard entry point for C code.  It is assumed that your code will cal
+  69:APP/app.c     **** *               main() once you have performed all necessary initialization.
+  70:APP/app.c     **** *
+  71:APP/app.c     **** * Argument(s) : none
+  72:APP/app.c     **** *
+  73:APP/app.c     **** * Return(s)   : none
+  74:APP/app.c     **** *
+  75:APP/app.c     **** * Caller(s)   : Startup Code.
+  76:APP/app.c     **** *
+  77:APP/app.c     **** * Note(s)     : none.
+  78:APP/app.c     **** ***************************************************************************************************
+  79:APP/app.c     **** */
+  80:APP/app.c     **** 
+  81:APP/app.c     **** int  main (void)
+  82:APP/app.c     **** {
+  83:APP/app.c     ****   OS_ERR  os_err;
+  84:APP/app.c     ****   
+  85:APP/app.c     ****   BSP_PreInit();                                              /* Perform BSP pre-initialization.   
+  86:APP/app.c     **** 
+  87:APP/app.c     ****   CPU_Init();                                                 /* Initialize the uC/CPU services    
+  88:APP/app.c     **** 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 3
+
+
+  89:APP/app.c     ****   OSInit(&os_err);                                            /* Init uC/OS-III.                   
+  90:APP/app.c     ****   
+  91:APP/app.c     ****   OSTaskCreate((OS_TCB      *)&App_TaskStartTCB,              /* Create the start task             
+  92:APP/app.c     ****                (CPU_CHAR    *)"Start",
+  93:APP/app.c     ****                (OS_TASK_PTR  )App_TaskStart, 
+  94:APP/app.c     ****                (void        *)0,
+  95:APP/app.c     ****                (OS_PRIO      )APP_CFG_TASK_START_PRIO,
+  96:APP/app.c     ****                (CPU_STK     *)&App_TaskStartStk[0],
+  97:APP/app.c     ****                (CPU_STK_SIZE )APP_CFG_TASK_START_STK_SIZE_LIMIT,
+  98:APP/app.c     ****                (CPU_STK_SIZE )APP_CFG_TASK_START_STK_SIZE,
+  99:APP/app.c     ****                (OS_MSG_QTY   )0u,
+ 100:APP/app.c     ****                (OS_TICK      )0u,
+ 101:APP/app.c     ****                (void        *)0,
+ 102:APP/app.c     ****                (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+ 103:APP/app.c     ****                (OS_ERR      *)&os_err);
+ 104:APP/app.c     ****   
+ 105:APP/app.c     ****   OSStart(&os_err);                                            /* Start multitasking (i.e. give con
+ 106:APP/app.c     **** }
+ 107:APP/app.c     **** 
+ 108:APP/app.c     **** 
+ 109:APP/app.c     **** /*
+ 110:APP/app.c     **** ***************************************************************************************************
+ 111:APP/app.c     **** *                                          App_TaskStart()
+ 112:APP/app.c     **** *
+ 113:APP/app.c     **** * Description : This is an example of a startup task.  As mentioned in the book's text, you MUST
+ 114:APP/app.c     **** *               initialize the ticker only once multitasking has started.
+ 115:APP/app.c     **** *
+ 116:APP/app.c     **** * Argument(s) : p_arg   is the argument passed to 'App_TaskStart()' by 'OSTaskCreate()'.
+ 117:APP/app.c     **** *
+ 118:APP/app.c     **** * Return(s)   : none
+ 119:APP/app.c     **** *
+ 120:APP/app.c     **** * Note(s)     : 1) The first line of code is used to prevent a compiler warning because 'p_arg' is 
+ 121:APP/app.c     **** *                  used.  The compiler should not generate any code for this statement.
+ 122:APP/app.c     **** ***************************************************************************************************
+ 123:APP/app.c     **** */
+ 124:APP/app.c     **** 
+ 125:APP/app.c     **** static  void  App_TaskStart (void *p_arg)
+ 126:APP/app.c     **** {
+ 127:APP/app.c     ****   OS_ERR       err;
+ 128:APP/app.c     ****      
+ 129:APP/app.c     ****  (void)p_arg;
+ 130:APP/app.c     **** 
+ 131:APP/app.c     ****   BSP_PostInit();                                               /* Perform BSP post-initialization 
+ 132:APP/app.c     ****   
+ 133:APP/app.c     ****   BSP_CPU_TickInit();                                           /* Perfrom Tick Initialization     
+ 134:APP/app.c     ****   
+ 135:APP/app.c     **** #if (OS_CFG_STAT_TASK_EN > 0u)
+ 136:APP/app.c     ****   OSStatTaskCPUUsageInit(&err);
+ 137:APP/app.c     **** #endif    
+ 138:APP/app.c     **** 
+ 139:APP/app.c     **** #ifdef CPU_CFG_INT_DIS_MEAS_EN
+ 140:APP/app.c     ****   CPU_IntDisMeasMaxCurReset();
+ 141:APP/app.c     **** #endif      
+ 142:APP/app.c     **** 
+ 143:APP/app.c     ****   /* wait for bmp280 sensor to be connected */
+ 144:APP/app.c     ****   wait_bmp280_connecting();
+ 145:APP/app.c     **** 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 4
+
+
+ 146:APP/app.c     ****   App_TaskCreate();                                             /* Create application tasks.       
+ 147:APP/app.c     ****   
+ 148:APP/app.c     ****   while (DEF_TRUE) {                                            /* Task body, always written as an 
+ 149:APP/app.c     ****     OSTimeDlyHMSM(0, 0, 0, 100, 
+ 150:APP/app.c     ****                   OS_OPT_TIME_HMSM_STRICT, 
+ 151:APP/app.c     ****                   &err);
+ 152:APP/app.c     ****   }
+ 153:APP/app.c     **** }
+ 154:APP/app.c     **** 
+ 155:APP/app.c     **** 
+ 156:APP/app.c     **** /*
+ 157:APP/app.c     **** ***************************************************************************************************
+ 158:APP/app.c     **** *                                          App_TaskCreate()
+ 159:APP/app.c     **** *
+ 160:APP/app.c     **** * Description : Create application tasks.
+ 161:APP/app.c     **** *
+ 162:APP/app.c     **** * Argument(s) : none
+ 163:APP/app.c     **** *
+ 164:APP/app.c     **** * Return(s)   : none
+ 165:APP/app.c     **** *
+ 166:APP/app.c     **** * Caller(s)   : AppTaskStart()
+ 167:APP/app.c     **** *
+ 168:APP/app.c     **** * Note(s)     : none.
+ 169:APP/app.c     **** ***************************************************************************************************
+ 170:APP/app.c     **** */
+ 171:APP/app.c     **** 
+ 172:APP/app.c     **** static  void  App_TaskCreate (void)
+ 173:APP/app.c     **** {
+  27              		.loc 1 173 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 8
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+  32              		.cfi_def_cfa_offset 24
+  33              		.cfi_offset 4, -24
+  34              		.cfi_offset 5, -20
+  35              		.cfi_offset 6, -16
+  36              		.cfi_offset 7, -12
+  37              		.cfi_offset 8, -8
+  38              		.cfi_offset 14, -4
+  39 0004 8CB0     		sub	sp, sp, #48
+  40              		.cfi_def_cfa_offset 72
+ 174:APP/app.c     ****   /* declare and define function local variables */
+ 175:APP/app.c     ****   OS_ERR  os_err;
+ 176:APP/app.c     ****   
+ 177:APP/app.c     ****   /* create COM task */
+ 178:APP/app.c     ****   OSTaskCreate((OS_TCB      *)&App_TaskCOM_TCB,
+  41              		.loc 1 178 0
+  42 0006 1B4D     		ldr	r5, .L3
+  43 0008 0DF12E07 		add	r7, sp, #46
+  44 000c 0897     		str	r7, [sp, #32]
+  45 000e 0326     		movs	r6, #3
+  46 0010 0796     		str	r6, [sp, #28]
+  47 0012 0024     		movs	r4, #0
+  48 0014 0694     		str	r4, [sp, #24]
+  49 0016 0594     		str	r4, [sp, #20]
+  50 0018 4FF00A08 		mov	r8, #10
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 5
+
+
+  51 001c CDF81080 		str	r8, [sp, #16]
+  52 0020 4FF48073 		mov	r3, #256
+  53 0024 0393     		str	r3, [sp, #12]
+  54 0026 1923     		movs	r3, #25
+  55 0028 0293     		str	r3, [sp, #8]
+  56 002a 05F1C003 		add	r3, r5, #192
+  57 002e 0193     		str	r3, [sp, #4]
+  58 0030 0423     		movs	r3, #4
+  59 0032 0093     		str	r3, [sp]
+  60 0034 2346     		mov	r3, r4
+  61 0036 104A     		ldr	r2, .L3+4
+  62 0038 1049     		ldr	r1, .L3+8
+  63 003a 2846     		mov	r0, r5
+  64 003c FFF7FEFF 		bl	OSTaskCreate
+  65              	.LVL0:
+ 179:APP/app.c     ****                (CPU_CHAR    *)"TaskCOM",
+ 180:APP/app.c     ****                (OS_TASK_PTR  )App_TaskCOM, 
+ 181:APP/app.c     ****                (void        *)0,
+ 182:APP/app.c     ****                (OS_PRIO      )APP_CFG_TASK_COM_PRIO,
+ 183:APP/app.c     ****                (CPU_STK     *)&App_TaskCOMStk[0],
+ 184:APP/app.c     ****                (CPU_STK_SIZE )APP_CFG_TASK_COM_STK_SIZE_LIMIT,
+ 185:APP/app.c     ****                (CPU_STK_SIZE )APP_CFG_TASK_COM_STK_SIZE,
+ 186:APP/app.c     ****                (OS_MSG_QTY   )10u,
+ 187:APP/app.c     ****                (OS_TICK      )0u,
+ 188:APP/app.c     ****                (void        *)0,
+ 189:APP/app.c     ****                (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+ 190:APP/app.c     ****                (OS_ERR      *)&os_err);
+ 191:APP/app.c     ****   /* create PRESS task */
+ 192:APP/app.c     ****   OSTaskCreate((OS_TCB      *)&App_TaskPRESS_TCB,
+  66              		.loc 1 192 0
+  67 0040 0897     		str	r7, [sp, #32]
+  68 0042 0796     		str	r6, [sp, #28]
+  69 0044 0694     		str	r4, [sp, #24]
+  70 0046 0594     		str	r4, [sp, #20]
+  71 0048 CDF81080 		str	r8, [sp, #16]
+  72 004c 4FF40073 		mov	r3, #512
+  73 0050 0393     		str	r3, [sp, #12]
+  74 0052 3323     		movs	r3, #51
+  75 0054 0293     		str	r3, [sp, #8]
+  76 0056 05F5B063 		add	r3, r5, #1408
+  77 005a 0193     		str	r3, [sp, #4]
+  78 005c 0096     		str	r6, [sp]
+  79 005e 2346     		mov	r3, r4
+  80 0060 074A     		ldr	r2, .L3+12
+  81 0062 0849     		ldr	r1, .L3+16
+  82 0064 05F59860 		add	r0, r5, #1216
+  83 0068 FFF7FEFF 		bl	OSTaskCreate
+  84              	.LVL1:
+ 193:APP/app.c     ****                (CPU_CHAR    *)"TaskPRESS",
+ 194:APP/app.c     ****                (OS_TASK_PTR  )App_TaskPRESS, 
+ 195:APP/app.c     ****                (void        *)0,
+ 196:APP/app.c     ****                (OS_PRIO      )APP_CFG_TASK_PRESS_PRIO,
+ 197:APP/app.c     ****                (CPU_STK     *)&App_TaskPRESSStk[0],
+ 198:APP/app.c     ****                (CPU_STK_SIZE )APP_CFG_TASK_PRESS_STK_SIZE_LIMIT,
+ 199:APP/app.c     ****                (CPU_STK_SIZE )APP_CFG_TASK_PRESS_STK_SIZE,
+ 200:APP/app.c     ****                (OS_MSG_QTY   )10u,
+ 201:APP/app.c     ****                (OS_TICK      )0u,
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 6
+
+
+ 202:APP/app.c     ****                (void        *)0,
+ 203:APP/app.c     ****                (OS_OPT       )(OS_OPT_TASK_STK_CHK | OS_OPT_TASK_STK_CLR),
+ 204:APP/app.c     ****                (OS_ERR      *)&os_err);
+ 205:APP/app.c     **** }
+  85              		.loc 1 205 0
+  86 006c 0CB0     		add	sp, sp, #48
+  87              		.cfi_def_cfa_offset 24
+  88              		@ sp needed
+  89 006e BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+  90              	.L4:
+  91 0072 00BF     		.align	2
+  92              	.L3:
+  93 0074 00000000 		.word	.LANCHOR0
+  94 0078 00000000 		.word	App_TaskCOM
+  95 007c 00000000 		.word	.LC0
+  96 0080 00000000 		.word	App_TaskPRESS
+  97 0084 08000000 		.word	.LC1
+  98              		.cfi_endproc
+  99              	.LFE3:
+ 100              		.size	App_TaskCreate, .-App_TaskCreate
+ 101              		.section	.text.App_TaskStart,"ax",%progbits
+ 102              		.align	2
+ 103              		.thumb
+ 104              		.thumb_func
+ 105              		.type	App_TaskStart, %function
+ 106              	App_TaskStart:
+ 107              	.LFB2:
+ 126:APP/app.c     ****   OS_ERR       err;
+ 108              		.loc 1 126 0
+ 109              		.cfi_startproc
+ 110              		@ args = 0, pretend = 0, frame = 8
+ 111              		@ frame_needed = 0, uses_anonymous_args = 0
+ 112              	.LVL2:
+ 113 0000 00B5     		push	{lr}
+ 114              		.cfi_def_cfa_offset 4
+ 115              		.cfi_offset 14, -4
+ 116 0002 85B0     		sub	sp, sp, #20
+ 117              		.cfi_def_cfa_offset 24
+ 131:APP/app.c     ****   
+ 118              		.loc 1 131 0
+ 119 0004 FFF7FEFF 		bl	BSP_PostInit
+ 120              	.LVL3:
+ 133:APP/app.c     ****   
+ 121              		.loc 1 133 0
+ 122 0008 FFF7FEFF 		bl	BSP_CPU_TickInit
+ 123              	.LVL4:
+ 136:APP/app.c     **** #endif    
+ 124              		.loc 1 136 0
+ 125 000c 0DF10E00 		add	r0, sp, #14
+ 126 0010 FFF7FEFF 		bl	OSStatTaskCPUUsageInit
+ 127              	.LVL5:
+ 144:APP/app.c     **** 
+ 128              		.loc 1 144 0
+ 129 0014 FFF7FEFF 		bl	wait_bmp280_connecting
+ 130              	.LVL6:
+ 146:APP/app.c     ****   
+ 131              		.loc 1 146 0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 7
+
+
+ 132 0018 FFF7FEFF 		bl	App_TaskCreate
+ 133              	.LVL7:
+ 134              	.L6:
+ 149:APP/app.c     ****                   OS_OPT_TIME_HMSM_STRICT, 
+ 135              		.loc 1 149 0 discriminator 1
+ 136 001c 0DF10E03 		add	r3, sp, #14
+ 137 0020 0193     		str	r3, [sp, #4]
+ 138 0022 0020     		movs	r0, #0
+ 139 0024 0090     		str	r0, [sp]
+ 140 0026 6423     		movs	r3, #100
+ 141 0028 0246     		mov	r2, r0
+ 142 002a 0146     		mov	r1, r0
+ 143 002c FFF7FEFF 		bl	OSTimeDlyHMSM
+ 144              	.LVL8:
+ 145 0030 F4E7     		b	.L6
+ 146              		.cfi_endproc
+ 147              	.LFE2:
+ 148              		.size	App_TaskStart, .-App_TaskStart
+ 149 0032 00BF     		.section	.text.App_TaskPRESS,"ax",%progbits
+ 150              		.align	2
+ 151              		.thumb
+ 152              		.thumb_func
+ 153              		.type	App_TaskPRESS, %function
+ 154              	App_TaskPRESS:
+ 155              	.LFB4:
+ 206:APP/app.c     **** 
+ 207:APP/app.c     **** /*
+ 208:APP/app.c     **** ***************************************************************************************************
+ 209:APP/app.c     **** *                                          App_TaskPRESS()
+ 210:APP/app.c     **** *
+ 211:APP/app.c     **** * Description : PRESS Task configure the connected bmp280 and read measured 
+ 212:APP/app.c     **** *               pressure and temperature. After the read it send the data to the
+ 213:APP/app.c     **** *               COM Task over TaskQ.
+ 214:APP/app.c     **** *
+ 215:APP/app.c     **** * Argument(s) : p_arg   is the argument passed to 'App_TaskPRESS()' by 'OSTaskCreate()'.
+ 216:APP/app.c     **** *
+ 217:APP/app.c     **** * Return(s)   : none
+ 218:APP/app.c     **** *
+ 219:APP/app.c     **** * Note(s)     : none
+ 220:APP/app.c     **** ***************************************************************************************************
+ 221:APP/app.c     **** */
+ 222:APP/app.c     **** 
+ 223:APP/app.c     **** static void App_TaskPRESS (void *p_arg)
+ 224:APP/app.c     **** {
+ 156              		.loc 1 224 0
+ 157              		.cfi_startproc
+ 158              		@ args = 0, pretend = 0, frame = 24
+ 159              		@ frame_needed = 0, uses_anonymous_args = 0
+ 160              	.LVL9:
+ 161 0000 30B5     		push	{r4, r5, lr}
+ 162              		.cfi_def_cfa_offset 12
+ 163              		.cfi_offset 4, -12
+ 164              		.cfi_offset 5, -8
+ 165              		.cfi_offset 14, -4
+ 166 0002 89B0     		sub	sp, sp, #36
+ 167              		.cfi_def_cfa_offset 48
+ 225:APP/app.c     ****   /* declare and define task local variables */
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 8
+
+
+ 226:APP/app.c     ****   OS_ERR             os_err;
+ 227:APP/app.c     ****   Bmp280_press_temp  bmp280_data;
+ 228:APP/app.c     ****   
+ 229:APP/app.c     ****   /* prevent compiler warnings */
+ 230:APP/app.c     ****   (void)p_arg;
+ 231:APP/app.c     ****   
+ 232:APP/app.c     ****   set_bmp280_config(
+ 168              		.loc 1 232 0
+ 169 0004 0023     		movs	r3, #0
+ 170 0006 0193     		str	r3, [sp, #4]
+ 171 0008 0122     		movs	r2, #1
+ 172 000a 0092     		str	r2, [sp]
+ 173 000c 0322     		movs	r2, #3
+ 174 000e 0221     		movs	r1, #2
+ 175 0010 1046     		mov	r0, r2
+ 176              	.LVL10:
+ 177 0012 FFF7FEFF 		bl	set_bmp280_config
+ 178              	.LVL11:
+ 179              	.L9:
+ 233:APP/app.c     ****     BMP280_CONFIG_OSRT_T, BMP280_CONFIG_OSRT_P, BMP280_CONFIG_POWER_MODE,
+ 234:APP/app.c     ****     BMP280_CONFIG_T_STANDBY, BMP280_CONFIG_FILTER, BMP280_CONFIG_SPI3W_EN
+ 235:APP/app.c     ****   );
+ 236:APP/app.c     ****   
+ 237:APP/app.c     ****   /* start of the endless loop */
+ 238:APP/app.c     ****   while (DEF_TRUE) {
+ 239:APP/app.c     ****     
+ 240:APP/app.c     ****     /* read pressure and temperature from bmp280 */
+ 241:APP/app.c     ****     bmp280_data = get_bmp280_press_temp();
+ 180              		.loc 1 241 0 discriminator 1
+ 181 0016 02AD     		add	r5, sp, #8
+ 182 0018 2846     		mov	r0, r5
+ 183 001a FFF7FEFF 		bl	get_bmp280_press_temp
+ 184              	.LVL12:
+ 185 001e 05AC     		add	r4, sp, #20
+ 186 0020 95E80300 		ldmia	r5, {r0, r1}
+ 187 0024 84E80300 		stmia	r4, {r0, r1}
+ 242:APP/app.c     ****     
+ 243:APP/app.c     ****     /* send readed bmp280 data to COM Task*/
+ 244:APP/app.c     ****     OSTaskQPost((OS_TCB      *)&App_TaskCOM_TCB,
+ 188              		.loc 1 244 0 discriminator 1
+ 189 0028 0DF11E05 		add	r5, sp, #30
+ 190 002c 0095     		str	r5, [sp]
+ 191 002e 0023     		movs	r3, #0
+ 192 0030 0822     		movs	r2, #8
+ 193 0032 2146     		mov	r1, r4
+ 194 0034 0648     		ldr	r0, .L11
+ 195 0036 FFF7FEFF 		bl	OSTaskQPost
+ 196              	.LVL13:
+ 245:APP/app.c     ****                 (CPU_INT08U  *)&bmp280_data,
+ 246:APP/app.c     ****                 (OS_MSG_SIZE  )sizeof(bmp280_data),
+ 247:APP/app.c     ****                 (OS_OPT       )OS_OPT_POST_FIFO,
+ 248:APP/app.c     ****                 (OS_ERR      *)&os_err);
+ 249:APP/app.c     ****     
+ 250:APP/app.c     ****     /* initiate scheduler */
+ 251:APP/app.c     ****     OSTimeDlyHMSM(0, 0, 0, 500,
+ 197              		.loc 1 251 0 discriminator 1
+ 198 003a 0195     		str	r5, [sp, #4]
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 9
+
+
+ 199 003c 0020     		movs	r0, #0
+ 200 003e 0090     		str	r0, [sp]
+ 201 0040 4FF4FA73 		mov	r3, #500
+ 202 0044 0246     		mov	r2, r0
+ 203 0046 0146     		mov	r1, r0
+ 204 0048 FFF7FEFF 		bl	OSTimeDlyHMSM
+ 205              	.LVL14:
+ 206 004c E3E7     		b	.L9
+ 207              	.L12:
+ 208 004e 00BF     		.align	2
+ 209              	.L11:
+ 210 0050 00000000 		.word	.LANCHOR0
+ 211              		.cfi_endproc
+ 212              	.LFE4:
+ 213              		.size	App_TaskPRESS, .-App_TaskPRESS
+ 214              		.section	.text.App_TaskCOM,"ax",%progbits
+ 215              		.align	2
+ 216              		.thumb
+ 217              		.thumb_func
+ 218              		.type	App_TaskCOM, %function
+ 219              	App_TaskCOM:
+ 220              	.LFB5:
+ 252:APP/app.c     ****                   OS_OPT_TIME_HMSM_STRICT, 
+ 253:APP/app.c     ****                   &os_err);
+ 254:APP/app.c     ****   }
+ 255:APP/app.c     **** }
+ 256:APP/app.c     **** 
+ 257:APP/app.c     **** /*
+ 258:APP/app.c     **** ***************************************************************************************************
+ 259:APP/app.c     **** *                                          App_TaskCOM()
+ 260:APP/app.c     **** *
+ 261:APP/app.c     **** * Description : COM Task wait for a message and send it's data via the UART interface.
+ 262:APP/app.c     **** *
+ 263:APP/app.c     **** * Argument(s) : p_arg   is the argument passed to 'App_TaskCOM()' by 'OSTaskCreate()'.
+ 264:APP/app.c     **** *
+ 265:APP/app.c     **** * Return(s)   : none
+ 266:APP/app.c     **** *
+ 267:APP/app.c     **** * Note(s)     : none
+ 268:APP/app.c     **** ***************************************************************************************************
+ 269:APP/app.c     **** */
+ 270:APP/app.c     **** 
+ 271:APP/app.c     **** static  void  App_TaskCOM (void *p_arg)
+ 272:APP/app.c     **** {
+ 221              		.loc 1 272 0
+ 222              		.cfi_startproc
+ 223              		@ args = 0, pretend = 0, frame = 8
+ 224              		@ frame_needed = 0, uses_anonymous_args = 0
+ 225              	.LVL15:
+ 226 0000 00B5     		push	{lr}
+ 227              		.cfi_def_cfa_offset 4
+ 228              		.cfi_offset 14, -4
+ 229 0002 85B0     		sub	sp, sp, #20
+ 230              		.cfi_def_cfa_offset 24
+ 231              	.LVL16:
+ 232              	.L14:
+ 273:APP/app.c     ****   /* declare and define task local variables */
+ 274:APP/app.c     ****   OS_ERR             os_err;
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 10
+
+
+ 275:APP/app.c     ****   OS_MSG_SIZE        msg_size;
+ 276:APP/app.c     ****   Bmp280_press_temp* p_rx_msg;
+ 277:APP/app.c     ****   
+ 278:APP/app.c     ****   /* prevent compiler warnings */
+ 279:APP/app.c     ****   (void)p_arg;
+ 280:APP/app.c     ****   
+ 281:APP/app.c     ****   /* start of the endless loop */
+ 282:APP/app.c     ****   while (DEF_TRUE) {
+ 283:APP/app.c     ****     
+ 284:APP/app.c     ****     /* wait for message */
+ 285:APP/app.c     ****     p_rx_msg = OSTaskQPend(0, OS_OPT_PEND_BLOCKING, &msg_size, (CPU_TS *)0, &os_err);
+ 233              		.loc 1 285 0
+ 234 0004 0DF10E03 		add	r3, sp, #14
+ 235 0008 0093     		str	r3, [sp]
+ 236 000a 0023     		movs	r3, #0
+ 237 000c 03AA     		add	r2, sp, #12
+ 238 000e 1946     		mov	r1, r3
+ 239 0010 1846     		mov	r0, r3
+ 240 0012 FFF7FEFF 		bl	OSTaskQPend
+ 241              	.LVL17:
+ 286:APP/app.c     ****     
+ 287:APP/app.c     ****     if (os_err == OS_ERR_NONE) {
+ 242              		.loc 1 287 0
+ 243 0016 BDF80E30 		ldrh	r3, [sp, #14]
+ 244 001a 002B     		cmp	r3, #0
+ 245 001c F2D1     		bne	.L14
+ 288:APP/app.c     ****       /* if message received */
+ 289:APP/app.c     ****       uart_send_press_temp(*p_rx_msg);
+ 246              		.loc 1 289 0
+ 247 001e 03C8     		ldmia	r0, {r0, r1}
+ 248              	.LVL18:
+ 249 0020 FFF7FEFF 		bl	uart_send_press_temp
+ 250              	.LVL19:
+ 251 0024 EEE7     		b	.L14
+ 252              		.cfi_endproc
+ 253              	.LFE5:
+ 254              		.size	App_TaskCOM, .-App_TaskCOM
+ 255 0026 00BF     		.section	.text.main,"ax",%progbits
+ 256              		.align	2
+ 257              		.global	main
+ 258              		.thumb
+ 259              		.thumb_func
+ 260              		.type	main, %function
+ 261              	main:
+ 262              	.LFB1:
+  82:APP/app.c     ****   OS_ERR  os_err;
+ 263              		.loc 1 82 0
+ 264              		.cfi_startproc
+ 265              		@ args = 0, pretend = 0, frame = 8
+ 266              		@ frame_needed = 0, uses_anonymous_args = 0
+ 267 0000 30B5     		push	{r4, r5, lr}
+ 268              		.cfi_def_cfa_offset 12
+ 269              		.cfi_offset 4, -12
+ 270              		.cfi_offset 5, -8
+ 271              		.cfi_offset 14, -4
+ 272 0002 8DB0     		sub	sp, sp, #52
+ 273              		.cfi_def_cfa_offset 64
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 11
+
+
+  85:APP/app.c     **** 
+ 274              		.loc 1 85 0
+ 275 0004 FFF7FEFF 		bl	BSP_PreInit
+ 276              	.LVL20:
+  87:APP/app.c     **** 
+ 277              		.loc 1 87 0
+ 278 0008 FFF7FEFF 		bl	CPU_Init
+ 279              	.LVL21:
+  89:APP/app.c     ****   
+ 280              		.loc 1 89 0
+ 281 000c 0DF12E05 		add	r5, sp, #46
+ 282 0010 2846     		mov	r0, r5
+ 283 0012 FFF7FEFF 		bl	OSInit
+ 284              	.LVL22:
+  91:APP/app.c     ****                (CPU_CHAR    *)"Start",
+ 285              		.loc 1 91 0
+ 286 0016 0F48     		ldr	r0, .L19
+ 287 0018 0895     		str	r5, [sp, #32]
+ 288 001a 0323     		movs	r3, #3
+ 289 001c 0793     		str	r3, [sp, #28]
+ 290 001e 0024     		movs	r4, #0
+ 291 0020 0694     		str	r4, [sp, #24]
+ 292 0022 0594     		str	r4, [sp, #20]
+ 293 0024 0494     		str	r4, [sp, #16]
+ 294 0026 8023     		movs	r3, #128
+ 295 0028 0393     		str	r3, [sp, #12]
+ 296 002a 0C23     		movs	r3, #12
+ 297 002c 0293     		str	r3, [sp, #8]
+ 298 002e 00F56463 		add	r3, r0, #3648
+ 299 0032 0193     		str	r3, [sp, #4]
+ 300 0034 0223     		movs	r3, #2
+ 301 0036 0093     		str	r3, [sp]
+ 302 0038 2346     		mov	r3, r4
+ 303 003a 074A     		ldr	r2, .L19+4
+ 304 003c 0749     		ldr	r1, .L19+8
+ 305 003e 00F55860 		add	r0, r0, #3456
+ 306 0042 FFF7FEFF 		bl	OSTaskCreate
+ 307              	.LVL23:
+ 105:APP/app.c     **** }
+ 308              		.loc 1 105 0
+ 309 0046 2846     		mov	r0, r5
+ 310 0048 FFF7FEFF 		bl	OSStart
+ 311              	.LVL24:
+ 106:APP/app.c     **** 
+ 312              		.loc 1 106 0
+ 313 004c 2046     		mov	r0, r4
+ 314 004e 0DB0     		add	sp, sp, #52
+ 315              		.cfi_def_cfa_offset 12
+ 316              		@ sp needed
+ 317 0050 30BD     		pop	{r4, r5, pc}
+ 318              	.L20:
+ 319 0052 00BF     		.align	2
+ 320              	.L19:
+ 321 0054 00000000 		.word	.LANCHOR0
+ 322 0058 00000000 		.word	App_TaskStart
+ 323 005c 14000000 		.word	.LC2
+ 324              		.cfi_endproc
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 12
+
+
+ 325              	.LFE1:
+ 326              		.size	main, .-main
+ 327              		.section	.rodata.str1.4,"aMS",%progbits,1
+ 328              		.align	2
+ 329              	.LC0:
+ 330 0000 5461736B 		.ascii	"TaskCOM\000"
+ 330      434F4D00 
+ 331              	.LC1:
+ 332 0008 5461736B 		.ascii	"TaskPRESS\000"
+ 332      50524553 
+ 332      5300
+ 333 0012 0000     		.space	2
+ 334              	.LC2:
+ 335 0014 53746172 		.ascii	"Start\000"
+ 335      7400
+ 336              		.bss
+ 337              		.align	2
+ 338              		.set	.LANCHOR0,. + 0
+ 339              		.type	App_TaskCOM_TCB, %object
+ 340              		.size	App_TaskCOM_TCB, 192
+ 341              	App_TaskCOM_TCB:
+ 342 0000 00000000 		.space	192
+ 342      00000000 
+ 342      00000000 
+ 342      00000000 
+ 342      00000000 
+ 343              		.type	App_TaskCOMStk, %object
+ 344              		.size	App_TaskCOMStk, 1024
+ 345              	App_TaskCOMStk:
+ 346 00c0 00000000 		.space	1024
+ 346      00000000 
+ 346      00000000 
+ 346      00000000 
+ 346      00000000 
+ 347              		.type	App_TaskPRESS_TCB, %object
+ 348              		.size	App_TaskPRESS_TCB, 192
+ 349              	App_TaskPRESS_TCB:
+ 350 04c0 00000000 		.space	192
+ 350      00000000 
+ 350      00000000 
+ 350      00000000 
+ 350      00000000 
+ 351              		.type	App_TaskPRESSStk, %object
+ 352              		.size	App_TaskPRESSStk, 2048
+ 353              	App_TaskPRESSStk:
+ 354 0580 00000000 		.space	2048
+ 354      00000000 
+ 354      00000000 
+ 354      00000000 
+ 354      00000000 
+ 355              		.type	App_TaskStartTCB, %object
+ 356              		.size	App_TaskStartTCB, 192
+ 357              	App_TaskStartTCB:
+ 358 0d80 00000000 		.space	192
+ 358      00000000 
+ 358      00000000 
+ 358      00000000 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 13
+
+
+ 358      00000000 
+ 359              		.type	App_TaskStartStk, %object
+ 360              		.size	App_TaskStartStk, 512
+ 361              	App_TaskStartStk:
+ 362 0e40 00000000 		.space	512
+ 362      00000000 
+ 362      00000000 
+ 362      00000000 
+ 362      00000000 
+ 363              		.text
+ 364              	.Letext0:
+ 365              		.file 2 ".\\uC-CPU\\ARM-Cortex-M3\\GNU/cpu.h"
+ 366              		.file 3 ".\\uC-CPU/cpu_core.h"
+ 367              		.file 4 ".\\uCOS-III\\Source/os_type.h"
+ 368              		.file 5 ".\\uCOS-III\\Source/os.h"
+ 369              		.file 6 "./bmp280.h"
+ 370              		.file 7 ".\\BSP/bsp.h"
+ 371              		.file 8 "./bsp_uart.h"
+ 372              		.section	.debug_info,"",%progbits
+ 373              	.Ldebug_info0:
+ 374 0000 87100000 		.4byte	0x1087
+ 375 0004 0400     		.2byte	0x4
+ 376 0006 00000000 		.4byte	.Ldebug_abbrev0
+ 377 000a 04       		.byte	0x4
+ 378 000b 01       		.uleb128 0x1
+ 379 000c 0F030000 		.4byte	.LASF316
+ 380 0010 0C       		.byte	0xc
+ 381 0011 00030000 		.4byte	.LASF317
+ 382 0015 550B0000 		.4byte	.LASF318
+ 383 0019 00000000 		.4byte	.Ldebug_ranges0+0
+ 384 001d 00000000 		.4byte	0
+ 385 0021 00000000 		.4byte	.Ldebug_line0
+ 386 0025 02       		.uleb128 0x2
+ 387 0026 04       		.byte	0x4
+ 388 0027 03       		.uleb128 0x3
+ 389 0028 01       		.byte	0x1
+ 390 0029 06       		.byte	0x6
+ 391 002a 39040000 		.4byte	.LASF0
+ 392 002e 03       		.uleb128 0x3
+ 393 002f 01       		.byte	0x1
+ 394 0030 08       		.byte	0x8
+ 395 0031 05050000 		.4byte	.LASF1
+ 396 0035 03       		.uleb128 0x3
+ 397 0036 02       		.byte	0x2
+ 398 0037 05       		.byte	0x5
+ 399 0038 78100000 		.4byte	.LASF2
+ 400 003c 03       		.uleb128 0x3
+ 401 003d 02       		.byte	0x2
+ 402 003e 07       		.byte	0x7
+ 403 003f 9F120000 		.4byte	.LASF3
+ 404 0043 03       		.uleb128 0x3
+ 405 0044 04       		.byte	0x4
+ 406 0045 05       		.byte	0x5
+ 407 0046 9D020000 		.4byte	.LASF4
+ 408 004a 03       		.uleb128 0x3
+ 409 004b 04       		.byte	0x4
+ 410 004c 07       		.byte	0x7
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 14
+
+
+ 411 004d 58090000 		.4byte	.LASF5
+ 412 0051 03       		.uleb128 0x3
+ 413 0052 08       		.byte	0x8
+ 414 0053 05       		.byte	0x5
+ 415 0054 6F0A0000 		.4byte	.LASF6
+ 416 0058 03       		.uleb128 0x3
+ 417 0059 08       		.byte	0x8
+ 418 005a 07       		.byte	0x7
+ 419 005b 3B0E0000 		.4byte	.LASF7
+ 420 005f 04       		.uleb128 0x4
+ 421 0060 04       		.byte	0x4
+ 422 0061 05       		.byte	0x5
+ 423 0062 696E7400 		.ascii	"int\000"
+ 424 0066 03       		.uleb128 0x3
+ 425 0067 04       		.byte	0x4
+ 426 0068 07       		.byte	0x7
+ 427 0069 070C0000 		.4byte	.LASF8
+ 428 006d 03       		.uleb128 0x3
+ 429 006e 08       		.byte	0x8
+ 430 006f 04       		.byte	0x4
+ 431 0070 120D0000 		.4byte	.LASF9
+ 432 0074 03       		.uleb128 0x3
+ 433 0075 04       		.byte	0x4
+ 434 0076 07       		.byte	0x7
+ 435 0077 61000000 		.4byte	.LASF10
+ 436 007b 03       		.uleb128 0x3
+ 437 007c 01       		.byte	0x1
+ 438 007d 08       		.byte	0x8
+ 439 007e E5050000 		.4byte	.LASF11
+ 440 0082 03       		.uleb128 0x3
+ 441 0083 08       		.byte	0x8
+ 442 0084 04       		.byte	0x4
+ 443 0085 9C0A0000 		.4byte	.LASF12
+ 444 0089 03       		.uleb128 0x3
+ 445 008a 04       		.byte	0x4
+ 446 008b 04       		.byte	0x4
+ 447 008c 490B0000 		.4byte	.LASF13
+ 448 0090 05       		.uleb128 0x5
+ 449 0091 E6000000 		.4byte	.LASF14
+ 450 0095 02       		.byte	0x2
+ 451 0096 76       		.byte	0x76
+ 452 0097 7B000000 		.4byte	0x7b
+ 453 009b 05       		.uleb128 0x5
+ 454 009c DD110000 		.4byte	.LASF15
+ 455 00a0 02       		.byte	0x2
+ 456 00a1 78       		.byte	0x78
+ 457 00a2 2E000000 		.4byte	0x2e
+ 458 00a6 05       		.uleb128 0x5
+ 459 00a7 13010000 		.4byte	.LASF16
+ 460 00ab 02       		.byte	0x2
+ 461 00ac 7A       		.byte	0x7a
+ 462 00ad 3C000000 		.4byte	0x3c
+ 463 00b1 05       		.uleb128 0x5
+ 464 00b2 37070000 		.4byte	.LASF17
+ 465 00b6 02       		.byte	0x2
+ 466 00b7 7C       		.byte	0x7c
+ 467 00b8 66000000 		.4byte	0x66
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 15
+
+
+ 468 00bc 05       		.uleb128 0x5
+ 469 00bd 2C070000 		.4byte	.LASF18
+ 470 00c1 02       		.byte	0x2
+ 471 00c2 7D       		.byte	0x7d
+ 472 00c3 5F000000 		.4byte	0x5f
+ 473 00c7 06       		.uleb128 0x6
+ 474 00c8 04       		.byte	0x4
+ 475 00c9 CD000000 		.4byte	0xcd
+ 476 00cd 07       		.uleb128 0x7
+ 477 00ce D8000000 		.4byte	0xd8
+ 478 00d2 08       		.uleb128 0x8
+ 479 00d3 25000000 		.4byte	0x25
+ 480 00d7 00       		.byte	0
+ 481 00d8 05       		.uleb128 0x5
+ 482 00d9 9A070000 		.4byte	.LASF19
+ 483 00dd 02       		.byte	0x2
+ 484 00de B5       		.byte	0xb5
+ 485 00df B1000000 		.4byte	0xb1
+ 486 00e3 05       		.uleb128 0x5
+ 487 00e4 9B010000 		.4byte	.LASF20
+ 488 00e8 02       		.byte	0x2
+ 489 00e9 D9       		.byte	0xd9
+ 490 00ea B1000000 		.4byte	0xb1
+ 491 00ee 05       		.uleb128 0x5
+ 492 00ef CC0B0000 		.4byte	.LASF21
+ 493 00f3 02       		.byte	0x2
+ 494 00f4 DA       		.byte	0xda
+ 495 00f5 D8000000 		.4byte	0xd8
+ 496 00f9 05       		.uleb128 0x5
+ 497 00fa 88080000 		.4byte	.LASF22
+ 498 00fe 03       		.byte	0x3
+ 499 00ff C4       		.byte	0xc4
+ 500 0100 B1000000 		.4byte	0xb1
+ 501 0104 05       		.uleb128 0x5
+ 502 0105 D2030000 		.4byte	.LASF23
+ 503 0109 03       		.byte	0x3
+ 504 010a C7       		.byte	0xc7
+ 505 010b F9000000 		.4byte	0xf9
+ 506 010f 05       		.uleb128 0x5
+ 507 0110 6A090000 		.4byte	.LASF24
+ 508 0114 04       		.byte	0x4
+ 509 0115 30       		.byte	0x30
+ 510 0116 A6000000 		.4byte	0xa6
+ 511 011a 05       		.uleb128 0x5
+ 512 011b 91080000 		.4byte	.LASF25
+ 513 011f 04       		.byte	0x4
+ 514 0120 34       		.byte	0x34
+ 515 0121 B1000000 		.4byte	0xb1
+ 516 0125 05       		.uleb128 0x5
+ 517 0126 B9050000 		.4byte	.LASF26
+ 518 012a 04       		.byte	0x4
+ 519 012b 36       		.byte	0x36
+ 520 012c B1000000 		.4byte	0xb1
+ 521 0130 05       		.uleb128 0x5
+ 522 0131 61100000 		.4byte	.LASF27
+ 523 0135 04       		.byte	0x4
+ 524 0136 38       		.byte	0x38
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 16
+
+
+ 525 0137 B1000000 		.4byte	0xb1
+ 526 013b 05       		.uleb128 0x5
+ 527 013c C5110000 		.4byte	.LASF28
+ 528 0140 04       		.byte	0x4
+ 529 0141 3F       		.byte	0x3f
+ 530 0142 A6000000 		.4byte	0xa6
+ 531 0146 05       		.uleb128 0x5
+ 532 0147 430C0000 		.4byte	.LASF29
+ 533 014b 04       		.byte	0x4
+ 534 014c 40       		.byte	0x40
+ 535 014d A6000000 		.4byte	0xa6
+ 536 0151 05       		.uleb128 0x5
+ 537 0152 120B0000 		.4byte	.LASF30
+ 538 0156 04       		.byte	0x4
+ 539 0157 42       		.byte	0x42
+ 540 0158 9B000000 		.4byte	0x9b
+ 541 015c 05       		.uleb128 0x5
+ 542 015d 230A0000 		.4byte	.LASF31
+ 543 0161 04       		.byte	0x4
+ 544 0162 44       		.byte	0x44
+ 545 0163 A6000000 		.4byte	0xa6
+ 546 0167 05       		.uleb128 0x5
+ 547 0168 C3050000 		.4byte	.LASF32
+ 548 016c 04       		.byte	0x4
+ 549 016d 45       		.byte	0x45
+ 550 016e B1000000 		.4byte	0xb1
+ 551 0172 05       		.uleb128 0x5
+ 552 0173 E6010000 		.4byte	.LASF33
+ 553 0177 04       		.byte	0x4
+ 554 0178 47       		.byte	0x47
+ 555 0179 A6000000 		.4byte	0xa6
+ 556 017d 05       		.uleb128 0x5
+ 557 017e 5E0A0000 		.4byte	.LASF34
+ 558 0182 04       		.byte	0x4
+ 559 0183 49       		.byte	0x49
+ 560 0184 9B000000 		.4byte	0x9b
+ 561 0188 05       		.uleb128 0x5
+ 562 0189 CD070000 		.4byte	.LASF35
+ 563 018d 04       		.byte	0x4
+ 564 018e 4F       		.byte	0x4f
+ 565 018f B1000000 		.4byte	0xb1
+ 566 0193 05       		.uleb128 0x5
+ 567 0194 D60A0000 		.4byte	.LASF36
+ 568 0198 04       		.byte	0x4
+ 569 0199 52       		.byte	0x52
+ 570 019a B1000000 		.4byte	0xb1
+ 571 019e 05       		.uleb128 0x5
+ 572 019f A7050000 		.4byte	.LASF37
+ 573 01a3 04       		.byte	0x4
+ 574 01a4 54       		.byte	0x54
+ 575 01a5 9B000000 		.4byte	0x9b
+ 576 01a9 05       		.uleb128 0x5
+ 577 01aa DD0C0000 		.4byte	.LASF38
+ 578 01ae 04       		.byte	0x4
+ 579 01af 56       		.byte	0x56
+ 580 01b0 9B000000 		.4byte	0x9b
+ 581 01b4 05       		.uleb128 0x5
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 17
+
+
+ 582 01b5 7D0A0000 		.4byte	.LASF39
+ 583 01b9 04       		.byte	0x4
+ 584 01ba 58       		.byte	0x58
+ 585 01bb B1000000 		.4byte	0xb1
+ 586 01bf 09       		.uleb128 0x9
+ 587 01c0 470D0000 		.4byte	.LASF287
+ 588 01c4 02       		.byte	0x2
+ 589 01c5 3C000000 		.4byte	0x3c
+ 590 01c9 05       		.byte	0x5
+ 591 01ca A501     		.2byte	0x1a5
+ 592 01cc 37060000 		.4byte	0x637
+ 593 01d0 0A       		.uleb128 0xa
+ 594 01d1 360A0000 		.4byte	.LASF40
+ 595 01d5 00       		.byte	0
+ 596 01d6 0B       		.uleb128 0xb
+ 597 01d7 E8030000 		.4byte	.LASF41
+ 598 01db 1027     		.2byte	0x2710
+ 599 01dd 0B       		.uleb128 0xb
+ 600 01de 36060000 		.4byte	.LASF42
+ 601 01e2 1127     		.2byte	0x2711
+ 602 01e4 0B       		.uleb128 0xb
+ 603 01e5 F1030000 		.4byte	.LASF43
+ 604 01e9 F82A     		.2byte	0x2af8
+ 605 01eb 0B       		.uleb128 0xb
+ 606 01ec FA030000 		.4byte	.LASF44
+ 607 01f0 E02E     		.2byte	0x2ee0
+ 608 01f2 0B       		.uleb128 0xb
+ 609 01f3 A2090000 		.4byte	.LASF45
+ 610 01f7 E12E     		.2byte	0x2ee1
+ 611 01f9 0B       		.uleb128 0xb
+ 612 01fa 03040000 		.4byte	.LASF46
+ 613 01fe C832     		.2byte	0x32c8
+ 614 0200 0B       		.uleb128 0xb
+ 615 0201 8A100000 		.4byte	.LASF47
+ 616 0205 C932     		.2byte	0x32c9
+ 617 0207 0B       		.uleb128 0xb
+ 618 0208 0C040000 		.4byte	.LASF48
+ 619 020c B036     		.2byte	0x36b0
+ 620 020e 0B       		.uleb128 0xb
+ 621 020f 15040000 		.4byte	.LASF49
+ 622 0213 983A     		.2byte	0x3a98
+ 623 0215 0B       		.uleb128 0xb
+ 624 0216 BE030000 		.4byte	.LASF50
+ 625 021a 993A     		.2byte	0x3a99
+ 626 021c 0B       		.uleb128 0xb
+ 627 021d 940E0000 		.4byte	.LASF51
+ 628 0221 FD3A     		.2byte	0x3afd
+ 629 0223 0B       		.uleb128 0xb
+ 630 0224 33050000 		.4byte	.LASF52
+ 631 0228 FE3A     		.2byte	0x3afe
+ 632 022a 0B       		.uleb128 0xb
+ 633 022b 8B110000 		.4byte	.LASF53
+ 634 022f FF3A     		.2byte	0x3aff
+ 635 0231 0B       		.uleb128 0xb
+ 636 0232 120E0000 		.4byte	.LASF54
+ 637 0236 003B     		.2byte	0x3b00
+ 638 0238 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 18
+
+
+ 639 0239 1E040000 		.4byte	.LASF55
+ 640 023d 803E     		.2byte	0x3e80
+ 641 023f 0B       		.uleb128 0xb
+ 642 0240 27040000 		.4byte	.LASF56
+ 643 0244 6842     		.2byte	0x4268
+ 644 0246 0B       		.uleb128 0xb
+ 645 0247 30040000 		.4byte	.LASF57
+ 646 024b 5046     		.2byte	0x4650
+ 647 024d 0B       		.uleb128 0xb
+ 648 024e D90B0000 		.4byte	.LASF58
+ 649 0252 5146     		.2byte	0x4651
+ 650 0254 0B       		.uleb128 0xb
+ 651 0255 FC120000 		.4byte	.LASF59
+ 652 0259 5246     		.2byte	0x4652
+ 653 025b 0B       		.uleb128 0xb
+ 654 025c A6020000 		.4byte	.LASF60
+ 655 0260 5346     		.2byte	0x4653
+ 656 0262 0B       		.uleb128 0xb
+ 657 0263 870F0000 		.4byte	.LASF61
+ 658 0267 5446     		.2byte	0x4654
+ 659 0269 0B       		.uleb128 0xb
+ 660 026a EE070000 		.4byte	.LASF62
+ 661 026e 5546     		.2byte	0x4655
+ 662 0270 0B       		.uleb128 0xb
+ 663 0271 07080000 		.4byte	.LASF63
+ 664 0275 5646     		.2byte	0x4656
+ 665 0277 0B       		.uleb128 0xb
+ 666 0278 79000000 		.4byte	.LASF64
+ 667 027c 384A     		.2byte	0x4a38
+ 668 027e 0B       		.uleb128 0xb
+ 669 027f 45040000 		.4byte	.LASF65
+ 670 0283 204E     		.2byte	0x4e20
+ 671 0285 0B       		.uleb128 0xb
+ 672 0286 4E040000 		.4byte	.LASF66
+ 673 028a 0852     		.2byte	0x5208
+ 674 028c 0B       		.uleb128 0xb
+ 675 028d EE0F0000 		.4byte	.LASF67
+ 676 0291 0952     		.2byte	0x5209
+ 677 0293 0B       		.uleb128 0xb
+ 678 0294 57040000 		.4byte	.LASF68
+ 679 0298 F055     		.2byte	0x55f0
+ 680 029a 0B       		.uleb128 0xb
+ 681 029b CF050000 		.4byte	.LASF69
+ 682 029f B956     		.2byte	0x56b9
+ 683 02a1 0B       		.uleb128 0xb
+ 684 02a2 00000000 		.4byte	.LASF70
+ 685 02a6 BA56     		.2byte	0x56ba
+ 686 02a8 0B       		.uleb128 0xb
+ 687 02a9 5D060000 		.4byte	.LASF71
+ 688 02ad BB56     		.2byte	0x56bb
+ 689 02af 0B       		.uleb128 0xb
+ 690 02b0 F7050000 		.4byte	.LASF72
+ 691 02b4 BC56     		.2byte	0x56bc
+ 692 02b6 0B       		.uleb128 0xb
+ 693 02b7 3D080000 		.4byte	.LASF73
+ 694 02bb BD56     		.2byte	0x56bd
+ 695 02bd 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 19
+
+
+ 696 02be F90D0000 		.4byte	.LASF74
+ 697 02c2 BE56     		.2byte	0x56be
+ 698 02c4 0B       		.uleb128 0xb
+ 699 02c5 AD0D0000 		.4byte	.LASF75
+ 700 02c9 BF56     		.2byte	0x56bf
+ 701 02cb 0B       		.uleb128 0xb
+ 702 02cc D10E0000 		.4byte	.LASF76
+ 703 02d0 C056     		.2byte	0x56c0
+ 704 02d2 0B       		.uleb128 0xb
+ 705 02d3 360F0000 		.4byte	.LASF77
+ 706 02d7 C156     		.2byte	0x56c1
+ 707 02d9 0B       		.uleb128 0xb
+ 708 02da 45020000 		.4byte	.LASF78
+ 709 02de C256     		.2byte	0x56c2
+ 710 02e0 0B       		.uleb128 0xb
+ 711 02e1 00020000 		.4byte	.LASF79
+ 712 02e5 1D57     		.2byte	0x571d
+ 713 02e7 0B       		.uleb128 0xb
+ 714 02e8 A0110000 		.4byte	.LASF80
+ 715 02ec 1E57     		.2byte	0x571e
+ 716 02ee 0B       		.uleb128 0xb
+ 717 02ef 91060000 		.4byte	.LASF81
+ 718 02f3 8157     		.2byte	0x5781
+ 719 02f5 0B       		.uleb128 0xb
+ 720 02f6 75020000 		.4byte	.LASF82
+ 721 02fa 8257     		.2byte	0x5782
+ 722 02fc 0B       		.uleb128 0xb
+ 723 02fd D40D0000 		.4byte	.LASF83
+ 724 0301 8357     		.2byte	0x5783
+ 725 0303 0B       		.uleb128 0xb
+ 726 0304 60040000 		.4byte	.LASF84
+ 727 0308 D859     		.2byte	0x59d8
+ 728 030a 0B       		.uleb128 0xb
+ 729 030b B80C0000 		.4byte	.LASF85
+ 730 030f D959     		.2byte	0x59d9
+ 731 0311 0B       		.uleb128 0xb
+ 732 0312 E0080000 		.4byte	.LASF86
+ 733 0316 DA59     		.2byte	0x59da
+ 734 0318 0B       		.uleb128 0xb
+ 735 0319 69040000 		.4byte	.LASF87
+ 736 031d C05D     		.2byte	0x5dc0
+ 737 031f 0B       		.uleb128 0xb
+ 738 0320 16020000 		.4byte	.LASF88
+ 739 0324 C15D     		.2byte	0x5dc1
+ 740 0326 0B       		.uleb128 0xb
+ 741 0327 61080000 		.4byte	.LASF89
+ 742 032b C25D     		.2byte	0x5dc2
+ 743 032d 0B       		.uleb128 0xb
+ 744 032e 3F120000 		.4byte	.LASF90
+ 745 0332 C35D     		.2byte	0x5dc3
+ 746 0334 0B       		.uleb128 0xb
+ 747 0335 39130000 		.4byte	.LASF91
+ 748 0339 C45D     		.2byte	0x5dc4
+ 749 033b 0B       		.uleb128 0xb
+ 750 033c 78110000 		.4byte	.LASF92
+ 751 0340 255E     		.2byte	0x5e25
+ 752 0342 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 20
+
+
+ 753 0343 4F0C0000 		.4byte	.LASF93
+ 754 0347 895E     		.2byte	0x5e89
+ 755 0349 0B       		.uleb128 0xb
+ 756 034a CB0C0000 		.4byte	.LASF94
+ 757 034e 8A5E     		.2byte	0x5e8a
+ 758 0350 0B       		.uleb128 0xb
+ 759 0351 72040000 		.4byte	.LASF95
+ 760 0355 A861     		.2byte	0x61a8
+ 761 0357 0B       		.uleb128 0xb
+ 762 0358 AF060000 		.4byte	.LASF96
+ 763 035c A961     		.2byte	0x61a9
+ 764 035e 0B       		.uleb128 0xb
+ 765 035f C0090000 		.4byte	.LASF97
+ 766 0363 AA61     		.2byte	0x61aa
+ 767 0365 0B       		.uleb128 0xb
+ 768 0366 62010000 		.4byte	.LASF98
+ 769 036a AB61     		.2byte	0x61ab
+ 770 036c 0B       		.uleb128 0xb
+ 771 036d 850A0000 		.4byte	.LASF99
+ 772 0371 AC61     		.2byte	0x61ac
+ 773 0373 0B       		.uleb128 0xb
+ 774 0374 E90D0000 		.4byte	.LASF100
+ 775 0378 AD61     		.2byte	0x61ad
+ 776 037a 0B       		.uleb128 0xb
+ 777 037b B8020000 		.4byte	.LASF101
+ 778 037f AE61     		.2byte	0x61ae
+ 779 0381 0B       		.uleb128 0xb
+ 780 0382 FF0C0000 		.4byte	.LASF102
+ 781 0386 AF61     		.2byte	0x61af
+ 782 0388 0B       		.uleb128 0xb
+ 783 0389 8A130000 		.4byte	.LASF103
+ 784 038d B061     		.2byte	0x61b0
+ 785 038f 0B       		.uleb128 0xb
+ 786 0390 830C0000 		.4byte	.LASF104
+ 787 0394 0D62     		.2byte	0x620d
+ 788 0396 0B       		.uleb128 0xb
+ 789 0397 EA040000 		.4byte	.LASF105
+ 790 039b 0E62     		.2byte	0x620e
+ 791 039d 0B       		.uleb128 0xb
+ 792 039e 0A110000 		.4byte	.LASF106
+ 793 03a2 7162     		.2byte	0x6271
+ 794 03a4 0B       		.uleb128 0xb
+ 795 03a5 F0120000 		.4byte	.LASF107
+ 796 03a9 7262     		.2byte	0x6272
+ 797 03ab 0B       		.uleb128 0xb
+ 798 03ac F70E0000 		.4byte	.LASF108
+ 799 03b0 7362     		.2byte	0x6273
+ 800 03b2 0B       		.uleb128 0xb
+ 801 03b3 810E0000 		.4byte	.LASF109
+ 802 03b7 D562     		.2byte	0x62d5
+ 803 03b9 0B       		.uleb128 0xb
+ 804 03ba 7B040000 		.4byte	.LASF110
+ 805 03be 9065     		.2byte	0x6590
+ 806 03c0 0B       		.uleb128 0xb
+ 807 03c1 2D0E0000 		.4byte	.LASF111
+ 808 03c5 9165     		.2byte	0x6591
+ 809 03c7 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 21
+
+
+ 810 03c8 A2100000 		.4byte	.LASF112
+ 811 03cc 9265     		.2byte	0x6592
+ 812 03ce 0B       		.uleb128 0xb
+ 813 03cf D0110000 		.4byte	.LASF113
+ 814 03d3 9365     		.2byte	0x6593
+ 815 03d5 0B       		.uleb128 0xb
+ 816 03d6 83060000 		.4byte	.LASF114
+ 817 03da 9465     		.2byte	0x6594
+ 818 03dc 0B       		.uleb128 0xb
+ 819 03dd 84040000 		.4byte	.LASF115
+ 820 03e1 7869     		.2byte	0x6978
+ 821 03e3 0B       		.uleb128 0xb
+ 822 03e4 120F0000 		.4byte	.LASF116
+ 823 03e8 7969     		.2byte	0x6979
+ 824 03ea 0B       		.uleb128 0xb
+ 825 03eb EF000000 		.4byte	.LASF117
+ 826 03ef 7A69     		.2byte	0x697a
+ 827 03f1 0B       		.uleb128 0xb
+ 828 03f2 F7110000 		.4byte	.LASF118
+ 829 03f6 7B69     		.2byte	0x697b
+ 830 03f8 0B       		.uleb128 0xb
+ 831 03f9 8D040000 		.4byte	.LASF119
+ 832 03fd 606D     		.2byte	0x6d60
+ 833 03ff 0B       		.uleb128 0xb
+ 834 0400 980C0000 		.4byte	.LASF120
+ 835 0404 616D     		.2byte	0x6d61
+ 836 0406 0B       		.uleb128 0xb
+ 837 0407 F7130000 		.4byte	.LASF121
+ 838 040b 626D     		.2byte	0x6d62
+ 839 040d 0B       		.uleb128 0xb
+ 840 040e C8020000 		.4byte	.LASF122
+ 841 0412 636D     		.2byte	0x6d63
+ 842 0414 0B       		.uleb128 0xb
+ 843 0415 70080000 		.4byte	.LASF123
+ 844 0419 646D     		.2byte	0x6d64
+ 845 041b 0B       		.uleb128 0xb
+ 846 041c B5070000 		.4byte	.LASF124
+ 847 0420 656D     		.2byte	0x6d65
+ 848 0422 0B       		.uleb128 0xb
+ 849 0423 04010000 		.4byte	.LASF125
+ 850 0427 C56D     		.2byte	0x6dc5
+ 851 0429 0B       		.uleb128 0xb
+ 852 042a 2A0D0000 		.4byte	.LASF126
+ 853 042e C66D     		.2byte	0x6dc6
+ 854 0430 0B       		.uleb128 0xb
+ 855 0431 BA100000 		.4byte	.LASF127
+ 856 0435 296E     		.2byte	0x6e29
+ 857 0437 0B       		.uleb128 0xb
+ 858 0438 210B0000 		.4byte	.LASF128
+ 859 043c 2A6E     		.2byte	0x6e2a
+ 860 043e 0B       		.uleb128 0xb
+ 861 043f 2B010000 		.4byte	.LASF129
+ 862 0443 2B6E     		.2byte	0x6e2b
+ 863 0445 0B       		.uleb128 0xb
+ 864 0446 03070000 		.4byte	.LASF130
+ 865 044a 2C6E     		.2byte	0x6e2c
+ 866 044c 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 22
+
+
+ 867 044d 92050000 		.4byte	.LASF131
+ 868 0451 2D6E     		.2byte	0x6e2d
+ 869 0453 0B       		.uleb128 0xb
+ 870 0454 CC0F0000 		.4byte	.LASF132
+ 871 0458 2E6E     		.2byte	0x6e2e
+ 872 045a 0B       		.uleb128 0xb
+ 873 045b 45090000 		.4byte	.LASF133
+ 874 045f 2F6E     		.2byte	0x6e2f
+ 875 0461 0B       		.uleb128 0xb
+ 876 0462 D1060000 		.4byte	.LASF134
+ 877 0466 306E     		.2byte	0x6e30
+ 878 0468 0B       		.uleb128 0xb
+ 879 0469 B30B0000 		.4byte	.LASF135
+ 880 046d 316E     		.2byte	0x6e31
+ 881 046f 0B       		.uleb128 0xb
+ 882 0470 96040000 		.4byte	.LASF136
+ 883 0474 4871     		.2byte	0x7148
+ 884 0476 0B       		.uleb128 0xb
+ 885 0477 50130000 		.4byte	.LASF137
+ 886 047b 4971     		.2byte	0x7149
+ 887 047d 0B       		.uleb128 0xb
+ 888 047e F8080000 		.4byte	.LASF138
+ 889 0482 4A71     		.2byte	0x714a
+ 890 0484 0B       		.uleb128 0xb
+ 891 0485 7B0D0000 		.4byte	.LASF139
+ 892 0489 4B71     		.2byte	0x714b
+ 893 048b 0B       		.uleb128 0xb
+ 894 048c DB120000 		.4byte	.LASF140
+ 895 0490 4C71     		.2byte	0x714c
+ 896 0492 0B       		.uleb128 0xb
+ 897 0493 620F0000 		.4byte	.LASF141
+ 898 0497 4D71     		.2byte	0x714d
+ 899 0499 0B       		.uleb128 0xb
+ 900 049a C20A0000 		.4byte	.LASF142
+ 901 049e 4E71     		.2byte	0x714e
+ 902 04a0 0B       		.uleb128 0xb
+ 903 04a1 D0100000 		.4byte	.LASF143
+ 904 04a5 4F71     		.2byte	0x714f
+ 905 04a7 0B       		.uleb128 0xb
+ 906 04a8 CE010000 		.4byte	.LASF144
+ 907 04ac 5071     		.2byte	0x7150
+ 908 04ae 0B       		.uleb128 0xb
+ 909 04af 8E090000 		.4byte	.LASF145
+ 910 04b3 5171     		.2byte	0x7151
+ 911 04b5 0B       		.uleb128 0xb
+ 912 04b6 970D0000 		.4byte	.LASF146
+ 913 04ba 5271     		.2byte	0x7152
+ 914 04bc 0B       		.uleb128 0xb
+ 915 04bd E9060000 		.4byte	.LASF147
+ 916 04c1 5371     		.2byte	0x7153
+ 917 04c3 0B       		.uleb128 0xb
+ 918 04c4 82050000 		.4byte	.LASF148
+ 919 04c8 5471     		.2byte	0x7154
+ 920 04ca 0B       		.uleb128 0xb
+ 921 04cb 77090000 		.4byte	.LASF149
+ 922 04cf 5571     		.2byte	0x7155
+ 923 04d1 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 23
+
+
+ 924 04d2 AD0E0000 		.4byte	.LASF150
+ 925 04d6 5671     		.2byte	0x7156
+ 926 04d8 0B       		.uleb128 0xb
+ 927 04d9 520E0000 		.4byte	.LASF151
+ 928 04dd 5771     		.2byte	0x7157
+ 929 04df 0B       		.uleb128 0xb
+ 930 04e0 09130000 		.4byte	.LASF152
+ 931 04e4 5871     		.2byte	0x7158
+ 932 04e6 0B       		.uleb128 0xb
+ 933 04e7 D6090000 		.4byte	.LASF153
+ 934 04eb 5971     		.2byte	0x7159
+ 935 04ed 0B       		.uleb128 0xb
+ 936 04ee EA020000 		.4byte	.LASF154
+ 937 04f2 5A71     		.2byte	0x715a
+ 938 04f4 0B       		.uleb128 0xb
+ 939 04f5 560D0000 		.4byte	.LASF155
+ 940 04f9 5B71     		.2byte	0x715b
+ 941 04fb 0B       		.uleb128 0xb
+ 942 04fc 06100000 		.4byte	.LASF156
+ 943 0500 5C71     		.2byte	0x715c
+ 944 0502 0B       		.uleb128 0xb
+ 945 0503 25080000 		.4byte	.LASF157
+ 946 0507 5D71     		.2byte	0x715d
+ 947 0509 0B       		.uleb128 0xb
+ 948 050a 86120000 		.4byte	.LASF158
+ 949 050e 5E71     		.2byte	0x715e
+ 950 0510 0B       		.uleb128 0xb
+ 951 0511 4E0F0000 		.4byte	.LASF159
+ 952 0515 5F71     		.2byte	0x715f
+ 953 0517 0B       		.uleb128 0xb
+ 954 0518 ED010000 		.4byte	.LASF160
+ 955 051c AD71     		.2byte	0x71ad
+ 956 051e 0B       		.uleb128 0xb
+ 957 051f 4C010000 		.4byte	.LASF161
+ 958 0523 C071     		.2byte	0x71c0
+ 959 0525 0B       		.uleb128 0xb
+ 960 0526 66020000 		.4byte	.LASF162
+ 961 052a C171     		.2byte	0x71c1
+ 962 052c 0B       		.uleb128 0xb
+ 963 052d EE090000 		.4byte	.LASF163
+ 964 0531 C271     		.2byte	0x71c2
+ 965 0533 0B       		.uleb128 0xb
+ 966 0534 C9120000 		.4byte	.LASF164
+ 967 0538 C371     		.2byte	0x71c3
+ 968 053a 0B       		.uleb128 0xb
+ 969 053b 7D070000 		.4byte	.LASF165
+ 970 053f C471     		.2byte	0x71c4
+ 971 0541 0B       		.uleb128 0xb
+ 972 0542 71130000 		.4byte	.LASF166
+ 973 0546 1172     		.2byte	0x7211
+ 974 0548 0B       		.uleb128 0xb
+ 975 0549 13120000 		.4byte	.LASF167
+ 976 054d 1272     		.2byte	0x7212
+ 977 054f 0B       		.uleb128 0xb
+ 978 0550 53050000 		.4byte	.LASF168
+ 979 0554 1372     		.2byte	0x7213
+ 980 0556 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 24
+
+
+ 981 0557 53120000 		.4byte	.LASF169
+ 982 055b 1472     		.2byte	0x7214
+ 983 055d 0B       		.uleb128 0xb
+ 984 055e 6A120000 		.4byte	.LASF170
+ 985 0562 7572     		.2byte	0x7275
+ 986 0564 0B       		.uleb128 0xb
+ 987 0565 42070000 		.4byte	.LASF171
+ 988 0569 7672     		.2byte	0x7276
+ 989 056b 0B       		.uleb128 0xb
+ 990 056c CE130000 		.4byte	.LASF172
+ 991 0570 7772     		.2byte	0x7277
+ 992 0572 0B       		.uleb128 0xb
+ 993 0573 D4070000 		.4byte	.LASF173
+ 994 0577 7872     		.2byte	0x7278
+ 995 0579 0B       		.uleb128 0xb
+ 996 057a 070A0000 		.4byte	.LASF174
+ 997 057e 7972     		.2byte	0x7279
+ 998 0580 0B       		.uleb128 0xb
+ 999 0581 AC080000 		.4byte	.LASF175
+ 1000 0585 7A72     		.2byte	0x727a
+ 1001 0587 0B       		.uleb128 0xb
+ 1002 0588 26100000 		.4byte	.LASF176
+ 1003 058c 7B72     		.2byte	0x727b
+ 1004 058e 0B       		.uleb128 0xb
+ 1005 058f BA010000 		.4byte	.LASF177
+ 1006 0593 7C72     		.2byte	0x727c
+ 1007 0595 0B       		.uleb128 0xb
+ 1008 0596 2B120000 		.4byte	.LASF178
+ 1009 059a 7D72     		.2byte	0x727d
+ 1010 059c 0B       		.uleb128 0xb
+ 1011 059d D5040000 		.4byte	.LASF179
+ 1012 05a1 7E72     		.2byte	0x727e
+ 1013 05a3 0B       		.uleb128 0xb
+ 1014 05a4 D1080000 		.4byte	.LASF180
+ 1015 05a8 D972     		.2byte	0x72d9
+ 1016 05aa 0B       		.uleb128 0xb
+ 1017 05ab EB100000 		.4byte	.LASF181
+ 1018 05af 3D73     		.2byte	0x733d
+ 1019 05b1 0B       		.uleb128 0xb
+ 1020 05b2 0F090000 		.4byte	.LASF182
+ 1021 05b6 3E73     		.2byte	0x733e
+ 1022 05b8 0B       		.uleb128 0xb
+ 1023 05b9 1A0C0000 		.4byte	.LASF183
+ 1024 05bd 3F73     		.2byte	0x733f
+ 1025 05bf 0B       		.uleb128 0xb
+ 1026 05c0 34110000 		.4byte	.LASF184
+ 1027 05c4 4073     		.2byte	0x7340
+ 1028 05c6 0B       		.uleb128 0xb
+ 1029 05c7 64070000 		.4byte	.LASF185
+ 1030 05cb 4173     		.2byte	0x7341
+ 1031 05cd 0B       		.uleb128 0xb
+ 1032 05ce E10A0000 		.4byte	.LASF186
+ 1033 05d2 4273     		.2byte	0x7342
+ 1034 05d4 0B       		.uleb128 0xb
+ 1035 05d5 E8110000 		.4byte	.LASF187
+ 1036 05d9 4373     		.2byte	0x7343
+ 1037 05db 0B       		.uleb128 0xb
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 25
+
+
+ 1038 05dc 6A0E0000 		.4byte	.LASF188
+ 1039 05e0 4473     		.2byte	0x7344
+ 1040 05e2 0B       		.uleb128 0xb
+ 1041 05e3 30090000 		.4byte	.LASF189
+ 1042 05e7 4573     		.2byte	0x7345
+ 1043 05e9 0B       		.uleb128 0xb
+ 1044 05ea AD000000 		.4byte	.LASF190
+ 1045 05ee 4673     		.2byte	0x7346
+ 1046 05f0 0B       		.uleb128 0xb
+ 1047 05f1 4A000000 		.4byte	.LASF191
+ 1048 05f5 4773     		.2byte	0x7347
+ 1049 05f7 0B       		.uleb128 0xb
+ 1050 05f8 0F060000 		.4byte	.LASF192
+ 1051 05fc 4873     		.2byte	0x7348
+ 1052 05fe 0B       		.uleb128 0xb
+ 1053 05ff 82000000 		.4byte	.LASF193
+ 1054 0603 4973     		.2byte	0x7349
+ 1055 0605 0B       		.uleb128 0xb
+ 1056 0606 9F040000 		.4byte	.LASF194
+ 1057 060a 3075     		.2byte	0x7530
+ 1058 060c 0B       		.uleb128 0xb
+ 1059 060d A8040000 		.4byte	.LASF195
+ 1060 0611 1879     		.2byte	0x7918
+ 1061 0613 0B       		.uleb128 0xb
+ 1062 0614 B1040000 		.4byte	.LASF196
+ 1063 0618 007D     		.2byte	0x7d00
+ 1064 061a 0B       		.uleb128 0xb
+ 1065 061b BA040000 		.4byte	.LASF197
+ 1066 061f E880     		.2byte	0x80e8
+ 1067 0621 0B       		.uleb128 0xb
+ 1068 0622 C3040000 		.4byte	.LASF198
+ 1069 0626 D084     		.2byte	0x84d0
+ 1070 0628 0B       		.uleb128 0xb
+ 1071 0629 B10A0000 		.4byte	.LASF199
+ 1072 062d D184     		.2byte	0x84d1
+ 1073 062f 0B       		.uleb128 0xb
+ 1074 0630 CC040000 		.4byte	.LASF200
+ 1075 0634 B888     		.2byte	0x88b8
+ 1076 0636 00       		.byte	0
+ 1077 0637 0C       		.uleb128 0xc
+ 1078 0638 E3020000 		.4byte	.LASF201
+ 1079 063c 05       		.byte	0x5
+ 1080 063d 7202     		.2byte	0x272
+ 1081 063f BF010000 		.4byte	0x1bf
+ 1082 0643 0C       		.uleb128 0xc
+ 1083 0644 47100000 		.4byte	.LASF202
+ 1084 0648 05       		.byte	0x5
+ 1085 0649 8202     		.2byte	0x282
+ 1086 064b 4F060000 		.4byte	0x64f
+ 1087 064f 0D       		.uleb128 0xd
+ 1088 0650 A8060000 		.4byte	.LASF208
+ 1089 0654 10       		.byte	0x10
+ 1090 0655 05       		.byte	0x5
+ 1091 0656 4003     		.2byte	0x340
+ 1092 0658 91060000 		.4byte	0x691
+ 1093 065c 0E       		.uleb128 0xe
+ 1094 065d 4E100000 		.4byte	.LASF203
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 26
+
+
+ 1095 0661 05       		.byte	0x5
+ 1096 0662 4103     		.2byte	0x341
+ 1097 0664 2C0B0000 		.4byte	0xb2c
+ 1098 0668 00       		.byte	0
+ 1099 0669 0E       		.uleb128 0xe
+ 1100 066a DF000000 		.4byte	.LASF204
+ 1101 066e 05       		.byte	0x5
+ 1102 066f 4203     		.2byte	0x342
+ 1103 0671 25000000 		.4byte	0x25
+ 1104 0675 04       		.byte	0x4
+ 1105 0676 0E       		.uleb128 0xe
+ 1106 0677 1C110000 		.4byte	.LASF205
+ 1107 067b 05       		.byte	0x5
+ 1108 067c 4303     		.2byte	0x343
+ 1109 067e 46010000 		.4byte	0x146
+ 1110 0682 08       		.byte	0x8
+ 1111 0683 0E       		.uleb128 0xe
+ 1112 0684 48060000 		.4byte	.LASF206
+ 1113 0688 05       		.byte	0x5
+ 1114 0689 4403     		.2byte	0x344
+ 1115 068b 04010000 		.4byte	0x104
+ 1116 068f 0C       		.byte	0xc
+ 1117 0690 00       		.byte	0
+ 1118 0691 0C       		.uleb128 0xc
+ 1119 0692 B0050000 		.4byte	.LASF207
+ 1120 0696 05       		.byte	0x5
+ 1121 0697 8402     		.2byte	0x284
+ 1122 0699 9D060000 		.4byte	0x69d
+ 1123 069d 0D       		.uleb128 0xd
+ 1124 069e 99100000 		.4byte	.LASF209
+ 1125 06a2 10       		.byte	0x10
+ 1126 06a3 05       		.byte	0x5
+ 1127 06a4 5303     		.2byte	0x353
+ 1128 06a6 EC060000 		.4byte	0x6ec
+ 1129 06aa 0E       		.uleb128 0xe
+ 1130 06ab 6A100000 		.4byte	.LASF210
+ 1131 06af 05       		.byte	0x5
+ 1132 06b0 5403     		.2byte	0x354
+ 1133 06b2 2C0B0000 		.4byte	0xb2c
+ 1134 06b6 00       		.byte	0
+ 1135 06b7 0E       		.uleb128 0xe
+ 1136 06b8 E4100000 		.4byte	.LASF211
+ 1137 06bc 05       		.byte	0x5
+ 1138 06bd 5503     		.2byte	0x355
+ 1139 06bf 2C0B0000 		.4byte	0xb2c
+ 1140 06c3 04       		.byte	0x4
+ 1141 06c4 0E       		.uleb128 0xe
+ 1142 06c5 36020000 		.4byte	.LASF212
+ 1143 06c9 05       		.byte	0x5
+ 1144 06ca 5603     		.2byte	0x356
+ 1145 06cc 3B010000 		.4byte	0x13b
+ 1146 06d0 08       		.byte	0x8
+ 1147 06d1 0E       		.uleb128 0xe
+ 1148 06d2 FF100000 		.4byte	.LASF213
+ 1149 06d6 05       		.byte	0x5
+ 1150 06d7 5703     		.2byte	0x357
+ 1151 06d9 3B010000 		.4byte	0x13b
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 27
+
+
+ 1152 06dd 0A       		.byte	0xa
+ 1153 06de 0E       		.uleb128 0xe
+ 1154 06df C60D0000 		.4byte	.LASF214
+ 1155 06e3 05       		.byte	0x5
+ 1156 06e4 5803     		.2byte	0x358
+ 1157 06e6 3B010000 		.4byte	0x13b
+ 1158 06ea 0C       		.byte	0xc
+ 1159 06eb 00       		.byte	0
+ 1160 06ec 0C       		.uleb128 0xc
+ 1161 06ed B9110000 		.4byte	.LASF215
+ 1162 06f1 05       		.byte	0x5
+ 1163 06f2 8E02     		.2byte	0x28e
+ 1164 06f4 C7000000 		.4byte	0xc7
+ 1165 06f8 0C       		.uleb128 0xc
+ 1166 06f9 95000000 		.4byte	.LASF216
+ 1167 06fd 05       		.byte	0x5
+ 1168 06fe 9002     		.2byte	0x290
+ 1169 0700 04070000 		.4byte	0x704
+ 1170 0704 0D       		.uleb128 0xd
+ 1171 0705 9D030000 		.4byte	.LASF217
+ 1172 0709 C0       		.byte	0xc0
+ 1173 070a 05       		.byte	0x5
+ 1174 070b AB03     		.2byte	0x3ab
+ 1175 070d A8090000 		.4byte	0x9a8
+ 1176 0711 0E       		.uleb128 0xe
+ 1177 0712 7B050000 		.4byte	.LASF218
+ 1178 0716 05       		.byte	0x5
+ 1179 0717 AC03     		.2byte	0x3ac
+ 1180 0719 320B0000 		.4byte	0xb32
+ 1181 071d 00       		.byte	0
+ 1182 071e 0E       		.uleb128 0xe
+ 1183 071f C40C0000 		.4byte	.LASF219
+ 1184 0723 05       		.byte	0x5
+ 1185 0724 AE03     		.2byte	0x3ae
+ 1186 0726 25000000 		.4byte	0x25
+ 1187 072a 04       		.byte	0x4
+ 1188 072b 0E       		.uleb128 0xe
+ 1189 072c 20070000 		.4byte	.LASF220
+ 1190 0730 05       		.byte	0x5
+ 1191 0731 B003     		.2byte	0x3b0
+ 1192 0733 320B0000 		.4byte	0xb32
+ 1193 0737 08       		.byte	0x8
+ 1194 0738 0E       		.uleb128 0xe
+ 1195 0739 4E100000 		.4byte	.LASF203
+ 1196 073d 05       		.byte	0x5
+ 1197 073e B203     		.2byte	0x3b2
+ 1198 0740 140B0000 		.4byte	0xb14
+ 1199 0744 0C       		.byte	0xc
+ 1200 0745 0E       		.uleb128 0xe
+ 1201 0746 B70F0000 		.4byte	.LASF221
+ 1202 074a 05       		.byte	0x5
+ 1203 074b B303     		.2byte	0x3b3
+ 1204 074d 140B0000 		.4byte	0xb14
+ 1205 0751 10       		.byte	0x10
+ 1206 0752 0E       		.uleb128 0xe
+ 1207 0753 10000000 		.4byte	.LASF222
+ 1208 0757 05       		.byte	0x5
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 28
+
+
+ 1209 0758 B503     		.2byte	0x3b5
+ 1210 075a 140B0000 		.4byte	0xb14
+ 1211 075e 14       		.byte	0x14
+ 1212 075f 0E       		.uleb128 0xe
+ 1213 0760 55080000 		.4byte	.LASF223
+ 1214 0764 05       		.byte	0x5
+ 1215 0765 B603     		.2byte	0x3b6
+ 1216 0767 140B0000 		.4byte	0xb14
+ 1217 076b 18       		.byte	0x18
+ 1218 076c 0E       		.uleb128 0xe
+ 1219 076d BF0F0000 		.4byte	.LASF224
+ 1220 0771 05       		.byte	0x5
+ 1221 0772 B803     		.2byte	0x3b8
+ 1222 0774 380B0000 		.4byte	0xb38
+ 1223 0778 1C       		.byte	0x1c
+ 1224 0779 0E       		.uleb128 0xe
+ 1225 077a 82100000 		.4byte	.LASF225
+ 1226 077e 05       		.byte	0x5
+ 1227 077f BA03     		.2byte	0x3ba
+ 1228 0781 260B0000 		.4byte	0xb26
+ 1229 0785 20       		.byte	0x20
+ 1230 0786 0E       		.uleb128 0xe
+ 1231 0787 62110000 		.4byte	.LASF226
+ 1232 078b 05       		.byte	0x5
+ 1233 078c BC03     		.2byte	0x3bc
+ 1234 078e 320B0000 		.4byte	0xb32
+ 1235 0792 24       		.byte	0x24
+ 1236 0793 0E       		.uleb128 0xe
+ 1237 0794 390D0000 		.4byte	.LASF227
+ 1238 0798 05       		.byte	0x5
+ 1239 0799 C203     		.2byte	0x3c2
+ 1240 079b EC060000 		.4byte	0x6ec
+ 1241 079f 28       		.byte	0x28
+ 1242 07a0 0E       		.uleb128 0xe
+ 1243 07a1 7A0F0000 		.4byte	.LASF228
+ 1244 07a5 05       		.byte	0x5
+ 1245 07a6 C303     		.2byte	0x3c3
+ 1246 07a8 25000000 		.4byte	0x25
+ 1247 07ac 2C       		.byte	0x2c
+ 1248 07ad 0E       		.uleb128 0xe
+ 1249 07ae 4E060000 		.4byte	.LASF229
+ 1250 07b2 05       		.byte	0x5
+ 1251 07b3 C503     		.2byte	0x3c5
+ 1252 07b5 1A0B0000 		.4byte	0xb1a
+ 1253 07b9 30       		.byte	0x30
+ 1254 07ba 0E       		.uleb128 0xe
+ 1255 07bb 0B0F0000 		.4byte	.LASF230
+ 1256 07bf 05       		.byte	0x5
+ 1257 07c0 C603     		.2byte	0x3c6
+ 1258 07c2 9E010000 		.4byte	0x19e
+ 1259 07c6 34       		.byte	0x34
+ 1260 07c7 0E       		.uleb128 0xe
+ 1261 07c8 4E110000 		.4byte	.LASF231
+ 1262 07cc 05       		.byte	0x5
+ 1263 07cd C703     		.2byte	0x3c7
+ 1264 07cf A9010000 		.4byte	0x1a9
+ 1265 07d3 35       		.byte	0x35
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 29
+
+
+ 1266 07d4 0E       		.uleb128 0xe
+ 1267 07d5 F80B0000 		.4byte	.LASF232
+ 1268 07d9 05       		.byte	0x5
+ 1269 07da C903     		.2byte	0x3c9
+ 1270 07dc 9E010000 		.4byte	0x19e
+ 1271 07e0 36       		.byte	0x36
+ 1272 07e1 0E       		.uleb128 0xe
+ 1273 07e2 1D130000 		.4byte	.LASF233
+ 1274 07e6 05       		.byte	0x5
+ 1275 07e7 CA03     		.2byte	0x3ca
+ 1276 07e9 7D010000 		.4byte	0x17d
+ 1277 07ed 37       		.byte	0x37
+ 1278 07ee 0E       		.uleb128 0xe
+ 1279 07ef 2E0A0000 		.4byte	.LASF234
+ 1280 07f3 05       		.byte	0x5
+ 1281 07f4 CB03     		.2byte	0x3cb
+ 1282 07f6 EE000000 		.4byte	0xee
+ 1283 07fa 38       		.byte	0x38
+ 1284 07fb 0F       		.uleb128 0xf
+ 1285 07fc 4F707400 		.ascii	"Opt\000"
+ 1286 0800 05       		.byte	0x5
+ 1287 0801 CC03     		.2byte	0x3cc
+ 1288 0803 72010000 		.4byte	0x172
+ 1289 0807 3C       		.byte	0x3c
+ 1290 0808 0E       		.uleb128 0xe
+ 1291 0809 1C000000 		.4byte	.LASF235
+ 1292 080d 05       		.byte	0x5
+ 1293 080e CE03     		.2byte	0x3ce
+ 1294 0810 5C010000 		.4byte	0x15c
+ 1295 0814 3E       		.byte	0x3e
+ 1296 0815 0F       		.uleb128 0xf
+ 1297 0816 545300   		.ascii	"TS\000"
+ 1298 0819 05       		.byte	0x5
+ 1299 081a D003     		.2byte	0x3d0
+ 1300 081c 04010000 		.4byte	0x104
+ 1301 0820 40       		.byte	0x40
+ 1302 0821 0E       		.uleb128 0xe
+ 1303 0822 49130000 		.4byte	.LASF236
+ 1304 0826 05       		.byte	0x5
+ 1305 0827 D203     		.2byte	0x3d2
+ 1306 0829 93010000 		.4byte	0x193
+ 1307 082d 44       		.byte	0x44
+ 1308 082e 0E       		.uleb128 0xe
+ 1309 082f AE010000 		.4byte	.LASF237
+ 1310 0833 05       		.byte	0x5
+ 1311 0834 D503     		.2byte	0x3d5
+ 1312 0836 B4010000 		.4byte	0x1b4
+ 1313 083a 48       		.byte	0x48
+ 1314 083b 0E       		.uleb128 0xe
+ 1315 083c F20C0000 		.4byte	.LASF238
+ 1316 0840 05       		.byte	0x5
+ 1317 0841 D603     		.2byte	0x3d6
+ 1318 0843 B4010000 		.4byte	0x1b4
+ 1319 0847 4C       		.byte	0x4c
+ 1320 0848 0E       		.uleb128 0xe
+ 1321 0849 2B060000 		.4byte	.LASF239
+ 1322 084d 05       		.byte	0x5
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 30
+
+
+ 1323 084e D703     		.2byte	0x3d7
+ 1324 0850 B4010000 		.4byte	0x1b4
+ 1325 0854 50       		.byte	0x50
+ 1326 0855 0E       		.uleb128 0xe
+ 1327 0856 420A0000 		.4byte	.LASF240
+ 1328 085a 05       		.byte	0x5
+ 1329 085b D903     		.2byte	0x3d9
+ 1330 085d B4010000 		.4byte	0x1b4
+ 1331 0861 54       		.byte	0x54
+ 1332 0862 0E       		.uleb128 0xe
+ 1333 0863 88020000 		.4byte	.LASF241
+ 1334 0867 05       		.byte	0x5
+ 1335 0868 DA03     		.2byte	0x3da
+ 1336 086a B4010000 		.4byte	0x1b4
+ 1337 086e 58       		.byte	0x58
+ 1338 086f 0E       		.uleb128 0xe
+ 1339 0870 DF000000 		.4byte	.LASF204
+ 1340 0874 05       		.byte	0x5
+ 1341 0875 DD03     		.2byte	0x3dd
+ 1342 0877 25000000 		.4byte	0x25
+ 1343 087b 5C       		.byte	0x5c
+ 1344 087c 0E       		.uleb128 0xe
+ 1345 087d 1C110000 		.4byte	.LASF205
+ 1346 0881 05       		.byte	0x5
+ 1347 0882 DE03     		.2byte	0x3de
+ 1348 0884 46010000 		.4byte	0x146
+ 1349 0888 60       		.byte	0x60
+ 1350 0889 0E       		.uleb128 0xe
+ 1351 088a 020C0000 		.4byte	.LASF242
+ 1352 088e 05       		.byte	0x5
+ 1353 088f E203     		.2byte	0x3e2
+ 1354 0891 91060000 		.4byte	0x691
+ 1355 0895 64       		.byte	0x64
+ 1356 0896 0E       		.uleb128 0xe
+ 1357 0897 EA050000 		.4byte	.LASF243
+ 1358 089b 05       		.byte	0x5
+ 1359 089c E403     		.2byte	0x3e4
+ 1360 089e 04010000 		.4byte	0x104
+ 1361 08a2 74       		.byte	0x74
+ 1362 08a3 0E       		.uleb128 0xe
+ 1363 08a4 A2130000 		.4byte	.LASF244
+ 1364 08a8 05       		.byte	0x5
+ 1365 08a9 E503     		.2byte	0x3e5
+ 1366 08ab 04010000 		.4byte	0x104
+ 1367 08af 78       		.byte	0x78
+ 1368 08b0 0E       		.uleb128 0xe
+ 1369 08b1 96020000 		.4byte	.LASF245
+ 1370 08b5 05       		.byte	0x5
+ 1371 08b6 EA03     		.2byte	0x3ea
+ 1372 08b8 3E0B0000 		.4byte	0xb3e
+ 1373 08bc 7C       		.byte	0x7c
+ 1374 08bd 0E       		.uleb128 0xe
+ 1375 08be 29050000 		.4byte	.LASF246
+ 1376 08c2 05       		.byte	0x5
+ 1377 08c3 EE03     		.2byte	0x3ee
+ 1378 08c5 30010000 		.4byte	0x130
+ 1379 08c9 80       		.byte	0x80
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 31
+
+
+ 1380 08ca 0E       		.uleb128 0xe
+ 1381 08cb 59110000 		.4byte	.LASF247
+ 1382 08cf 05       		.byte	0x5
+ 1383 08d0 EF03     		.2byte	0x3ef
+ 1384 08d2 30010000 		.4byte	0x130
+ 1385 08d6 84       		.byte	0x84
+ 1386 08d7 0E       		.uleb128 0xe
+ 1387 08d8 660A0000 		.4byte	.LASF248
+ 1388 08dc 05       		.byte	0x5
+ 1389 08dd F003     		.2byte	0x3f0
+ 1390 08df 72010000 		.4byte	0x172
+ 1391 08e3 88       		.byte	0x88
+ 1392 08e4 0E       		.uleb128 0xe
+ 1393 08e5 A3010000 		.4byte	.LASF249
+ 1394 08e9 05       		.byte	0x5
+ 1395 08ea F403     		.2byte	0x3f4
+ 1396 08ec 51010000 		.4byte	0x151
+ 1397 08f0 8A       		.byte	0x8a
+ 1398 08f1 0E       		.uleb128 0xe
+ 1399 08f2 5D020000 		.4byte	.LASF250
+ 1400 08f6 05       		.byte	0x5
+ 1401 08f7 F803     		.2byte	0x3f8
+ 1402 08f9 0F010000 		.4byte	0x10f
+ 1403 08fd 8C       		.byte	0x8c
+ 1404 08fe 0E       		.uleb128 0xe
+ 1405 08ff EB0E0000 		.4byte	.LASF251
+ 1406 0903 05       		.byte	0x5
+ 1407 0904 F903     		.2byte	0x3f9
+ 1408 0906 0F010000 		.4byte	0x10f
+ 1409 090a 8E       		.byte	0x8e
+ 1410 090b 0E       		.uleb128 0xe
+ 1411 090c 27090000 		.4byte	.LASF252
+ 1412 0910 05       		.byte	0x5
+ 1413 0911 FA03     		.2byte	0x3fa
+ 1414 0913 1A010000 		.4byte	0x11a
+ 1415 0917 90       		.byte	0x90
+ 1416 0918 0E       		.uleb128 0xe
+ 1417 0919 6F0D0000 		.4byte	.LASF253
+ 1418 091d 05       		.byte	0x5
+ 1419 091e FB03     		.2byte	0x3fb
+ 1420 0920 04010000 		.4byte	0x104
+ 1421 0924 94       		.byte	0x94
+ 1422 0925 0E       		.uleb128 0xe
+ 1423 0926 1E0D0000 		.4byte	.LASF254
+ 1424 092a 05       		.byte	0x5
+ 1425 092b FC03     		.2byte	0x3fc
+ 1426 092d 04010000 		.4byte	0x104
+ 1427 0931 98       		.byte	0x98
+ 1428 0932 0E       		.uleb128 0xe
+ 1429 0933 47050000 		.4byte	.LASF255
+ 1430 0937 05       		.byte	0x5
+ 1431 0938 FD03     		.2byte	0x3fd
+ 1432 093a 25010000 		.4byte	0x125
+ 1433 093e 9C       		.byte	0x9c
+ 1434 093f 0E       		.uleb128 0xe
+ 1435 0940 24110000 		.4byte	.LASF256
+ 1436 0944 05       		.byte	0x5
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 32
+
+
+ 1437 0945 FE03     		.2byte	0x3fe
+ 1438 0947 25010000 		.4byte	0x125
+ 1439 094b A0       		.byte	0xa0
+ 1440 094c 0E       		.uleb128 0xe
+ 1441 094d F40A0000 		.4byte	.LASF257
+ 1442 0951 05       		.byte	0x5
+ 1443 0952 0004     		.2byte	0x400
+ 1444 0954 04010000 		.4byte	0x104
+ 1445 0958 A4       		.byte	0xa4
+ 1446 0959 0E       		.uleb128 0xe
+ 1447 095a D9030000 		.4byte	.LASF258
+ 1448 095e 05       		.byte	0x5
+ 1449 095f 0104     		.2byte	0x401
+ 1450 0961 04010000 		.4byte	0x104
+ 1451 0965 A8       		.byte	0xa8
+ 1452 0966 0E       		.uleb128 0xe
+ 1453 0967 70100000 		.4byte	.LASF259
+ 1454 096b 05       		.byte	0x5
+ 1455 096c 0504     		.2byte	0x405
+ 1456 096e EE000000 		.4byte	0xee
+ 1457 0972 AC       		.byte	0xac
+ 1458 0973 0E       		.uleb128 0xe
+ 1459 0974 D7000000 		.4byte	.LASF260
+ 1460 0978 05       		.byte	0x5
+ 1461 0979 0604     		.2byte	0x406
+ 1462 097b EE000000 		.4byte	0xee
+ 1463 097f B0       		.byte	0xb0
+ 1464 0980 0E       		.uleb128 0xe
+ 1465 0981 70050000 		.4byte	.LASF261
+ 1466 0985 05       		.byte	0x5
+ 1467 0986 1104     		.2byte	0x411
+ 1468 0988 140B0000 		.4byte	0xb14
+ 1469 098c B4       		.byte	0xb4
+ 1470 098d 0E       		.uleb128 0xe
+ 1471 098e 6D110000 		.4byte	.LASF262
+ 1472 0992 05       		.byte	0x5
+ 1473 0993 1204     		.2byte	0x412
+ 1474 0995 140B0000 		.4byte	0xb14
+ 1475 0999 B8       		.byte	0xb8
+ 1476 099a 0E       		.uleb128 0xe
+ 1477 099b FA040000 		.4byte	.LASF263
+ 1478 099f 05       		.byte	0x5
+ 1479 09a0 1304     		.2byte	0x413
+ 1480 09a2 260B0000 		.4byte	0xb26
+ 1481 09a6 BC       		.byte	0xbc
+ 1482 09a7 00       		.byte	0
+ 1483 09a8 0C       		.uleb128 0xc
+ 1484 09a9 280F0000 		.4byte	.LASF264
+ 1485 09ad 05       		.byte	0x5
+ 1486 09ae 9E02     		.2byte	0x29e
+ 1487 09b0 B4090000 		.4byte	0x9b4
+ 1488 09b4 0D       		.uleb128 0xd
+ 1489 09b5 A30A0000 		.4byte	.LASF265
+ 1490 09b9 08       		.byte	0x8
+ 1491 09ba 05       		.byte	0x5
+ 1492 09bb 1E04     		.2byte	0x41e
+ 1493 09bd E9090000 		.4byte	0x9e9
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 33
+
+
+ 1494 09c1 0E       		.uleb128 0xe
+ 1495 09c2 310C0000 		.4byte	.LASF266
+ 1496 09c6 05       		.byte	0x5
+ 1497 09c7 1F04     		.2byte	0x41f
+ 1498 09c9 140B0000 		.4byte	0xb14
+ 1499 09cd 00       		.byte	0
+ 1500 09ce 0E       		.uleb128 0xe
+ 1501 09cf FF100000 		.4byte	.LASF213
+ 1502 09d3 05       		.byte	0x5
+ 1503 09d4 2004     		.2byte	0x420
+ 1504 09d6 5C010000 		.4byte	0x15c
+ 1505 09da 04       		.byte	0x4
+ 1506 09db 0E       		.uleb128 0xe
+ 1507 09dc C60D0000 		.4byte	.LASF214
+ 1508 09e0 05       		.byte	0x5
+ 1509 09e1 2104     		.2byte	0x421
+ 1510 09e3 5C010000 		.4byte	0x15c
+ 1511 09e7 06       		.byte	0x6
+ 1512 09e8 00       		.byte	0
+ 1513 09e9 0C       		.uleb128 0xc
+ 1514 09ea 9F080000 		.4byte	.LASF267
+ 1515 09ee 05       		.byte	0x5
+ 1516 09ef A502     		.2byte	0x2a5
+ 1517 09f1 F5090000 		.4byte	0x9f5
+ 1518 09f5 0D       		.uleb128 0xd
+ 1519 09f6 29020000 		.4byte	.LASF268
+ 1520 09fa 20       		.byte	0x20
+ 1521 09fb 05       		.byte	0x5
+ 1522 09fc DD02     		.2byte	0x2dd
+ 1523 09fe 6B0A0000 		.4byte	0xa6b
+ 1524 0a02 0E       		.uleb128 0xe
+ 1525 0a03 B70F0000 		.4byte	.LASF221
+ 1526 0a07 05       		.byte	0x5
+ 1527 0a08 DE02     		.2byte	0x2de
+ 1528 0a0a 1A0B0000 		.4byte	0xb1a
+ 1529 0a0e 00       		.byte	0
+ 1530 0a0f 0E       		.uleb128 0xe
+ 1531 0a10 4E100000 		.4byte	.LASF203
+ 1532 0a14 05       		.byte	0x5
+ 1533 0a15 DF02     		.2byte	0x2df
+ 1534 0a17 1A0B0000 		.4byte	0xb1a
+ 1535 0a1b 04       		.byte	0x4
+ 1536 0a1c 0E       		.uleb128 0xe
+ 1537 0a1d DC020000 		.4byte	.LASF269
+ 1538 0a21 05       		.byte	0x5
+ 1539 0a22 E002     		.2byte	0x2e0
+ 1540 0a24 140B0000 		.4byte	0xb14
+ 1541 0a28 08       		.byte	0x8
+ 1542 0a29 0E       		.uleb128 0xe
+ 1543 0a2a 56100000 		.4byte	.LASF270
+ 1544 0a2e 05       		.byte	0x5
+ 1545 0a2f E102     		.2byte	0x2e1
+ 1546 0a31 200B0000 		.4byte	0xb20
+ 1547 0a35 0C       		.byte	0xc
+ 1548 0a36 0E       		.uleb128 0xe
+ 1549 0a37 230E0000 		.4byte	.LASF271
+ 1550 0a3b 05       		.byte	0x5
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 34
+
+
+ 1551 0a3c E202     		.2byte	0x2e2
+ 1552 0a3e 200B0000 		.4byte	0xb20
+ 1553 0a42 10       		.byte	0x10
+ 1554 0a43 0E       		.uleb128 0xe
+ 1555 0a44 BE130000 		.4byte	.LASF272
+ 1556 0a48 05       		.byte	0x5
+ 1557 0a49 E302     		.2byte	0x2e3
+ 1558 0a4b 25000000 		.4byte	0x25
+ 1559 0a4f 14       		.byte	0x14
+ 1560 0a50 0E       		.uleb128 0xe
+ 1561 0a51 E70C0000 		.4byte	.LASF273
+ 1562 0a55 05       		.byte	0x5
+ 1563 0a56 E402     		.2byte	0x2e4
+ 1564 0a58 46010000 		.4byte	0x146
+ 1565 0a5c 18       		.byte	0x18
+ 1566 0a5d 0E       		.uleb128 0xe
+ 1567 0a5e 140C0000 		.4byte	.LASF274
+ 1568 0a62 05       		.byte	0x5
+ 1569 0a63 E502     		.2byte	0x2e5
+ 1570 0a65 04010000 		.4byte	0x104
+ 1571 0a69 1C       		.byte	0x1c
+ 1572 0a6a 00       		.byte	0
+ 1573 0a6b 0C       		.uleb128 0xc
+ 1574 0a6c 2F000000 		.4byte	.LASF275
+ 1575 0a70 05       		.byte	0x5
+ 1576 0a71 A602     		.2byte	0x2a6
+ 1577 0a73 770A0000 		.4byte	0xa77
+ 1578 0a77 0D       		.uleb128 0xd
+ 1579 0a78 990F0000 		.4byte	.LASF276
+ 1580 0a7c 0C       		.byte	0xc
+ 1581 0a7d 05       		.byte	0x5
+ 1582 0a7e E902     		.2byte	0x2e9
+ 1583 0a80 AC0A0000 		.4byte	0xaac
+ 1584 0a84 0E       		.uleb128 0xe
+ 1585 0a85 4E0D0000 		.4byte	.LASF277
+ 1586 0a89 05       		.byte	0x5
+ 1587 0a8a EA02     		.2byte	0x2ea
+ 1588 0a8c 1A0B0000 		.4byte	0xb1a
+ 1589 0a90 00       		.byte	0
+ 1590 0a91 0E       		.uleb128 0xe
+ 1591 0a92 650C0000 		.4byte	.LASF278
+ 1592 0a96 05       		.byte	0x5
+ 1593 0a97 EB02     		.2byte	0x2eb
+ 1594 0a99 1A0B0000 		.4byte	0xb1a
+ 1595 0a9d 04       		.byte	0x4
+ 1596 0a9e 0E       		.uleb128 0xe
+ 1597 0a9f FF100000 		.4byte	.LASF213
+ 1598 0aa3 05       		.byte	0x5
+ 1599 0aa4 EC02     		.2byte	0x2ec
+ 1600 0aa6 5C010000 		.4byte	0x15c
+ 1601 0aaa 08       		.byte	0x8
+ 1602 0aab 00       		.byte	0
+ 1603 0aac 0C       		.uleb128 0xc
+ 1604 0aad B4090000 		.4byte	.LASF279
+ 1605 0ab1 05       		.byte	0x5
+ 1606 0ab2 A702     		.2byte	0x2a7
+ 1607 0ab4 B80A0000 		.4byte	0xab8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 35
+
+
+ 1608 0ab8 0D       		.uleb128 0xd
+ 1609 0ab9 8B0D0000 		.4byte	.LASF280
+ 1610 0abd 20       		.byte	0x20
+ 1611 0abe 05       		.byte	0x5
+ 1612 0abf FF02     		.2byte	0x2ff
+ 1613 0ac1 140B0000 		.4byte	0xb14
+ 1614 0ac5 0E       		.uleb128 0xe
+ 1615 0ac6 7E0C0000 		.4byte	.LASF281
+ 1616 0aca 05       		.byte	0x5
+ 1617 0acb 0003     		.2byte	0x300
+ 1618 0acd 67010000 		.4byte	0x167
+ 1619 0ad1 00       		.byte	0
+ 1620 0ad2 0E       		.uleb128 0xe
+ 1621 0ad3 82100000 		.4byte	.LASF225
+ 1622 0ad7 05       		.byte	0x5
+ 1623 0ad8 0103     		.2byte	0x301
+ 1624 0ada 260B0000 		.4byte	0xb26
+ 1625 0ade 04       		.byte	0x4
+ 1626 0adf 0E       		.uleb128 0xe
+ 1627 0ae0 C8080000 		.4byte	.LASF282
+ 1628 0ae4 05       		.byte	0x5
+ 1629 0ae5 0203     		.2byte	0x302
+ 1630 0ae7 6B0A0000 		.4byte	0xa6b
+ 1631 0aeb 08       		.byte	0x8
+ 1632 0aec 0E       		.uleb128 0xe
+ 1633 0aed 70050000 		.4byte	.LASF261
+ 1634 0af1 05       		.byte	0x5
+ 1635 0af2 0403     		.2byte	0x304
+ 1636 0af4 25000000 		.4byte	0x25
+ 1637 0af8 14       		.byte	0x14
+ 1638 0af9 0E       		.uleb128 0xe
+ 1639 0afa 6D110000 		.4byte	.LASF262
+ 1640 0afe 05       		.byte	0x5
+ 1641 0aff 0503     		.2byte	0x305
+ 1642 0b01 25000000 		.4byte	0x25
+ 1643 0b05 18       		.byte	0x18
+ 1644 0b06 0E       		.uleb128 0xe
+ 1645 0b07 FA040000 		.4byte	.LASF263
+ 1646 0b0b 05       		.byte	0x5
+ 1647 0b0c 0603     		.2byte	0x306
+ 1648 0b0e 260B0000 		.4byte	0xb26
+ 1649 0b12 1C       		.byte	0x1c
+ 1650 0b13 00       		.byte	0
+ 1651 0b14 06       		.uleb128 0x6
+ 1652 0b15 04       		.byte	0x4
+ 1653 0b16 F8060000 		.4byte	0x6f8
+ 1654 0b1a 06       		.uleb128 0x6
+ 1655 0b1b 04       		.byte	0x4
+ 1656 0b1c E9090000 		.4byte	0x9e9
+ 1657 0b20 06       		.uleb128 0x6
+ 1658 0b21 04       		.byte	0x4
+ 1659 0b22 AC0A0000 		.4byte	0xaac
+ 1660 0b26 06       		.uleb128 0x6
+ 1661 0b27 04       		.byte	0x4
+ 1662 0b28 90000000 		.4byte	0x90
+ 1663 0b2c 06       		.uleb128 0x6
+ 1664 0b2d 04       		.byte	0x4
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 36
+
+
+ 1665 0b2e 43060000 		.4byte	0x643
+ 1666 0b32 06       		.uleb128 0x6
+ 1667 0b33 04       		.byte	0x4
+ 1668 0b34 E3000000 		.4byte	0xe3
+ 1669 0b38 06       		.uleb128 0x6
+ 1670 0b39 04       		.byte	0x4
+ 1671 0b3a A8090000 		.4byte	0x9a8
+ 1672 0b3e 10       		.uleb128 0x10
+ 1673 0b3f 88010000 		.4byte	0x188
+ 1674 0b43 4E0B0000 		.4byte	0xb4e
+ 1675 0b47 11       		.uleb128 0x11
+ 1676 0b48 74000000 		.4byte	0x74
+ 1677 0b4c 00       		.byte	0
+ 1678 0b4d 00       		.byte	0
+ 1679 0b4e 12       		.uleb128 0x12
+ 1680 0b4f 79010000 		.4byte	.LASF283
+ 1681 0b53 08       		.byte	0x8
+ 1682 0b54 06       		.byte	0x6
+ 1683 0b55 4F       		.byte	0x4f
+ 1684 0b56 730B0000 		.4byte	0xb73
+ 1685 0b5a 13       		.uleb128 0x13
+ 1686 0b5b 6C130000 		.4byte	.LASF284
+ 1687 0b5f 06       		.byte	0x6
+ 1688 0b60 50       		.byte	0x50
+ 1689 0b61 BC000000 		.4byte	0xbc
+ 1690 0b65 00       		.byte	0
+ 1691 0b66 13       		.uleb128 0x13
+ 1692 0b67 C8130000 		.4byte	.LASF285
+ 1693 0b6b 06       		.byte	0x6
+ 1694 0b6c 51       		.byte	0x51
+ 1695 0b6d B1000000 		.4byte	0xb1
+ 1696 0b71 04       		.byte	0x4
+ 1697 0b72 00       		.byte	0
+ 1698 0b73 05       		.uleb128 0x5
+ 1699 0b74 A3070000 		.4byte	.LASF286
+ 1700 0b78 06       		.byte	0x6
+ 1701 0b79 52       		.byte	0x52
+ 1702 0b7a 4E0B0000 		.4byte	0xb4e
+ 1703 0b7e 14       		.uleb128 0x14
+ 1704 0b7f 3A0B0000 		.4byte	.LASF319
+ 1705 0b83 01       		.byte	0x1
+ 1706 0b84 AC       		.byte	0xac
+ 1707 0b85 00000000 		.4byte	.LFB3
+ 1708 0b89 88000000 		.4byte	.LFE3-.LFB3
+ 1709 0b8d 01       		.uleb128 0x1
+ 1710 0b8e 9C       		.byte	0x9c
+ 1711 0b8f 770C0000 		.4byte	0xc77
+ 1712 0b93 15       		.uleb128 0x15
+ 1713 0b94 470D0000 		.4byte	.LASF287
+ 1714 0b98 01       		.byte	0x1
+ 1715 0b99 AF       		.byte	0xaf
+ 1716 0b9a 37060000 		.4byte	0x637
+ 1717 0b9e 02       		.uleb128 0x2
+ 1718 0b9f 91       		.byte	0x91
+ 1719 0ba0 66       		.sleb128 -26
+ 1720 0ba1 16       		.uleb128 0x16
+ 1721 0ba2 40000000 		.4byte	.LVL0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 37
+
+
+ 1722 0ba6 DD0F0000 		.4byte	0xfdd
+ 1723 0baa 0C0C0000 		.4byte	0xc0c
+ 1724 0bae 17       		.uleb128 0x17
+ 1725 0baf 01       		.uleb128 0x1
+ 1726 0bb0 50       		.byte	0x50
+ 1727 0bb1 02       		.uleb128 0x2
+ 1728 0bb2 75       		.byte	0x75
+ 1729 0bb3 00       		.sleb128 0
+ 1730 0bb4 17       		.uleb128 0x17
+ 1731 0bb5 01       		.uleb128 0x1
+ 1732 0bb6 51       		.byte	0x51
+ 1733 0bb7 05       		.uleb128 0x5
+ 1734 0bb8 03       		.byte	0x3
+ 1735 0bb9 00000000 		.4byte	.LC0
+ 1736 0bbd 17       		.uleb128 0x17
+ 1737 0bbe 01       		.uleb128 0x1
+ 1738 0bbf 52       		.byte	0x52
+ 1739 0bc0 05       		.uleb128 0x5
+ 1740 0bc1 03       		.byte	0x3
+ 1741 0bc2 00000000 		.4byte	App_TaskCOM
+ 1742 0bc6 17       		.uleb128 0x17
+ 1743 0bc7 01       		.uleb128 0x1
+ 1744 0bc8 53       		.byte	0x53
+ 1745 0bc9 02       		.uleb128 0x2
+ 1746 0bca 74       		.byte	0x74
+ 1747 0bcb 00       		.sleb128 0
+ 1748 0bcc 17       		.uleb128 0x17
+ 1749 0bcd 02       		.uleb128 0x2
+ 1750 0bce 7D       		.byte	0x7d
+ 1751 0bcf 00       		.sleb128 0
+ 1752 0bd0 01       		.uleb128 0x1
+ 1753 0bd1 34       		.byte	0x34
+ 1754 0bd2 17       		.uleb128 0x17
+ 1755 0bd3 02       		.uleb128 0x2
+ 1756 0bd4 7D       		.byte	0x7d
+ 1757 0bd5 04       		.sleb128 4
+ 1758 0bd6 03       		.uleb128 0x3
+ 1759 0bd7 75       		.byte	0x75
+ 1760 0bd8 C001     		.sleb128 192
+ 1761 0bda 17       		.uleb128 0x17
+ 1762 0bdb 02       		.uleb128 0x2
+ 1763 0bdc 7D       		.byte	0x7d
+ 1764 0bdd 08       		.sleb128 8
+ 1765 0bde 01       		.uleb128 0x1
+ 1766 0bdf 49       		.byte	0x49
+ 1767 0be0 17       		.uleb128 0x17
+ 1768 0be1 02       		.uleb128 0x2
+ 1769 0be2 7D       		.byte	0x7d
+ 1770 0be3 0C       		.sleb128 12
+ 1771 0be4 03       		.uleb128 0x3
+ 1772 0be5 0A       		.byte	0xa
+ 1773 0be6 0001     		.2byte	0x100
+ 1774 0be8 17       		.uleb128 0x17
+ 1775 0be9 02       		.uleb128 0x2
+ 1776 0bea 7D       		.byte	0x7d
+ 1777 0beb 10       		.sleb128 16
+ 1778 0bec 02       		.uleb128 0x2
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 38
+
+
+ 1779 0bed 78       		.byte	0x78
+ 1780 0bee 00       		.sleb128 0
+ 1781 0bef 17       		.uleb128 0x17
+ 1782 0bf0 02       		.uleb128 0x2
+ 1783 0bf1 7D       		.byte	0x7d
+ 1784 0bf2 14       		.sleb128 20
+ 1785 0bf3 02       		.uleb128 0x2
+ 1786 0bf4 74       		.byte	0x74
+ 1787 0bf5 00       		.sleb128 0
+ 1788 0bf6 17       		.uleb128 0x17
+ 1789 0bf7 02       		.uleb128 0x2
+ 1790 0bf8 7D       		.byte	0x7d
+ 1791 0bf9 18       		.sleb128 24
+ 1792 0bfa 02       		.uleb128 0x2
+ 1793 0bfb 74       		.byte	0x74
+ 1794 0bfc 00       		.sleb128 0
+ 1795 0bfd 17       		.uleb128 0x17
+ 1796 0bfe 02       		.uleb128 0x2
+ 1797 0bff 7D       		.byte	0x7d
+ 1798 0c00 1C       		.sleb128 28
+ 1799 0c01 02       		.uleb128 0x2
+ 1800 0c02 76       		.byte	0x76
+ 1801 0c03 00       		.sleb128 0
+ 1802 0c04 17       		.uleb128 0x17
+ 1803 0c05 02       		.uleb128 0x2
+ 1804 0c06 7D       		.byte	0x7d
+ 1805 0c07 20       		.sleb128 32
+ 1806 0c08 02       		.uleb128 0x2
+ 1807 0c09 77       		.byte	0x77
+ 1808 0c0a 00       		.sleb128 0
+ 1809 0c0b 00       		.byte	0
+ 1810 0c0c 18       		.uleb128 0x18
+ 1811 0c0d 6C000000 		.4byte	.LVL1
+ 1812 0c11 DD0F0000 		.4byte	0xfdd
+ 1813 0c15 17       		.uleb128 0x17
+ 1814 0c16 01       		.uleb128 0x1
+ 1815 0c17 50       		.byte	0x50
+ 1816 0c18 03       		.uleb128 0x3
+ 1817 0c19 75       		.byte	0x75
+ 1818 0c1a C009     		.sleb128 1216
+ 1819 0c1c 17       		.uleb128 0x17
+ 1820 0c1d 01       		.uleb128 0x1
+ 1821 0c1e 51       		.byte	0x51
+ 1822 0c1f 05       		.uleb128 0x5
+ 1823 0c20 03       		.byte	0x3
+ 1824 0c21 08000000 		.4byte	.LC1
+ 1825 0c25 17       		.uleb128 0x17
+ 1826 0c26 01       		.uleb128 0x1
+ 1827 0c27 52       		.byte	0x52
+ 1828 0c28 05       		.uleb128 0x5
+ 1829 0c29 03       		.byte	0x3
+ 1830 0c2a 00000000 		.4byte	App_TaskPRESS
+ 1831 0c2e 17       		.uleb128 0x17
+ 1832 0c2f 01       		.uleb128 0x1
+ 1833 0c30 53       		.byte	0x53
+ 1834 0c31 02       		.uleb128 0x2
+ 1835 0c32 74       		.byte	0x74
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 39
+
+
+ 1836 0c33 00       		.sleb128 0
+ 1837 0c34 17       		.uleb128 0x17
+ 1838 0c35 02       		.uleb128 0x2
+ 1839 0c36 7D       		.byte	0x7d
+ 1840 0c37 00       		.sleb128 0
+ 1841 0c38 02       		.uleb128 0x2
+ 1842 0c39 76       		.byte	0x76
+ 1843 0c3a 00       		.sleb128 0
+ 1844 0c3b 17       		.uleb128 0x17
+ 1845 0c3c 02       		.uleb128 0x2
+ 1846 0c3d 7D       		.byte	0x7d
+ 1847 0c3e 04       		.sleb128 4
+ 1848 0c3f 03       		.uleb128 0x3
+ 1849 0c40 75       		.byte	0x75
+ 1850 0c41 800B     		.sleb128 1408
+ 1851 0c43 17       		.uleb128 0x17
+ 1852 0c44 02       		.uleb128 0x2
+ 1853 0c45 7D       		.byte	0x7d
+ 1854 0c46 08       		.sleb128 8
+ 1855 0c47 02       		.uleb128 0x2
+ 1856 0c48 08       		.byte	0x8
+ 1857 0c49 33       		.byte	0x33
+ 1858 0c4a 17       		.uleb128 0x17
+ 1859 0c4b 02       		.uleb128 0x2
+ 1860 0c4c 7D       		.byte	0x7d
+ 1861 0c4d 0C       		.sleb128 12
+ 1862 0c4e 03       		.uleb128 0x3
+ 1863 0c4f 0A       		.byte	0xa
+ 1864 0c50 0002     		.2byte	0x200
+ 1865 0c52 17       		.uleb128 0x17
+ 1866 0c53 02       		.uleb128 0x2
+ 1867 0c54 7D       		.byte	0x7d
+ 1868 0c55 10       		.sleb128 16
+ 1869 0c56 02       		.uleb128 0x2
+ 1870 0c57 78       		.byte	0x78
+ 1871 0c58 00       		.sleb128 0
+ 1872 0c59 17       		.uleb128 0x17
+ 1873 0c5a 02       		.uleb128 0x2
+ 1874 0c5b 7D       		.byte	0x7d
+ 1875 0c5c 14       		.sleb128 20
+ 1876 0c5d 02       		.uleb128 0x2
+ 1877 0c5e 74       		.byte	0x74
+ 1878 0c5f 00       		.sleb128 0
+ 1879 0c60 17       		.uleb128 0x17
+ 1880 0c61 02       		.uleb128 0x2
+ 1881 0c62 7D       		.byte	0x7d
+ 1882 0c63 18       		.sleb128 24
+ 1883 0c64 02       		.uleb128 0x2
+ 1884 0c65 74       		.byte	0x74
+ 1885 0c66 00       		.sleb128 0
+ 1886 0c67 17       		.uleb128 0x17
+ 1887 0c68 02       		.uleb128 0x2
+ 1888 0c69 7D       		.byte	0x7d
+ 1889 0c6a 1C       		.sleb128 28
+ 1890 0c6b 02       		.uleb128 0x2
+ 1891 0c6c 76       		.byte	0x76
+ 1892 0c6d 00       		.sleb128 0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 40
+
+
+ 1893 0c6e 17       		.uleb128 0x17
+ 1894 0c6f 02       		.uleb128 0x2
+ 1895 0c70 7D       		.byte	0x7d
+ 1896 0c71 20       		.sleb128 32
+ 1897 0c72 02       		.uleb128 0x2
+ 1898 0c73 77       		.byte	0x77
+ 1899 0c74 00       		.sleb128 0
+ 1900 0c75 00       		.byte	0
+ 1901 0c76 00       		.byte	0
+ 1902 0c77 19       		.uleb128 0x19
+ 1903 0c78 8D010000 		.4byte	.LASF288
+ 1904 0c7c 01       		.byte	0x1
+ 1905 0c7d 7D       		.byte	0x7d
+ 1906 0c7e 00000000 		.4byte	.LFB2
+ 1907 0c82 32000000 		.4byte	.LFE2-.LFB2
+ 1908 0c86 01       		.uleb128 0x1
+ 1909 0c87 9C       		.byte	0x9c
+ 1910 0c88 0E0D0000 		.4byte	0xd0e
+ 1911 0c8c 1A       		.uleb128 0x1a
+ 1912 0c8d 4F0B0000 		.4byte	.LASF290
+ 1913 0c91 01       		.byte	0x1
+ 1914 0c92 7D       		.byte	0x7d
+ 1915 0c93 25000000 		.4byte	0x25
+ 1916 0c97 00000000 		.4byte	.LLST0
+ 1917 0c9b 1B       		.uleb128 0x1b
+ 1918 0c9c 65727200 		.ascii	"err\000"
+ 1919 0ca0 01       		.byte	0x1
+ 1920 0ca1 7F       		.byte	0x7f
+ 1921 0ca2 37060000 		.4byte	0x637
+ 1922 0ca6 02       		.uleb128 0x2
+ 1923 0ca7 91       		.byte	0x91
+ 1924 0ca8 76       		.sleb128 -10
+ 1925 0ca9 1C       		.uleb128 0x1c
+ 1926 0caa 08000000 		.4byte	.LVL3
+ 1927 0cae E90F0000 		.4byte	0xfe9
+ 1928 0cb2 1C       		.uleb128 0x1c
+ 1929 0cb3 0C000000 		.4byte	.LVL4
+ 1930 0cb7 F40F0000 		.4byte	0xff4
+ 1931 0cbb 16       		.uleb128 0x16
+ 1932 0cbc 14000000 		.4byte	.LVL5
+ 1933 0cc0 FF0F0000 		.4byte	0xfff
+ 1934 0cc4 CF0C0000 		.4byte	0xccf
+ 1935 0cc8 17       		.uleb128 0x17
+ 1936 0cc9 01       		.uleb128 0x1
+ 1937 0cca 50       		.byte	0x50
+ 1938 0ccb 02       		.uleb128 0x2
+ 1939 0ccc 91       		.byte	0x91
+ 1940 0ccd 76       		.sleb128 -10
+ 1941 0cce 00       		.byte	0
+ 1942 0ccf 1C       		.uleb128 0x1c
+ 1943 0cd0 18000000 		.4byte	.LVL6
+ 1944 0cd4 0B100000 		.4byte	0x100b
+ 1945 0cd8 1C       		.uleb128 0x1c
+ 1946 0cd9 1C000000 		.4byte	.LVL7
+ 1947 0cdd 7E0B0000 		.4byte	0xb7e
+ 1948 0ce1 18       		.uleb128 0x18
+ 1949 0ce2 30000000 		.4byte	.LVL8
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 41
+
+
+ 1950 0ce6 16100000 		.4byte	0x1016
+ 1951 0cea 17       		.uleb128 0x17
+ 1952 0ceb 01       		.uleb128 0x1
+ 1953 0cec 50       		.byte	0x50
+ 1954 0ced 01       		.uleb128 0x1
+ 1955 0cee 30       		.byte	0x30
+ 1956 0cef 17       		.uleb128 0x17
+ 1957 0cf0 01       		.uleb128 0x1
+ 1958 0cf1 51       		.byte	0x51
+ 1959 0cf2 01       		.uleb128 0x1
+ 1960 0cf3 30       		.byte	0x30
+ 1961 0cf4 17       		.uleb128 0x17
+ 1962 0cf5 01       		.uleb128 0x1
+ 1963 0cf6 52       		.byte	0x52
+ 1964 0cf7 01       		.uleb128 0x1
+ 1965 0cf8 30       		.byte	0x30
+ 1966 0cf9 17       		.uleb128 0x17
+ 1967 0cfa 01       		.uleb128 0x1
+ 1968 0cfb 53       		.byte	0x53
+ 1969 0cfc 02       		.uleb128 0x2
+ 1970 0cfd 08       		.byte	0x8
+ 1971 0cfe 64       		.byte	0x64
+ 1972 0cff 17       		.uleb128 0x17
+ 1973 0d00 02       		.uleb128 0x2
+ 1974 0d01 7D       		.byte	0x7d
+ 1975 0d02 00       		.sleb128 0
+ 1976 0d03 01       		.uleb128 0x1
+ 1977 0d04 30       		.byte	0x30
+ 1978 0d05 17       		.uleb128 0x17
+ 1979 0d06 02       		.uleb128 0x2
+ 1980 0d07 7D       		.byte	0x7d
+ 1981 0d08 04       		.sleb128 4
+ 1982 0d09 02       		.uleb128 0x2
+ 1983 0d0a 91       		.byte	0x91
+ 1984 0d0b 76       		.sleb128 -10
+ 1985 0d0c 00       		.byte	0
+ 1986 0d0d 00       		.byte	0
+ 1987 0d0e 19       		.uleb128 0x19
+ 1988 0d0f A4030000 		.4byte	.LASF289
+ 1989 0d13 01       		.byte	0x1
+ 1990 0d14 DF       		.byte	0xdf
+ 1991 0d15 00000000 		.4byte	.LFB4
+ 1992 0d19 54000000 		.4byte	.LFE4-.LFB4
+ 1993 0d1d 01       		.uleb128 0x1
+ 1994 0d1e 9C       		.byte	0x9c
+ 1995 0d1f EC0D0000 		.4byte	0xdec
+ 1996 0d23 1A       		.uleb128 0x1a
+ 1997 0d24 4F0B0000 		.4byte	.LASF290
+ 1998 0d28 01       		.byte	0x1
+ 1999 0d29 DF       		.byte	0xdf
+ 2000 0d2a 25000000 		.4byte	0x25
+ 2001 0d2e 21000000 		.4byte	.LLST1
+ 2002 0d32 15       		.uleb128 0x15
+ 2003 0d33 470D0000 		.4byte	.LASF287
+ 2004 0d37 01       		.byte	0x1
+ 2005 0d38 E2       		.byte	0xe2
+ 2006 0d39 37060000 		.4byte	0x637
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 42
+
+
+ 2007 0d3d 02       		.uleb128 0x2
+ 2008 0d3e 91       		.byte	0x91
+ 2009 0d3f 6E       		.sleb128 -18
+ 2010 0d40 15       		.uleb128 0x15
+ 2011 0d41 77060000 		.4byte	.LASF291
+ 2012 0d45 01       		.byte	0x1
+ 2013 0d46 E3       		.byte	0xe3
+ 2014 0d47 730B0000 		.4byte	0xb73
+ 2015 0d4b 02       		.uleb128 0x2
+ 2016 0d4c 91       		.byte	0x91
+ 2017 0d4d 64       		.sleb128 -28
+ 2018 0d4e 16       		.uleb128 0x16
+ 2019 0d4f 16000000 		.4byte	.LVL11
+ 2020 0d53 22100000 		.4byte	0x1022
+ 2021 0d57 7C0D0000 		.4byte	0xd7c
+ 2022 0d5b 17       		.uleb128 0x17
+ 2023 0d5c 01       		.uleb128 0x1
+ 2024 0d5d 50       		.byte	0x50
+ 2025 0d5e 01       		.uleb128 0x1
+ 2026 0d5f 33       		.byte	0x33
+ 2027 0d60 17       		.uleb128 0x17
+ 2028 0d61 01       		.uleb128 0x1
+ 2029 0d62 51       		.byte	0x51
+ 2030 0d63 01       		.uleb128 0x1
+ 2031 0d64 32       		.byte	0x32
+ 2032 0d65 17       		.uleb128 0x17
+ 2033 0d66 01       		.uleb128 0x1
+ 2034 0d67 52       		.byte	0x52
+ 2035 0d68 01       		.uleb128 0x1
+ 2036 0d69 33       		.byte	0x33
+ 2037 0d6a 17       		.uleb128 0x17
+ 2038 0d6b 01       		.uleb128 0x1
+ 2039 0d6c 53       		.byte	0x53
+ 2040 0d6d 01       		.uleb128 0x1
+ 2041 0d6e 30       		.byte	0x30
+ 2042 0d6f 17       		.uleb128 0x17
+ 2043 0d70 02       		.uleb128 0x2
+ 2044 0d71 7D       		.byte	0x7d
+ 2045 0d72 00       		.sleb128 0
+ 2046 0d73 01       		.uleb128 0x1
+ 2047 0d74 31       		.byte	0x31
+ 2048 0d75 17       		.uleb128 0x17
+ 2049 0d76 02       		.uleb128 0x2
+ 2050 0d77 7D       		.byte	0x7d
+ 2051 0d78 04       		.sleb128 4
+ 2052 0d79 01       		.uleb128 0x1
+ 2053 0d7a 30       		.byte	0x30
+ 2054 0d7b 00       		.byte	0
+ 2055 0d7c 16       		.uleb128 0x16
+ 2056 0d7d 1E000000 		.4byte	.LVL12
+ 2057 0d81 2D100000 		.4byte	0x102d
+ 2058 0d85 900D0000 		.4byte	0xd90
+ 2059 0d89 17       		.uleb128 0x17
+ 2060 0d8a 01       		.uleb128 0x1
+ 2061 0d8b 50       		.byte	0x50
+ 2062 0d8c 02       		.uleb128 0x2
+ 2063 0d8d 75       		.byte	0x75
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 43
+
+
+ 2064 0d8e 00       		.sleb128 0
+ 2065 0d8f 00       		.byte	0
+ 2066 0d90 16       		.uleb128 0x16
+ 2067 0d91 3A000000 		.4byte	.LVL13
+ 2068 0d95 38100000 		.4byte	0x1038
+ 2069 0d99 BE0D0000 		.4byte	0xdbe
+ 2070 0d9d 17       		.uleb128 0x17
+ 2071 0d9e 01       		.uleb128 0x1
+ 2072 0d9f 50       		.byte	0x50
+ 2073 0da0 05       		.uleb128 0x5
+ 2074 0da1 03       		.byte	0x3
+ 2075 0da2 00000000 		.4byte	.LANCHOR0
+ 2076 0da6 17       		.uleb128 0x17
+ 2077 0da7 01       		.uleb128 0x1
+ 2078 0da8 51       		.byte	0x51
+ 2079 0da9 02       		.uleb128 0x2
+ 2080 0daa 74       		.byte	0x74
+ 2081 0dab 00       		.sleb128 0
+ 2082 0dac 17       		.uleb128 0x17
+ 2083 0dad 01       		.uleb128 0x1
+ 2084 0dae 52       		.byte	0x52
+ 2085 0daf 01       		.uleb128 0x1
+ 2086 0db0 38       		.byte	0x38
+ 2087 0db1 17       		.uleb128 0x17
+ 2088 0db2 01       		.uleb128 0x1
+ 2089 0db3 53       		.byte	0x53
+ 2090 0db4 01       		.uleb128 0x1
+ 2091 0db5 30       		.byte	0x30
+ 2092 0db6 17       		.uleb128 0x17
+ 2093 0db7 02       		.uleb128 0x2
+ 2094 0db8 7D       		.byte	0x7d
+ 2095 0db9 00       		.sleb128 0
+ 2096 0dba 02       		.uleb128 0x2
+ 2097 0dbb 75       		.byte	0x75
+ 2098 0dbc 00       		.sleb128 0
+ 2099 0dbd 00       		.byte	0
+ 2100 0dbe 18       		.uleb128 0x18
+ 2101 0dbf 4C000000 		.4byte	.LVL14
+ 2102 0dc3 16100000 		.4byte	0x1016
+ 2103 0dc7 17       		.uleb128 0x17
+ 2104 0dc8 01       		.uleb128 0x1
+ 2105 0dc9 50       		.byte	0x50
+ 2106 0dca 01       		.uleb128 0x1
+ 2107 0dcb 30       		.byte	0x30
+ 2108 0dcc 17       		.uleb128 0x17
+ 2109 0dcd 01       		.uleb128 0x1
+ 2110 0dce 51       		.byte	0x51
+ 2111 0dcf 01       		.uleb128 0x1
+ 2112 0dd0 30       		.byte	0x30
+ 2113 0dd1 17       		.uleb128 0x17
+ 2114 0dd2 01       		.uleb128 0x1
+ 2115 0dd3 52       		.byte	0x52
+ 2116 0dd4 01       		.uleb128 0x1
+ 2117 0dd5 30       		.byte	0x30
+ 2118 0dd6 17       		.uleb128 0x17
+ 2119 0dd7 01       		.uleb128 0x1
+ 2120 0dd8 53       		.byte	0x53
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 44
+
+
+ 2121 0dd9 03       		.uleb128 0x3
+ 2122 0dda 0A       		.byte	0xa
+ 2123 0ddb F401     		.2byte	0x1f4
+ 2124 0ddd 17       		.uleb128 0x17
+ 2125 0dde 02       		.uleb128 0x2
+ 2126 0ddf 7D       		.byte	0x7d
+ 2127 0de0 00       		.sleb128 0
+ 2128 0de1 01       		.uleb128 0x1
+ 2129 0de2 30       		.byte	0x30
+ 2130 0de3 17       		.uleb128 0x17
+ 2131 0de4 02       		.uleb128 0x2
+ 2132 0de5 7D       		.byte	0x7d
+ 2133 0de6 04       		.sleb128 4
+ 2134 0de7 02       		.uleb128 0x2
+ 2135 0de8 75       		.byte	0x75
+ 2136 0de9 00       		.sleb128 0
+ 2137 0dea 00       		.byte	0
+ 2138 0deb 00       		.byte	0
+ 2139 0dec 1D       		.uleb128 0x1d
+ 2140 0ded C50E0000 		.4byte	.LASF292
+ 2141 0df1 01       		.byte	0x1
+ 2142 0df2 0F01     		.2byte	0x10f
+ 2143 0df4 00000000 		.4byte	.LFB5
+ 2144 0df8 26000000 		.4byte	.LFE5-.LFB5
+ 2145 0dfc 01       		.uleb128 0x1
+ 2146 0dfd 9C       		.byte	0x9c
+ 2147 0dfe 740E0000 		.4byte	0xe74
+ 2148 0e02 1E       		.uleb128 0x1e
+ 2149 0e03 4F0B0000 		.4byte	.LASF290
+ 2150 0e07 01       		.byte	0x1
+ 2151 0e08 0F01     		.2byte	0x10f
+ 2152 0e0a 25000000 		.4byte	0x25
+ 2153 0e0e 42000000 		.4byte	.LLST2
+ 2154 0e12 1F       		.uleb128 0x1f
+ 2155 0e13 470D0000 		.4byte	.LASF287
+ 2156 0e17 01       		.byte	0x1
+ 2157 0e18 1201     		.2byte	0x112
+ 2158 0e1a 37060000 		.4byte	0x637
+ 2159 0e1e 02       		.uleb128 0x2
+ 2160 0e1f 91       		.byte	0x91
+ 2161 0e20 76       		.sleb128 -10
+ 2162 0e21 1F       		.uleb128 0x1f
+ 2163 0e22 3A0C0000 		.4byte	.LASF293
+ 2164 0e26 01       		.byte	0x1
+ 2165 0e27 1301     		.2byte	0x113
+ 2166 0e29 46010000 		.4byte	0x146
+ 2167 0e2d 02       		.uleb128 0x2
+ 2168 0e2e 91       		.byte	0x91
+ 2169 0e2f 74       		.sleb128 -12
+ 2170 0e30 20       		.uleb128 0x20
+ 2171 0e31 B1100000 		.4byte	.LASF294
+ 2172 0e35 01       		.byte	0x1
+ 2173 0e36 1401     		.2byte	0x114
+ 2174 0e38 740E0000 		.4byte	0xe74
+ 2175 0e3c 63000000 		.4byte	.LLST3
+ 2176 0e40 16       		.uleb128 0x16
+ 2177 0e41 16000000 		.4byte	.LVL17
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 45
+
+
+ 2178 0e45 44100000 		.4byte	0x1044
+ 2179 0e49 6A0E0000 		.4byte	0xe6a
+ 2180 0e4d 17       		.uleb128 0x17
+ 2181 0e4e 01       		.uleb128 0x1
+ 2182 0e4f 50       		.byte	0x50
+ 2183 0e50 01       		.uleb128 0x1
+ 2184 0e51 30       		.byte	0x30
+ 2185 0e52 17       		.uleb128 0x17
+ 2186 0e53 01       		.uleb128 0x1
+ 2187 0e54 51       		.byte	0x51
+ 2188 0e55 01       		.uleb128 0x1
+ 2189 0e56 30       		.byte	0x30
+ 2190 0e57 17       		.uleb128 0x17
+ 2191 0e58 01       		.uleb128 0x1
+ 2192 0e59 52       		.byte	0x52
+ 2193 0e5a 02       		.uleb128 0x2
+ 2194 0e5b 91       		.byte	0x91
+ 2195 0e5c 74       		.sleb128 -12
+ 2196 0e5d 17       		.uleb128 0x17
+ 2197 0e5e 01       		.uleb128 0x1
+ 2198 0e5f 53       		.byte	0x53
+ 2199 0e60 01       		.uleb128 0x1
+ 2200 0e61 30       		.byte	0x30
+ 2201 0e62 17       		.uleb128 0x17
+ 2202 0e63 02       		.uleb128 0x2
+ 2203 0e64 7D       		.byte	0x7d
+ 2204 0e65 00       		.sleb128 0
+ 2205 0e66 02       		.uleb128 0x2
+ 2206 0e67 91       		.byte	0x91
+ 2207 0e68 76       		.sleb128 -10
+ 2208 0e69 00       		.byte	0
+ 2209 0e6a 1C       		.uleb128 0x1c
+ 2210 0e6b 24000000 		.4byte	.LVL19
+ 2211 0e6f 50100000 		.4byte	0x1050
+ 2212 0e73 00       		.byte	0
+ 2213 0e74 06       		.uleb128 0x6
+ 2214 0e75 04       		.byte	0x4
+ 2215 0e76 730B0000 		.4byte	0xb73
+ 2216 0e7a 21       		.uleb128 0x21
+ 2217 0e7b 0A030000 		.4byte	.LASF320
+ 2218 0e7f 01       		.byte	0x1
+ 2219 0e80 51       		.byte	0x51
+ 2220 0e81 5F000000 		.4byte	0x5f
+ 2221 0e85 00000000 		.4byte	.LFB1
+ 2222 0e89 60000000 		.4byte	.LFE1-.LFB1
+ 2223 0e8d 01       		.uleb128 0x1
+ 2224 0e8e 9C       		.byte	0x9c
+ 2225 0e8f 460F0000 		.4byte	0xf46
+ 2226 0e93 15       		.uleb128 0x15
+ 2227 0e94 470D0000 		.4byte	.LASF287
+ 2228 0e98 01       		.byte	0x1
+ 2229 0e99 53       		.byte	0x53
+ 2230 0e9a 37060000 		.4byte	0x637
+ 2231 0e9e 02       		.uleb128 0x2
+ 2232 0e9f 91       		.byte	0x91
+ 2233 0ea0 6E       		.sleb128 -18
+ 2234 0ea1 1C       		.uleb128 0x1c
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 46
+
+
+ 2235 0ea2 08000000 		.4byte	.LVL20
+ 2236 0ea6 5B100000 		.4byte	0x105b
+ 2237 0eaa 1C       		.uleb128 0x1c
+ 2238 0eab 0C000000 		.4byte	.LVL21
+ 2239 0eaf 66100000 		.4byte	0x1066
+ 2240 0eb3 16       		.uleb128 0x16
+ 2241 0eb4 16000000 		.4byte	.LVL22
+ 2242 0eb8 72100000 		.4byte	0x1072
+ 2243 0ebc C70E0000 		.4byte	0xec7
+ 2244 0ec0 17       		.uleb128 0x17
+ 2245 0ec1 01       		.uleb128 0x1
+ 2246 0ec2 50       		.byte	0x50
+ 2247 0ec3 02       		.uleb128 0x2
+ 2248 0ec4 75       		.byte	0x75
+ 2249 0ec5 00       		.sleb128 0
+ 2250 0ec6 00       		.byte	0
+ 2251 0ec7 16       		.uleb128 0x16
+ 2252 0ec8 46000000 		.4byte	.LVL23
+ 2253 0ecc DD0F0000 		.4byte	0xfdd
+ 2254 0ed0 350F0000 		.4byte	0xf35
+ 2255 0ed4 17       		.uleb128 0x17
+ 2256 0ed5 01       		.uleb128 0x1
+ 2257 0ed6 50       		.byte	0x50
+ 2258 0ed7 05       		.uleb128 0x5
+ 2259 0ed8 03       		.byte	0x3
+ 2260 0ed9 800D0000 		.4byte	.LANCHOR0+3456
+ 2261 0edd 17       		.uleb128 0x17
+ 2262 0ede 01       		.uleb128 0x1
+ 2263 0edf 51       		.byte	0x51
+ 2264 0ee0 05       		.uleb128 0x5
+ 2265 0ee1 03       		.byte	0x3
+ 2266 0ee2 14000000 		.4byte	.LC2
+ 2267 0ee6 17       		.uleb128 0x17
+ 2268 0ee7 01       		.uleb128 0x1
+ 2269 0ee8 52       		.byte	0x52
+ 2270 0ee9 05       		.uleb128 0x5
+ 2271 0eea 03       		.byte	0x3
+ 2272 0eeb 00000000 		.4byte	App_TaskStart
+ 2273 0eef 17       		.uleb128 0x17
+ 2274 0ef0 01       		.uleb128 0x1
+ 2275 0ef1 53       		.byte	0x53
+ 2276 0ef2 02       		.uleb128 0x2
+ 2277 0ef3 74       		.byte	0x74
+ 2278 0ef4 00       		.sleb128 0
+ 2279 0ef5 17       		.uleb128 0x17
+ 2280 0ef6 02       		.uleb128 0x2
+ 2281 0ef7 7D       		.byte	0x7d
+ 2282 0ef8 00       		.sleb128 0
+ 2283 0ef9 01       		.uleb128 0x1
+ 2284 0efa 32       		.byte	0x32
+ 2285 0efb 17       		.uleb128 0x17
+ 2286 0efc 02       		.uleb128 0x2
+ 2287 0efd 7D       		.byte	0x7d
+ 2288 0efe 04       		.sleb128 4
+ 2289 0eff 05       		.uleb128 0x5
+ 2290 0f00 03       		.byte	0x3
+ 2291 0f01 400E0000 		.4byte	.LANCHOR0+3648
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 47
+
+
+ 2292 0f05 17       		.uleb128 0x17
+ 2293 0f06 02       		.uleb128 0x2
+ 2294 0f07 7D       		.byte	0x7d
+ 2295 0f08 08       		.sleb128 8
+ 2296 0f09 01       		.uleb128 0x1
+ 2297 0f0a 3C       		.byte	0x3c
+ 2298 0f0b 17       		.uleb128 0x17
+ 2299 0f0c 02       		.uleb128 0x2
+ 2300 0f0d 7D       		.byte	0x7d
+ 2301 0f0e 0C       		.sleb128 12
+ 2302 0f0f 02       		.uleb128 0x2
+ 2303 0f10 08       		.byte	0x8
+ 2304 0f11 80       		.byte	0x80
+ 2305 0f12 17       		.uleb128 0x17
+ 2306 0f13 02       		.uleb128 0x2
+ 2307 0f14 7D       		.byte	0x7d
+ 2308 0f15 10       		.sleb128 16
+ 2309 0f16 02       		.uleb128 0x2
+ 2310 0f17 74       		.byte	0x74
+ 2311 0f18 00       		.sleb128 0
+ 2312 0f19 17       		.uleb128 0x17
+ 2313 0f1a 02       		.uleb128 0x2
+ 2314 0f1b 7D       		.byte	0x7d
+ 2315 0f1c 14       		.sleb128 20
+ 2316 0f1d 02       		.uleb128 0x2
+ 2317 0f1e 74       		.byte	0x74
+ 2318 0f1f 00       		.sleb128 0
+ 2319 0f20 17       		.uleb128 0x17
+ 2320 0f21 02       		.uleb128 0x2
+ 2321 0f22 7D       		.byte	0x7d
+ 2322 0f23 18       		.sleb128 24
+ 2323 0f24 02       		.uleb128 0x2
+ 2324 0f25 74       		.byte	0x74
+ 2325 0f26 00       		.sleb128 0
+ 2326 0f27 17       		.uleb128 0x17
+ 2327 0f28 02       		.uleb128 0x2
+ 2328 0f29 7D       		.byte	0x7d
+ 2329 0f2a 1C       		.sleb128 28
+ 2330 0f2b 01       		.uleb128 0x1
+ 2331 0f2c 33       		.byte	0x33
+ 2332 0f2d 17       		.uleb128 0x17
+ 2333 0f2e 02       		.uleb128 0x2
+ 2334 0f2f 7D       		.byte	0x7d
+ 2335 0f30 20       		.sleb128 32
+ 2336 0f31 02       		.uleb128 0x2
+ 2337 0f32 75       		.byte	0x75
+ 2338 0f33 00       		.sleb128 0
+ 2339 0f34 00       		.byte	0
+ 2340 0f35 18       		.uleb128 0x18
+ 2341 0f36 4C000000 		.4byte	.LVL24
+ 2342 0f3a 7E100000 		.4byte	0x107e
+ 2343 0f3e 17       		.uleb128 0x17
+ 2344 0f3f 01       		.uleb128 0x1
+ 2345 0f40 50       		.byte	0x50
+ 2346 0f41 02       		.uleb128 0x2
+ 2347 0f42 75       		.byte	0x75
+ 2348 0f43 00       		.sleb128 0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 48
+
+
+ 2349 0f44 00       		.byte	0
+ 2350 0f45 00       		.byte	0
+ 2351 0f46 15       		.uleb128 0x15
+ 2352 0f47 6D0C0000 		.4byte	.LASF295
+ 2353 0f4b 01       		.byte	0x1
+ 2354 0f4c 29       		.byte	0x29
+ 2355 0f4d F8060000 		.4byte	0x6f8
+ 2356 0f51 05       		.uleb128 0x5
+ 2357 0f52 03       		.byte	0x3
+ 2358 0f53 800D0000 		.4byte	App_TaskStartTCB
+ 2359 0f57 10       		.uleb128 0x10
+ 2360 0f58 E3000000 		.4byte	0xe3
+ 2361 0f5c 670F0000 		.4byte	0xf67
+ 2362 0f60 11       		.uleb128 0x11
+ 2363 0f61 74000000 		.4byte	0x74
+ 2364 0f65 7F       		.byte	0x7f
+ 2365 0f66 00       		.byte	0
+ 2366 0f67 15       		.uleb128 0x15
+ 2367 0f68 9C000000 		.4byte	.LASF296
+ 2368 0f6c 01       		.byte	0x1
+ 2369 0f6d 2A       		.byte	0x2a
+ 2370 0f6e 570F0000 		.4byte	0xf57
+ 2371 0f72 05       		.uleb128 0x5
+ 2372 0f73 03       		.byte	0x3
+ 2373 0f74 400E0000 		.4byte	App_TaskStartStk
+ 2374 0f78 15       		.uleb128 0x15
+ 2375 0f79 C1060000 		.4byte	.LASF297
+ 2376 0f7d 01       		.byte	0x1
+ 2377 0f7e 2C       		.byte	0x2c
+ 2378 0f7f F8060000 		.4byte	0x6f8
+ 2379 0f83 05       		.uleb128 0x5
+ 2380 0f84 03       		.byte	0x3
+ 2381 0f85 00000000 		.4byte	App_TaskCOM_TCB
+ 2382 0f89 10       		.uleb128 0x10
+ 2383 0f8a E3000000 		.4byte	0xe3
+ 2384 0f8e 990F0000 		.4byte	0xf99
+ 2385 0f92 11       		.uleb128 0x11
+ 2386 0f93 74000000 		.4byte	0x74
+ 2387 0f97 FF       		.byte	0xff
+ 2388 0f98 00       		.byte	0
+ 2389 0f99 15       		.uleb128 0x15
+ 2390 0f9a 6A000000 		.4byte	.LASF298
+ 2391 0f9e 01       		.byte	0x1
+ 2392 0f9f 2D       		.byte	0x2d
+ 2393 0fa0 890F0000 		.4byte	0xf89
+ 2394 0fa4 05       		.uleb128 0x5
+ 2395 0fa5 03       		.byte	0x3
+ 2396 0fa6 C0000000 		.4byte	App_TaskCOMStk
+ 2397 0faa 15       		.uleb128 0x15
+ 2398 0fab C5000000 		.4byte	.LASF299
+ 2399 0faf 01       		.byte	0x1
+ 2400 0fb0 2F       		.byte	0x2f
+ 2401 0fb1 F8060000 		.4byte	0x6f8
+ 2402 0fb5 05       		.uleb128 0x5
+ 2403 0fb6 03       		.byte	0x3
+ 2404 0fb7 C0040000 		.4byte	App_TaskPRESS_TCB
+ 2405 0fbb 10       		.uleb128 0x10
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 49
+
+
+ 2406 0fbc E3000000 		.4byte	0xe3
+ 2407 0fc0 CC0F0000 		.4byte	0xfcc
+ 2408 0fc4 22       		.uleb128 0x22
+ 2409 0fc5 74000000 		.4byte	0x74
+ 2410 0fc9 FF01     		.2byte	0x1ff
+ 2411 0fcb 00       		.byte	0
+ 2412 0fcc 15       		.uleb128 0x15
+ 2413 0fcd A60F0000 		.4byte	.LASF300
+ 2414 0fd1 01       		.byte	0x1
+ 2415 0fd2 30       		.byte	0x30
+ 2416 0fd3 BB0F0000 		.4byte	0xfbb
+ 2417 0fd7 05       		.uleb128 0x5
+ 2418 0fd8 03       		.byte	0x3
+ 2419 0fd9 80050000 		.4byte	App_TaskPRESSStk
+ 2420 0fdd 23       		.uleb128 0x23
+ 2421 0fde 1E010000 		.4byte	.LASF301
+ 2422 0fe2 1E010000 		.4byte	.LASF301
+ 2423 0fe6 05       		.byte	0x5
+ 2424 0fe7 6D06     		.2byte	0x66d
+ 2425 0fe9 24       		.uleb128 0x24
+ 2426 0fea A60B0000 		.4byte	.LASF302
+ 2427 0fee A60B0000 		.4byte	.LASF302
+ 2428 0ff2 07       		.byte	0x7
+ 2429 0ff3 6F       		.byte	0x6f
+ 2430 0ff4 24       		.uleb128 0x24
+ 2431 0ff5 4D0A0000 		.4byte	.LASF303
+ 2432 0ff9 4D0A0000 		.4byte	.LASF303
+ 2433 0ffd 07       		.byte	0x7
+ 2434 0ffe 71       		.byte	0x71
+ 2435 0fff 23       		.uleb128 0x23
+ 2436 1000 B2120000 		.4byte	.LASF304
+ 2437 1004 B2120000 		.4byte	.LASF304
+ 2438 1008 05       		.byte	0x5
+ 2439 1009 8807     		.2byte	0x788
+ 2440 100b 24       		.uleb128 0x24
+ 2441 100c 22130000 		.4byte	.LASF305
+ 2442 1010 22130000 		.4byte	.LASF305
+ 2443 1014 06       		.byte	0x6
+ 2444 1015 5A       		.byte	0x5a
+ 2445 1016 23       		.uleb128 0x23
+ 2446 1017 3C000000 		.4byte	.LASF306
+ 2447 101b 3C000000 		.4byte	.LASF306
+ 2448 101f 05       		.byte	0x5
+ 2449 1020 1C07     		.2byte	0x71c
+ 2450 1022 24       		.uleb128 0x24
+ 2451 1023 000B0000 		.4byte	.LASF307
+ 2452 1027 000B0000 		.4byte	.LASF307
+ 2453 102b 06       		.byte	0x6
+ 2454 102c 59       		.byte	0x59
+ 2455 102d 24       		.uleb128 0x24
+ 2456 102e 13050000 		.4byte	.LASF308
+ 2457 1032 13050000 		.4byte	.LASF308
+ 2458 1036 06       		.byte	0x6
+ 2459 1037 5E       		.byte	0x5e
+ 2460 1038 23       		.uleb128 0x23
+ 2461 1039 B2130000 		.4byte	.LASF309
+ 2462 103d B2130000 		.4byte	.LASF309
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 50
+
+
+ 2463 1041 05       		.byte	0x5
+ 2464 1042 8E06     		.2byte	0x68e
+ 2465 1044 23       		.uleb128 0x23
+ 2466 1045 E20F0000 		.4byte	.LASF310
+ 2467 1049 E20F0000 		.4byte	.LASF310
+ 2468 104d 05       		.byte	0x5
+ 2469 104e 8406     		.2byte	0x684
+ 2470 1050 24       		.uleb128 0x24
+ 2471 1051 E2130000 		.4byte	.LASF311
+ 2472 1055 E2130000 		.4byte	.LASF311
+ 2473 1059 08       		.byte	0x8
+ 2474 105a 18       		.byte	0x18
+ 2475 105b 24       		.uleb128 0x24
+ 2476 105c B2030000 		.4byte	.LASF312
+ 2477 1060 B2030000 		.4byte	.LASF312
+ 2478 1064 07       		.byte	0x7
+ 2479 1065 6D       		.byte	0x6d
+ 2480 1066 23       		.uleb128 0x23
+ 2481 1067 43010000 		.4byte	.LASF313
+ 2482 106b 43010000 		.4byte	.LASF313
+ 2483 106f 03       		.byte	0x3
+ 2484 1070 FE01     		.2byte	0x1fe
+ 2485 1072 23       		.uleb128 0x23
+ 2486 1073 5D070000 		.4byte	.LASF314
+ 2487 1077 5D070000 		.4byte	.LASF314
+ 2488 107b 05       		.byte	0x5
+ 2489 107c 6C07     		.2byte	0x76c
+ 2490 107e 23       		.uleb128 0x23
+ 2491 107f 7E120000 		.4byte	.LASF315
+ 2492 1083 7E120000 		.4byte	.LASF315
+ 2493 1087 05       		.byte	0x5
+ 2494 1088 8307     		.2byte	0x783
+ 2495 108a 00       		.byte	0
+ 2496              		.section	.debug_abbrev,"",%progbits
+ 2497              	.Ldebug_abbrev0:
+ 2498 0000 01       		.uleb128 0x1
+ 2499 0001 11       		.uleb128 0x11
+ 2500 0002 01       		.byte	0x1
+ 2501 0003 25       		.uleb128 0x25
+ 2502 0004 0E       		.uleb128 0xe
+ 2503 0005 13       		.uleb128 0x13
+ 2504 0006 0B       		.uleb128 0xb
+ 2505 0007 03       		.uleb128 0x3
+ 2506 0008 0E       		.uleb128 0xe
+ 2507 0009 1B       		.uleb128 0x1b
+ 2508 000a 0E       		.uleb128 0xe
+ 2509 000b 55       		.uleb128 0x55
+ 2510 000c 17       		.uleb128 0x17
+ 2511 000d 11       		.uleb128 0x11
+ 2512 000e 01       		.uleb128 0x1
+ 2513 000f 10       		.uleb128 0x10
+ 2514 0010 17       		.uleb128 0x17
+ 2515 0011 00       		.byte	0
+ 2516 0012 00       		.byte	0
+ 2517 0013 02       		.uleb128 0x2
+ 2518 0014 0F       		.uleb128 0xf
+ 2519 0015 00       		.byte	0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 51
+
+
+ 2520 0016 0B       		.uleb128 0xb
+ 2521 0017 0B       		.uleb128 0xb
+ 2522 0018 00       		.byte	0
+ 2523 0019 00       		.byte	0
+ 2524 001a 03       		.uleb128 0x3
+ 2525 001b 24       		.uleb128 0x24
+ 2526 001c 00       		.byte	0
+ 2527 001d 0B       		.uleb128 0xb
+ 2528 001e 0B       		.uleb128 0xb
+ 2529 001f 3E       		.uleb128 0x3e
+ 2530 0020 0B       		.uleb128 0xb
+ 2531 0021 03       		.uleb128 0x3
+ 2532 0022 0E       		.uleb128 0xe
+ 2533 0023 00       		.byte	0
+ 2534 0024 00       		.byte	0
+ 2535 0025 04       		.uleb128 0x4
+ 2536 0026 24       		.uleb128 0x24
+ 2537 0027 00       		.byte	0
+ 2538 0028 0B       		.uleb128 0xb
+ 2539 0029 0B       		.uleb128 0xb
+ 2540 002a 3E       		.uleb128 0x3e
+ 2541 002b 0B       		.uleb128 0xb
+ 2542 002c 03       		.uleb128 0x3
+ 2543 002d 08       		.uleb128 0x8
+ 2544 002e 00       		.byte	0
+ 2545 002f 00       		.byte	0
+ 2546 0030 05       		.uleb128 0x5
+ 2547 0031 16       		.uleb128 0x16
+ 2548 0032 00       		.byte	0
+ 2549 0033 03       		.uleb128 0x3
+ 2550 0034 0E       		.uleb128 0xe
+ 2551 0035 3A       		.uleb128 0x3a
+ 2552 0036 0B       		.uleb128 0xb
+ 2553 0037 3B       		.uleb128 0x3b
+ 2554 0038 0B       		.uleb128 0xb
+ 2555 0039 49       		.uleb128 0x49
+ 2556 003a 13       		.uleb128 0x13
+ 2557 003b 00       		.byte	0
+ 2558 003c 00       		.byte	0
+ 2559 003d 06       		.uleb128 0x6
+ 2560 003e 0F       		.uleb128 0xf
+ 2561 003f 00       		.byte	0
+ 2562 0040 0B       		.uleb128 0xb
+ 2563 0041 0B       		.uleb128 0xb
+ 2564 0042 49       		.uleb128 0x49
+ 2565 0043 13       		.uleb128 0x13
+ 2566 0044 00       		.byte	0
+ 2567 0045 00       		.byte	0
+ 2568 0046 07       		.uleb128 0x7
+ 2569 0047 15       		.uleb128 0x15
+ 2570 0048 01       		.byte	0x1
+ 2571 0049 27       		.uleb128 0x27
+ 2572 004a 19       		.uleb128 0x19
+ 2573 004b 01       		.uleb128 0x1
+ 2574 004c 13       		.uleb128 0x13
+ 2575 004d 00       		.byte	0
+ 2576 004e 00       		.byte	0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 52
+
+
+ 2577 004f 08       		.uleb128 0x8
+ 2578 0050 05       		.uleb128 0x5
+ 2579 0051 00       		.byte	0
+ 2580 0052 49       		.uleb128 0x49
+ 2581 0053 13       		.uleb128 0x13
+ 2582 0054 00       		.byte	0
+ 2583 0055 00       		.byte	0
+ 2584 0056 09       		.uleb128 0x9
+ 2585 0057 04       		.uleb128 0x4
+ 2586 0058 01       		.byte	0x1
+ 2587 0059 03       		.uleb128 0x3
+ 2588 005a 0E       		.uleb128 0xe
+ 2589 005b 0B       		.uleb128 0xb
+ 2590 005c 0B       		.uleb128 0xb
+ 2591 005d 49       		.uleb128 0x49
+ 2592 005e 13       		.uleb128 0x13
+ 2593 005f 3A       		.uleb128 0x3a
+ 2594 0060 0B       		.uleb128 0xb
+ 2595 0061 3B       		.uleb128 0x3b
+ 2596 0062 05       		.uleb128 0x5
+ 2597 0063 01       		.uleb128 0x1
+ 2598 0064 13       		.uleb128 0x13
+ 2599 0065 00       		.byte	0
+ 2600 0066 00       		.byte	0
+ 2601 0067 0A       		.uleb128 0xa
+ 2602 0068 28       		.uleb128 0x28
+ 2603 0069 00       		.byte	0
+ 2604 006a 03       		.uleb128 0x3
+ 2605 006b 0E       		.uleb128 0xe
+ 2606 006c 1C       		.uleb128 0x1c
+ 2607 006d 0B       		.uleb128 0xb
+ 2608 006e 00       		.byte	0
+ 2609 006f 00       		.byte	0
+ 2610 0070 0B       		.uleb128 0xb
+ 2611 0071 28       		.uleb128 0x28
+ 2612 0072 00       		.byte	0
+ 2613 0073 03       		.uleb128 0x3
+ 2614 0074 0E       		.uleb128 0xe
+ 2615 0075 1C       		.uleb128 0x1c
+ 2616 0076 05       		.uleb128 0x5
+ 2617 0077 00       		.byte	0
+ 2618 0078 00       		.byte	0
+ 2619 0079 0C       		.uleb128 0xc
+ 2620 007a 16       		.uleb128 0x16
+ 2621 007b 00       		.byte	0
+ 2622 007c 03       		.uleb128 0x3
+ 2623 007d 0E       		.uleb128 0xe
+ 2624 007e 3A       		.uleb128 0x3a
+ 2625 007f 0B       		.uleb128 0xb
+ 2626 0080 3B       		.uleb128 0x3b
+ 2627 0081 05       		.uleb128 0x5
+ 2628 0082 49       		.uleb128 0x49
+ 2629 0083 13       		.uleb128 0x13
+ 2630 0084 00       		.byte	0
+ 2631 0085 00       		.byte	0
+ 2632 0086 0D       		.uleb128 0xd
+ 2633 0087 13       		.uleb128 0x13
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 53
+
+
+ 2634 0088 01       		.byte	0x1
+ 2635 0089 03       		.uleb128 0x3
+ 2636 008a 0E       		.uleb128 0xe
+ 2637 008b 0B       		.uleb128 0xb
+ 2638 008c 0B       		.uleb128 0xb
+ 2639 008d 3A       		.uleb128 0x3a
+ 2640 008e 0B       		.uleb128 0xb
+ 2641 008f 3B       		.uleb128 0x3b
+ 2642 0090 05       		.uleb128 0x5
+ 2643 0091 01       		.uleb128 0x1
+ 2644 0092 13       		.uleb128 0x13
+ 2645 0093 00       		.byte	0
+ 2646 0094 00       		.byte	0
+ 2647 0095 0E       		.uleb128 0xe
+ 2648 0096 0D       		.uleb128 0xd
+ 2649 0097 00       		.byte	0
+ 2650 0098 03       		.uleb128 0x3
+ 2651 0099 0E       		.uleb128 0xe
+ 2652 009a 3A       		.uleb128 0x3a
+ 2653 009b 0B       		.uleb128 0xb
+ 2654 009c 3B       		.uleb128 0x3b
+ 2655 009d 05       		.uleb128 0x5
+ 2656 009e 49       		.uleb128 0x49
+ 2657 009f 13       		.uleb128 0x13
+ 2658 00a0 38       		.uleb128 0x38
+ 2659 00a1 0B       		.uleb128 0xb
+ 2660 00a2 00       		.byte	0
+ 2661 00a3 00       		.byte	0
+ 2662 00a4 0F       		.uleb128 0xf
+ 2663 00a5 0D       		.uleb128 0xd
+ 2664 00a6 00       		.byte	0
+ 2665 00a7 03       		.uleb128 0x3
+ 2666 00a8 08       		.uleb128 0x8
+ 2667 00a9 3A       		.uleb128 0x3a
+ 2668 00aa 0B       		.uleb128 0xb
+ 2669 00ab 3B       		.uleb128 0x3b
+ 2670 00ac 05       		.uleb128 0x5
+ 2671 00ad 49       		.uleb128 0x49
+ 2672 00ae 13       		.uleb128 0x13
+ 2673 00af 38       		.uleb128 0x38
+ 2674 00b0 0B       		.uleb128 0xb
+ 2675 00b1 00       		.byte	0
+ 2676 00b2 00       		.byte	0
+ 2677 00b3 10       		.uleb128 0x10
+ 2678 00b4 01       		.uleb128 0x1
+ 2679 00b5 01       		.byte	0x1
+ 2680 00b6 49       		.uleb128 0x49
+ 2681 00b7 13       		.uleb128 0x13
+ 2682 00b8 01       		.uleb128 0x1
+ 2683 00b9 13       		.uleb128 0x13
+ 2684 00ba 00       		.byte	0
+ 2685 00bb 00       		.byte	0
+ 2686 00bc 11       		.uleb128 0x11
+ 2687 00bd 21       		.uleb128 0x21
+ 2688 00be 00       		.byte	0
+ 2689 00bf 49       		.uleb128 0x49
+ 2690 00c0 13       		.uleb128 0x13
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 54
+
+
+ 2691 00c1 2F       		.uleb128 0x2f
+ 2692 00c2 0B       		.uleb128 0xb
+ 2693 00c3 00       		.byte	0
+ 2694 00c4 00       		.byte	0
+ 2695 00c5 12       		.uleb128 0x12
+ 2696 00c6 13       		.uleb128 0x13
+ 2697 00c7 01       		.byte	0x1
+ 2698 00c8 03       		.uleb128 0x3
+ 2699 00c9 0E       		.uleb128 0xe
+ 2700 00ca 0B       		.uleb128 0xb
+ 2701 00cb 0B       		.uleb128 0xb
+ 2702 00cc 3A       		.uleb128 0x3a
+ 2703 00cd 0B       		.uleb128 0xb
+ 2704 00ce 3B       		.uleb128 0x3b
+ 2705 00cf 0B       		.uleb128 0xb
+ 2706 00d0 01       		.uleb128 0x1
+ 2707 00d1 13       		.uleb128 0x13
+ 2708 00d2 00       		.byte	0
+ 2709 00d3 00       		.byte	0
+ 2710 00d4 13       		.uleb128 0x13
+ 2711 00d5 0D       		.uleb128 0xd
+ 2712 00d6 00       		.byte	0
+ 2713 00d7 03       		.uleb128 0x3
+ 2714 00d8 0E       		.uleb128 0xe
+ 2715 00d9 3A       		.uleb128 0x3a
+ 2716 00da 0B       		.uleb128 0xb
+ 2717 00db 3B       		.uleb128 0x3b
+ 2718 00dc 0B       		.uleb128 0xb
+ 2719 00dd 49       		.uleb128 0x49
+ 2720 00de 13       		.uleb128 0x13
+ 2721 00df 38       		.uleb128 0x38
+ 2722 00e0 0B       		.uleb128 0xb
+ 2723 00e1 00       		.byte	0
+ 2724 00e2 00       		.byte	0
+ 2725 00e3 14       		.uleb128 0x14
+ 2726 00e4 2E       		.uleb128 0x2e
+ 2727 00e5 01       		.byte	0x1
+ 2728 00e6 03       		.uleb128 0x3
+ 2729 00e7 0E       		.uleb128 0xe
+ 2730 00e8 3A       		.uleb128 0x3a
+ 2731 00e9 0B       		.uleb128 0xb
+ 2732 00ea 3B       		.uleb128 0x3b
+ 2733 00eb 0B       		.uleb128 0xb
+ 2734 00ec 27       		.uleb128 0x27
+ 2735 00ed 19       		.uleb128 0x19
+ 2736 00ee 11       		.uleb128 0x11
+ 2737 00ef 01       		.uleb128 0x1
+ 2738 00f0 12       		.uleb128 0x12
+ 2739 00f1 06       		.uleb128 0x6
+ 2740 00f2 40       		.uleb128 0x40
+ 2741 00f3 18       		.uleb128 0x18
+ 2742 00f4 9742     		.uleb128 0x2117
+ 2743 00f6 19       		.uleb128 0x19
+ 2744 00f7 01       		.uleb128 0x1
+ 2745 00f8 13       		.uleb128 0x13
+ 2746 00f9 00       		.byte	0
+ 2747 00fa 00       		.byte	0
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 55
+
+
+ 2748 00fb 15       		.uleb128 0x15
+ 2749 00fc 34       		.uleb128 0x34
+ 2750 00fd 00       		.byte	0
+ 2751 00fe 03       		.uleb128 0x3
+ 2752 00ff 0E       		.uleb128 0xe
+ 2753 0100 3A       		.uleb128 0x3a
+ 2754 0101 0B       		.uleb128 0xb
+ 2755 0102 3B       		.uleb128 0x3b
+ 2756 0103 0B       		.uleb128 0xb
+ 2757 0104 49       		.uleb128 0x49
+ 2758 0105 13       		.uleb128 0x13
+ 2759 0106 02       		.uleb128 0x2
+ 2760 0107 18       		.uleb128 0x18
+ 2761 0108 00       		.byte	0
+ 2762 0109 00       		.byte	0
+ 2763 010a 16       		.uleb128 0x16
+ 2764 010b 898201   		.uleb128 0x4109
+ 2765 010e 01       		.byte	0x1
+ 2766 010f 11       		.uleb128 0x11
+ 2767 0110 01       		.uleb128 0x1
+ 2768 0111 31       		.uleb128 0x31
+ 2769 0112 13       		.uleb128 0x13
+ 2770 0113 01       		.uleb128 0x1
+ 2771 0114 13       		.uleb128 0x13
+ 2772 0115 00       		.byte	0
+ 2773 0116 00       		.byte	0
+ 2774 0117 17       		.uleb128 0x17
+ 2775 0118 8A8201   		.uleb128 0x410a
+ 2776 011b 00       		.byte	0
+ 2777 011c 02       		.uleb128 0x2
+ 2778 011d 18       		.uleb128 0x18
+ 2779 011e 9142     		.uleb128 0x2111
+ 2780 0120 18       		.uleb128 0x18
+ 2781 0121 00       		.byte	0
+ 2782 0122 00       		.byte	0
+ 2783 0123 18       		.uleb128 0x18
+ 2784 0124 898201   		.uleb128 0x4109
+ 2785 0127 01       		.byte	0x1
+ 2786 0128 11       		.uleb128 0x11
+ 2787 0129 01       		.uleb128 0x1
+ 2788 012a 31       		.uleb128 0x31
+ 2789 012b 13       		.uleb128 0x13
+ 2790 012c 00       		.byte	0
+ 2791 012d 00       		.byte	0
+ 2792 012e 19       		.uleb128 0x19
+ 2793 012f 2E       		.uleb128 0x2e
+ 2794 0130 01       		.byte	0x1
+ 2795 0131 03       		.uleb128 0x3
+ 2796 0132 0E       		.uleb128 0xe
+ 2797 0133 3A       		.uleb128 0x3a
+ 2798 0134 0B       		.uleb128 0xb
+ 2799 0135 3B       		.uleb128 0x3b
+ 2800 0136 0B       		.uleb128 0xb
+ 2801 0137 27       		.uleb128 0x27
+ 2802 0138 19       		.uleb128 0x19
+ 2803 0139 8701     		.uleb128 0x87
+ 2804 013b 19       		.uleb128 0x19
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 56
+
+
+ 2805 013c 11       		.uleb128 0x11
+ 2806 013d 01       		.uleb128 0x1
+ 2807 013e 12       		.uleb128 0x12
+ 2808 013f 06       		.uleb128 0x6
+ 2809 0140 40       		.uleb128 0x40
+ 2810 0141 18       		.uleb128 0x18
+ 2811 0142 9742     		.uleb128 0x2117
+ 2812 0144 19       		.uleb128 0x19
+ 2813 0145 01       		.uleb128 0x1
+ 2814 0146 13       		.uleb128 0x13
+ 2815 0147 00       		.byte	0
+ 2816 0148 00       		.byte	0
+ 2817 0149 1A       		.uleb128 0x1a
+ 2818 014a 05       		.uleb128 0x5
+ 2819 014b 00       		.byte	0
+ 2820 014c 03       		.uleb128 0x3
+ 2821 014d 0E       		.uleb128 0xe
+ 2822 014e 3A       		.uleb128 0x3a
+ 2823 014f 0B       		.uleb128 0xb
+ 2824 0150 3B       		.uleb128 0x3b
+ 2825 0151 0B       		.uleb128 0xb
+ 2826 0152 49       		.uleb128 0x49
+ 2827 0153 13       		.uleb128 0x13
+ 2828 0154 02       		.uleb128 0x2
+ 2829 0155 17       		.uleb128 0x17
+ 2830 0156 00       		.byte	0
+ 2831 0157 00       		.byte	0
+ 2832 0158 1B       		.uleb128 0x1b
+ 2833 0159 34       		.uleb128 0x34
+ 2834 015a 00       		.byte	0
+ 2835 015b 03       		.uleb128 0x3
+ 2836 015c 08       		.uleb128 0x8
+ 2837 015d 3A       		.uleb128 0x3a
+ 2838 015e 0B       		.uleb128 0xb
+ 2839 015f 3B       		.uleb128 0x3b
+ 2840 0160 0B       		.uleb128 0xb
+ 2841 0161 49       		.uleb128 0x49
+ 2842 0162 13       		.uleb128 0x13
+ 2843 0163 02       		.uleb128 0x2
+ 2844 0164 18       		.uleb128 0x18
+ 2845 0165 00       		.byte	0
+ 2846 0166 00       		.byte	0
+ 2847 0167 1C       		.uleb128 0x1c
+ 2848 0168 898201   		.uleb128 0x4109
+ 2849 016b 00       		.byte	0
+ 2850 016c 11       		.uleb128 0x11
+ 2851 016d 01       		.uleb128 0x1
+ 2852 016e 31       		.uleb128 0x31
+ 2853 016f 13       		.uleb128 0x13
+ 2854 0170 00       		.byte	0
+ 2855 0171 00       		.byte	0
+ 2856 0172 1D       		.uleb128 0x1d
+ 2857 0173 2E       		.uleb128 0x2e
+ 2858 0174 01       		.byte	0x1
+ 2859 0175 03       		.uleb128 0x3
+ 2860 0176 0E       		.uleb128 0xe
+ 2861 0177 3A       		.uleb128 0x3a
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 57
+
+
+ 2862 0178 0B       		.uleb128 0xb
+ 2863 0179 3B       		.uleb128 0x3b
+ 2864 017a 05       		.uleb128 0x5
+ 2865 017b 27       		.uleb128 0x27
+ 2866 017c 19       		.uleb128 0x19
+ 2867 017d 8701     		.uleb128 0x87
+ 2868 017f 19       		.uleb128 0x19
+ 2869 0180 11       		.uleb128 0x11
+ 2870 0181 01       		.uleb128 0x1
+ 2871 0182 12       		.uleb128 0x12
+ 2872 0183 06       		.uleb128 0x6
+ 2873 0184 40       		.uleb128 0x40
+ 2874 0185 18       		.uleb128 0x18
+ 2875 0186 9742     		.uleb128 0x2117
+ 2876 0188 19       		.uleb128 0x19
+ 2877 0189 01       		.uleb128 0x1
+ 2878 018a 13       		.uleb128 0x13
+ 2879 018b 00       		.byte	0
+ 2880 018c 00       		.byte	0
+ 2881 018d 1E       		.uleb128 0x1e
+ 2882 018e 05       		.uleb128 0x5
+ 2883 018f 00       		.byte	0
+ 2884 0190 03       		.uleb128 0x3
+ 2885 0191 0E       		.uleb128 0xe
+ 2886 0192 3A       		.uleb128 0x3a
+ 2887 0193 0B       		.uleb128 0xb
+ 2888 0194 3B       		.uleb128 0x3b
+ 2889 0195 05       		.uleb128 0x5
+ 2890 0196 49       		.uleb128 0x49
+ 2891 0197 13       		.uleb128 0x13
+ 2892 0198 02       		.uleb128 0x2
+ 2893 0199 17       		.uleb128 0x17
+ 2894 019a 00       		.byte	0
+ 2895 019b 00       		.byte	0
+ 2896 019c 1F       		.uleb128 0x1f
+ 2897 019d 34       		.uleb128 0x34
+ 2898 019e 00       		.byte	0
+ 2899 019f 03       		.uleb128 0x3
+ 2900 01a0 0E       		.uleb128 0xe
+ 2901 01a1 3A       		.uleb128 0x3a
+ 2902 01a2 0B       		.uleb128 0xb
+ 2903 01a3 3B       		.uleb128 0x3b
+ 2904 01a4 05       		.uleb128 0x5
+ 2905 01a5 49       		.uleb128 0x49
+ 2906 01a6 13       		.uleb128 0x13
+ 2907 01a7 02       		.uleb128 0x2
+ 2908 01a8 18       		.uleb128 0x18
+ 2909 01a9 00       		.byte	0
+ 2910 01aa 00       		.byte	0
+ 2911 01ab 20       		.uleb128 0x20
+ 2912 01ac 34       		.uleb128 0x34
+ 2913 01ad 00       		.byte	0
+ 2914 01ae 03       		.uleb128 0x3
+ 2915 01af 0E       		.uleb128 0xe
+ 2916 01b0 3A       		.uleb128 0x3a
+ 2917 01b1 0B       		.uleb128 0xb
+ 2918 01b2 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 58
+
+
+ 2919 01b3 05       		.uleb128 0x5
+ 2920 01b4 49       		.uleb128 0x49
+ 2921 01b5 13       		.uleb128 0x13
+ 2922 01b6 02       		.uleb128 0x2
+ 2923 01b7 17       		.uleb128 0x17
+ 2924 01b8 00       		.byte	0
+ 2925 01b9 00       		.byte	0
+ 2926 01ba 21       		.uleb128 0x21
+ 2927 01bb 2E       		.uleb128 0x2e
+ 2928 01bc 01       		.byte	0x1
+ 2929 01bd 3F       		.uleb128 0x3f
+ 2930 01be 19       		.uleb128 0x19
+ 2931 01bf 03       		.uleb128 0x3
+ 2932 01c0 0E       		.uleb128 0xe
+ 2933 01c1 3A       		.uleb128 0x3a
+ 2934 01c2 0B       		.uleb128 0xb
+ 2935 01c3 3B       		.uleb128 0x3b
+ 2936 01c4 0B       		.uleb128 0xb
+ 2937 01c5 27       		.uleb128 0x27
+ 2938 01c6 19       		.uleb128 0x19
+ 2939 01c7 49       		.uleb128 0x49
+ 2940 01c8 13       		.uleb128 0x13
+ 2941 01c9 11       		.uleb128 0x11
+ 2942 01ca 01       		.uleb128 0x1
+ 2943 01cb 12       		.uleb128 0x12
+ 2944 01cc 06       		.uleb128 0x6
+ 2945 01cd 40       		.uleb128 0x40
+ 2946 01ce 18       		.uleb128 0x18
+ 2947 01cf 9742     		.uleb128 0x2117
+ 2948 01d1 19       		.uleb128 0x19
+ 2949 01d2 01       		.uleb128 0x1
+ 2950 01d3 13       		.uleb128 0x13
+ 2951 01d4 00       		.byte	0
+ 2952 01d5 00       		.byte	0
+ 2953 01d6 22       		.uleb128 0x22
+ 2954 01d7 21       		.uleb128 0x21
+ 2955 01d8 00       		.byte	0
+ 2956 01d9 49       		.uleb128 0x49
+ 2957 01da 13       		.uleb128 0x13
+ 2958 01db 2F       		.uleb128 0x2f
+ 2959 01dc 05       		.uleb128 0x5
+ 2960 01dd 00       		.byte	0
+ 2961 01de 00       		.byte	0
+ 2962 01df 23       		.uleb128 0x23
+ 2963 01e0 2E       		.uleb128 0x2e
+ 2964 01e1 00       		.byte	0
+ 2965 01e2 3F       		.uleb128 0x3f
+ 2966 01e3 19       		.uleb128 0x19
+ 2967 01e4 3C       		.uleb128 0x3c
+ 2968 01e5 19       		.uleb128 0x19
+ 2969 01e6 6E       		.uleb128 0x6e
+ 2970 01e7 0E       		.uleb128 0xe
+ 2971 01e8 03       		.uleb128 0x3
+ 2972 01e9 0E       		.uleb128 0xe
+ 2973 01ea 3A       		.uleb128 0x3a
+ 2974 01eb 0B       		.uleb128 0xb
+ 2975 01ec 3B       		.uleb128 0x3b
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 59
+
+
+ 2976 01ed 05       		.uleb128 0x5
+ 2977 01ee 00       		.byte	0
+ 2978 01ef 00       		.byte	0
+ 2979 01f0 24       		.uleb128 0x24
+ 2980 01f1 2E       		.uleb128 0x2e
+ 2981 01f2 00       		.byte	0
+ 2982 01f3 3F       		.uleb128 0x3f
+ 2983 01f4 19       		.uleb128 0x19
+ 2984 01f5 3C       		.uleb128 0x3c
+ 2985 01f6 19       		.uleb128 0x19
+ 2986 01f7 6E       		.uleb128 0x6e
+ 2987 01f8 0E       		.uleb128 0xe
+ 2988 01f9 03       		.uleb128 0x3
+ 2989 01fa 0E       		.uleb128 0xe
+ 2990 01fb 3A       		.uleb128 0x3a
+ 2991 01fc 0B       		.uleb128 0xb
+ 2992 01fd 3B       		.uleb128 0x3b
+ 2993 01fe 0B       		.uleb128 0xb
+ 2994 01ff 00       		.byte	0
+ 2995 0200 00       		.byte	0
+ 2996 0201 00       		.byte	0
+ 2997              		.section	.debug_loc,"",%progbits
+ 2998              	.Ldebug_loc0:
+ 2999              	.LLST0:
+ 3000 0000 00000000 		.4byte	.LVL2
+ 3001 0004 07000000 		.4byte	.LVL3-1
+ 3002 0008 0100     		.2byte	0x1
+ 3003 000a 50       		.byte	0x50
+ 3004 000b 07000000 		.4byte	.LVL3-1
+ 3005 000f 32000000 		.4byte	.LFE2
+ 3006 0013 0400     		.2byte	0x4
+ 3007 0015 F3       		.byte	0xf3
+ 3008 0016 01       		.uleb128 0x1
+ 3009 0017 50       		.byte	0x50
+ 3010 0018 9F       		.byte	0x9f
+ 3011 0019 00000000 		.4byte	0
+ 3012 001d 00000000 		.4byte	0
+ 3013              	.LLST1:
+ 3014 0021 00000000 		.4byte	.LVL9
+ 3015 0025 12000000 		.4byte	.LVL10
+ 3016 0029 0100     		.2byte	0x1
+ 3017 002b 50       		.byte	0x50
+ 3018 002c 12000000 		.4byte	.LVL10
+ 3019 0030 54000000 		.4byte	.LFE4
+ 3020 0034 0400     		.2byte	0x4
+ 3021 0036 F3       		.byte	0xf3
+ 3022 0037 01       		.uleb128 0x1
+ 3023 0038 50       		.byte	0x50
+ 3024 0039 9F       		.byte	0x9f
+ 3025 003a 00000000 		.4byte	0
+ 3026 003e 00000000 		.4byte	0
+ 3027              	.LLST2:
+ 3028 0042 00000000 		.4byte	.LVL15
+ 3029 0046 04000000 		.4byte	.LVL16
+ 3030 004a 0100     		.2byte	0x1
+ 3031 004c 50       		.byte	0x50
+ 3032 004d 04000000 		.4byte	.LVL16
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 60
+
+
+ 3033 0051 26000000 		.4byte	.LFE5
+ 3034 0055 0400     		.2byte	0x4
+ 3035 0057 F3       		.byte	0xf3
+ 3036 0058 01       		.uleb128 0x1
+ 3037 0059 50       		.byte	0x50
+ 3038 005a 9F       		.byte	0x9f
+ 3039 005b 00000000 		.4byte	0
+ 3040 005f 00000000 		.4byte	0
+ 3041              	.LLST3:
+ 3042 0063 16000000 		.4byte	.LVL17
+ 3043 0067 20000000 		.4byte	.LVL18
+ 3044 006b 0100     		.2byte	0x1
+ 3045 006d 50       		.byte	0x50
+ 3046 006e 00000000 		.4byte	0
+ 3047 0072 00000000 		.4byte	0
+ 3048              		.section	.debug_aranges,"",%progbits
+ 3049 0000 3C000000 		.4byte	0x3c
+ 3050 0004 0200     		.2byte	0x2
+ 3051 0006 00000000 		.4byte	.Ldebug_info0
+ 3052 000a 04       		.byte	0x4
+ 3053 000b 00       		.byte	0
+ 3054 000c 0000     		.2byte	0
+ 3055 000e 0000     		.2byte	0
+ 3056 0010 00000000 		.4byte	.LFB3
+ 3057 0014 88000000 		.4byte	.LFE3-.LFB3
+ 3058 0018 00000000 		.4byte	.LFB2
+ 3059 001c 32000000 		.4byte	.LFE2-.LFB2
+ 3060 0020 00000000 		.4byte	.LFB4
+ 3061 0024 54000000 		.4byte	.LFE4-.LFB4
+ 3062 0028 00000000 		.4byte	.LFB5
+ 3063 002c 26000000 		.4byte	.LFE5-.LFB5
+ 3064 0030 00000000 		.4byte	.LFB1
+ 3065 0034 60000000 		.4byte	.LFE1-.LFB1
+ 3066 0038 00000000 		.4byte	0
+ 3067 003c 00000000 		.4byte	0
+ 3068              		.section	.debug_ranges,"",%progbits
+ 3069              	.Ldebug_ranges0:
+ 3070 0000 00000000 		.4byte	.LFB3
+ 3071 0004 88000000 		.4byte	.LFE3
+ 3072 0008 00000000 		.4byte	.LFB2
+ 3073 000c 32000000 		.4byte	.LFE2
+ 3074 0010 00000000 		.4byte	.LFB4
+ 3075 0014 54000000 		.4byte	.LFE4
+ 3076 0018 00000000 		.4byte	.LFB5
+ 3077 001c 26000000 		.4byte	.LFE5
+ 3078 0020 00000000 		.4byte	.LFB1
+ 3079 0024 60000000 		.4byte	.LFE1
+ 3080 0028 00000000 		.4byte	0
+ 3081 002c 00000000 		.4byte	0
+ 3082              		.section	.debug_line,"",%progbits
+ 3083              	.Ldebug_line0:
+ 3084 0000 38010000 		.section	.debug_str,"MS",%progbits,1
+ 3084      0200AF00 
+ 3084      00000201 
+ 3084      FB0E0D00 
+ 3084      01010101 
+ 3085              	.LASF70:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 61
+
+
+ 3086 0000 4F535F45 		.ascii	"OS_ERR_MEM_FULL\000"
+ 3086      52525F4D 
+ 3086      454D5F46 
+ 3086      554C4C00 
+ 3087              	.LASF222:
+ 3088 0010 5469636B 		.ascii	"TickNextPtr\000"
+ 3088      4E657874 
+ 3088      50747200 
+ 3089              	.LASF235:
+ 3090 001c 50656E64 		.ascii	"PendDataTblEntries\000"
+ 3090      44617461 
+ 3090      54626C45 
+ 3090      6E747269 
+ 3090      657300
+ 3091              	.LASF275:
+ 3092 002f 4F535F50 		.ascii	"OS_PEND_LIST\000"
+ 3092      454E445F 
+ 3092      4C495354 
+ 3092      00
+ 3093              	.LASF306:
+ 3094 003c 4F535469 		.ascii	"OSTimeDlyHMSM\000"
+ 3094      6D65446C 
+ 3094      79484D53 
+ 3094      4D00
+ 3095              	.LASF191:
+ 3096 004a 4F535F45 		.ascii	"OS_ERR_TMR_STK_INVALID\000"
+ 3096      52525F54 
+ 3096      4D525F53 
+ 3096      544B5F49 
+ 3096      4E56414C 
+ 3097              	.LASF10:
+ 3098 0061 73697A65 		.ascii	"sizetype\000"
+ 3098      74797065 
+ 3098      00
+ 3099              	.LASF298:
+ 3100 006a 4170705F 		.ascii	"App_TaskCOMStk\000"
+ 3100      5461736B 
+ 3100      434F4D53 
+ 3100      746B00
+ 3101              	.LASF64:
+ 3102 0079 4F535F45 		.ascii	"OS_ERR_J\000"
+ 3102      52525F4A 
+ 3102      00
+ 3103              	.LASF193:
+ 3104 0082 4F535F45 		.ascii	"OS_ERR_TMR_STOPPED\000"
+ 3104      52525F54 
+ 3104      4D525F53 
+ 3104      544F5050 
+ 3104      454400
+ 3105              	.LASF216:
+ 3106 0095 4F535F54 		.ascii	"OS_TCB\000"
+ 3106      434200
+ 3107              	.LASF296:
+ 3108 009c 4170705F 		.ascii	"App_TaskStartStk\000"
+ 3108      5461736B 
+ 3108      53746172 
+ 3108      7453746B 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 62
+
+
+ 3108      00
+ 3109              	.LASF190:
+ 3110 00ad 4F535F45 		.ascii	"OS_ERR_TMR_PRIO_INVALID\000"
+ 3110      52525F54 
+ 3110      4D525F50 
+ 3110      52494F5F 
+ 3110      494E5641 
+ 3111              	.LASF299:
+ 3112 00c5 4170705F 		.ascii	"App_TaskPRESS_TCB\000"
+ 3112      5461736B 
+ 3112      50524553 
+ 3112      535F5443 
+ 3112      4200
+ 3113              	.LASF260:
+ 3114 00d7 53746B46 		.ascii	"StkFree\000"
+ 3114      72656500 
+ 3115              	.LASF204:
+ 3116 00df 4D736750 		.ascii	"MsgPtr\000"
+ 3116      747200
+ 3117              	.LASF14:
+ 3118 00e6 4350555F 		.ascii	"CPU_CHAR\000"
+ 3118      43484152 
+ 3118      00
+ 3119              	.LASF117:
+ 3120 00ef 4F535F45 		.ascii	"OS_ERR_ROUND_ROBIN_1\000"
+ 3120      52525F52 
+ 3120      4F554E44 
+ 3120      5F524F42 
+ 3120      494E5F31 
+ 3121              	.LASF125:
+ 3122 0104 4F535F45 		.ascii	"OS_ERR_SEM_OVF\000"
+ 3122      52525F53 
+ 3122      454D5F4F 
+ 3122      564600
+ 3123              	.LASF16:
+ 3124 0113 4350555F 		.ascii	"CPU_INT16U\000"
+ 3124      494E5431 
+ 3124      365500
+ 3125              	.LASF301:
+ 3126 011e 4F535461 		.ascii	"OSTaskCreate\000"
+ 3126      736B4372 
+ 3126      65617465 
+ 3126      00
+ 3127              	.LASF129:
+ 3128 012b 4F535F45 		.ascii	"OS_ERR_STAT_STK_INVALID\000"
+ 3128      52525F53 
+ 3128      5441545F 
+ 3128      53544B5F 
+ 3128      494E5641 
+ 3129              	.LASF313:
+ 3130 0143 4350555F 		.ascii	"CPU_Init\000"
+ 3130      496E6974 
+ 3130      00
+ 3131              	.LASF161:
+ 3132 014c 4F535F45 		.ascii	"OS_ERR_TLS_ID_INVALID\000"
+ 3132      52525F54 
+ 3132      4C535F49 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 63
+
+
+ 3132      445F494E 
+ 3132      56414C49 
+ 3133              	.LASF98:
+ 3134 0162 4F535F45 		.ascii	"OS_ERR_PEND_ABORT_NONE\000"
+ 3134      52525F50 
+ 3134      454E445F 
+ 3134      41424F52 
+ 3134      545F4E4F 
+ 3135              	.LASF283:
+ 3136 0179 735F426D 		.ascii	"s_Bmp280_press_temp\000"
+ 3136      70323830 
+ 3136      5F707265 
+ 3136      73735F74 
+ 3136      656D7000 
+ 3137              	.LASF288:
+ 3138 018d 4170705F 		.ascii	"App_TaskStart\000"
+ 3138      5461736B 
+ 3138      53746172 
+ 3138      7400
+ 3139              	.LASF20:
+ 3140 019b 4350555F 		.ascii	"CPU_STK\000"
+ 3140      53544B00 
+ 3141              	.LASF249:
+ 3142 01a3 53757370 		.ascii	"SuspendCtr\000"
+ 3142      656E6443 
+ 3142      747200
+ 3143              	.LASF237:
+ 3144 01ae 5469636B 		.ascii	"TickCtrPrev\000"
+ 3144      43747250 
+ 3144      72657600 
+ 3145              	.LASF177:
+ 3146 01ba 4F535F45 		.ascii	"OS_ERR_TIME_NOT_DLY\000"
+ 3146      52525F54 
+ 3146      494D455F 
+ 3146      4E4F545F 
+ 3146      444C5900 
+ 3147              	.LASF144:
+ 3148 01ce 4F535F45 		.ascii	"OS_ERR_TASK_NO_MORE_TCB\000"
+ 3148      52525F54 
+ 3148      41534B5F 
+ 3148      4E4F5F4D 
+ 3148      4F52455F 
+ 3149              	.LASF33:
+ 3150 01e6 4F535F4F 		.ascii	"OS_OPT\000"
+ 3150      505400
+ 3151              	.LASF160:
+ 3152 01ed 4F535F45 		.ascii	"OS_ERR_TCB_INVALID\000"
+ 3152      52525F54 
+ 3152      43425F49 
+ 3152      4E56414C 
+ 3152      494400
+ 3153              	.LASF79:
+ 3154 0200 4F535F45 		.ascii	"OS_ERR_MSG_POOL_EMPTY\000"
+ 3154      52525F4D 
+ 3154      53475F50 
+ 3154      4F4F4C5F 
+ 3154      454D5054 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 64
+
+
+ 3155              	.LASF88:
+ 3156 0216 4F535F45 		.ascii	"OS_ERR_OBJ_CREATED\000"
+ 3156      52525F4F 
+ 3156      424A5F43 
+ 3156      52454154 
+ 3156      454400
+ 3157              	.LASF268:
+ 3158 0229 6F735F70 		.ascii	"os_pend_data\000"
+ 3158      656E645F 
+ 3158      64617461 
+ 3158      00
+ 3159              	.LASF212:
+ 3160 0236 4E627245 		.ascii	"NbrEntriesSize\000"
+ 3160      6E747269 
+ 3160      65735369 
+ 3160      7A6500
+ 3161              	.LASF78:
+ 3162 0245 4F535F45 		.ascii	"OS_ERR_MEM_NO_FREE_BLKS\000"
+ 3162      52525F4D 
+ 3162      454D5F4E 
+ 3162      4F5F4652 
+ 3162      45455F42 
+ 3163              	.LASF250:
+ 3164 025d 43505555 		.ascii	"CPUUsage\000"
+ 3164      73616765 
+ 3164      00
+ 3165              	.LASF162:
+ 3166 0266 4F535F45 		.ascii	"OS_ERR_TLS_ISR\000"
+ 3166      52525F54 
+ 3166      4C535F49 
+ 3166      535200
+ 3167              	.LASF82:
+ 3168 0275 4F535F45 		.ascii	"OS_ERR_MUTEX_OWNER\000"
+ 3168      52525F4D 
+ 3168      55544558 
+ 3168      5F4F574E 
+ 3168      455200
+ 3169              	.LASF241:
+ 3170 0288 54696D65 		.ascii	"TimeQuantaCtr\000"
+ 3170      5175616E 
+ 3170      74614374 
+ 3170      7200
+ 3171              	.LASF245:
+ 3172 0296 52656754 		.ascii	"RegTbl\000"
+ 3172      626C00
+ 3173              	.LASF4:
+ 3174 029d 6C6F6E67 		.ascii	"long int\000"
+ 3174      20696E74 
+ 3174      00
+ 3175              	.LASF60:
+ 3176 02a6 4F535F45 		.ascii	"OS_ERR_INT_Q_FULL\000"
+ 3176      52525F49 
+ 3176      4E545F51 
+ 3176      5F46554C 
+ 3176      4C00
+ 3177              	.LASF101:
+ 3178 02b8 4F535F45 		.ascii	"OS_ERR_PEND_ISR\000"
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 65
+
+
+ 3178      52525F50 
+ 3178      454E445F 
+ 3178      49535200 
+ 3179              	.LASF122:
+ 3180 02c8 4F535F45 		.ascii	"OS_ERR_SCHED_LOCKED\000"
+ 3180      52525F53 
+ 3180      43484544 
+ 3180      5F4C4F43 
+ 3180      4B454400 
+ 3181              	.LASF269:
+ 3182 02dc 54434250 		.ascii	"TCBPtr\000"
+ 3182      747200
+ 3183              	.LASF201:
+ 3184 02e3 4F535F45 		.ascii	"OS_ERR\000"
+ 3184      525200
+ 3185              	.LASF154:
+ 3186 02ea 4F535F45 		.ascii	"OS_ERR_TASK_SUSPENDED\000"
+ 3186      52525F54 
+ 3186      41534B5F 
+ 3186      53555350 
+ 3186      454E4445 
+ 3187              	.LASF317:
+ 3188 0300 4150505C 		.ascii	"APP\\app.c\000"
+ 3188      6170702E 
+ 3188      6300
+ 3189              	.LASF320:
+ 3190 030a 6D61696E 		.ascii	"main\000"
+ 3190      00
+ 3191              	.LASF316:
+ 3192 030f 474E5520 		.ascii	"GNU C11 5.4.1 20160609 (release) [ARM/embedded-5-br"
+ 3192      43313120 
+ 3192      352E342E 
+ 3192      31203230 
+ 3192      31363036 
+ 3193 0342 616E6368 		.ascii	"anch revision 237715] -mcpu=cortex-m3 -mthumb -g -O"
+ 3193      20726576 
+ 3193      6973696F 
+ 3193      6E203233 
+ 3193      37373135 
+ 3194 0375 67202D66 		.ascii	"g -ffunction-sections -ffat-lto-objects\000"
+ 3194      66756E63 
+ 3194      74696F6E 
+ 3194      2D736563 
+ 3194      74696F6E 
+ 3195              	.LASF217:
+ 3196 039d 6F735F74 		.ascii	"os_tcb\000"
+ 3196      636200
+ 3197              	.LASF289:
+ 3198 03a4 4170705F 		.ascii	"App_TaskPRESS\000"
+ 3198      5461736B 
+ 3198      50524553 
+ 3198      5300
+ 3199              	.LASF312:
+ 3200 03b2 4253505F 		.ascii	"BSP_PreInit\000"
+ 3200      50726549 
+ 3200      6E697400 
+ 3201              	.LASF50:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 66
+
+
+ 3202 03be 4F535F45 		.ascii	"OS_ERR_FATAL_RETURN\000"
+ 3202      52525F46 
+ 3202      4154414C 
+ 3202      5F524554 
+ 3202      55524E00 
+ 3203              	.LASF23:
+ 3204 03d2 4350555F 		.ascii	"CPU_TS\000"
+ 3204      545300
+ 3205              	.LASF258:
+ 3206 03d9 53656D50 		.ascii	"SemPendTimeMax\000"
+ 3206      656E6454 
+ 3206      696D654D 
+ 3206      617800
+ 3207              	.LASF41:
+ 3208 03e8 4F535F45 		.ascii	"OS_ERR_A\000"
+ 3208      52525F41 
+ 3208      00
+ 3209              	.LASF43:
+ 3210 03f1 4F535F45 		.ascii	"OS_ERR_B\000"
+ 3210      52525F42 
+ 3210      00
+ 3211              	.LASF44:
+ 3212 03fa 4F535F45 		.ascii	"OS_ERR_C\000"
+ 3212      52525F43 
+ 3212      00
+ 3213              	.LASF46:
+ 3214 0403 4F535F45 		.ascii	"OS_ERR_D\000"
+ 3214      52525F44 
+ 3214      00
+ 3215              	.LASF48:
+ 3216 040c 4F535F45 		.ascii	"OS_ERR_E\000"
+ 3216      52525F45 
+ 3216      00
+ 3217              	.LASF49:
+ 3218 0415 4F535F45 		.ascii	"OS_ERR_F\000"
+ 3218      52525F46 
+ 3218      00
+ 3219              	.LASF55:
+ 3220 041e 4F535F45 		.ascii	"OS_ERR_G\000"
+ 3220      52525F47 
+ 3220      00
+ 3221              	.LASF56:
+ 3222 0427 4F535F45 		.ascii	"OS_ERR_H\000"
+ 3222      52525F48 
+ 3222      00
+ 3223              	.LASF57:
+ 3224 0430 4F535F45 		.ascii	"OS_ERR_I\000"
+ 3224      52525F49 
+ 3224      00
+ 3225              	.LASF0:
+ 3226 0439 7369676E 		.ascii	"signed char\000"
+ 3226      65642063 
+ 3226      68617200 
+ 3227              	.LASF65:
+ 3228 0445 4F535F45 		.ascii	"OS_ERR_K\000"
+ 3228      52525F4B 
+ 3228      00
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 67
+
+
+ 3229              	.LASF66:
+ 3230 044e 4F535F45 		.ascii	"OS_ERR_L\000"
+ 3230      52525F4C 
+ 3230      00
+ 3231              	.LASF68:
+ 3232 0457 4F535F45 		.ascii	"OS_ERR_M\000"
+ 3232      52525F4D 
+ 3232      00
+ 3233              	.LASF84:
+ 3234 0460 4F535F45 		.ascii	"OS_ERR_N\000"
+ 3234      52525F4E 
+ 3234      00
+ 3235              	.LASF87:
+ 3236 0469 4F535F45 		.ascii	"OS_ERR_O\000"
+ 3236      52525F4F 
+ 3236      00
+ 3237              	.LASF95:
+ 3238 0472 4F535F45 		.ascii	"OS_ERR_P\000"
+ 3238      52525F50 
+ 3238      00
+ 3239              	.LASF110:
+ 3240 047b 4F535F45 		.ascii	"OS_ERR_Q\000"
+ 3240      52525F51 
+ 3240      00
+ 3241              	.LASF115:
+ 3242 0484 4F535F45 		.ascii	"OS_ERR_R\000"
+ 3242      52525F52 
+ 3242      00
+ 3243              	.LASF119:
+ 3244 048d 4F535F45 		.ascii	"OS_ERR_S\000"
+ 3244      52525F53 
+ 3244      00
+ 3245              	.LASF136:
+ 3246 0496 4F535F45 		.ascii	"OS_ERR_T\000"
+ 3246      52525F54 
+ 3246      00
+ 3247              	.LASF194:
+ 3248 049f 4F535F45 		.ascii	"OS_ERR_U\000"
+ 3248      52525F55 
+ 3248      00
+ 3249              	.LASF195:
+ 3250 04a8 4F535F45 		.ascii	"OS_ERR_V\000"
+ 3250      52525F56 
+ 3250      00
+ 3251              	.LASF196:
+ 3252 04b1 4F535F45 		.ascii	"OS_ERR_W\000"
+ 3252      52525F57 
+ 3252      00
+ 3253              	.LASF197:
+ 3254 04ba 4F535F45 		.ascii	"OS_ERR_X\000"
+ 3254      52525F58 
+ 3254      00
+ 3255              	.LASF198:
+ 3256 04c3 4F535F45 		.ascii	"OS_ERR_Y\000"
+ 3256      52525F59 
+ 3256      00
+ 3257              	.LASF200:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 68
+
+
+ 3258 04cc 4F535F45 		.ascii	"OS_ERR_Z\000"
+ 3258      52525F5A 
+ 3258      00
+ 3259              	.LASF179:
+ 3260 04d5 4F535F45 		.ascii	"OS_ERR_TIME_ZERO_DLY\000"
+ 3260      52525F54 
+ 3260      494D455F 
+ 3260      5A45524F 
+ 3260      5F444C59 
+ 3261              	.LASF105:
+ 3262 04ea 4F535F45 		.ascii	"OS_ERR_POST_ISR\000"
+ 3262      52525F50 
+ 3262      4F53545F 
+ 3262      49535200 
+ 3263              	.LASF263:
+ 3264 04fa 4462674E 		.ascii	"DbgNamePtr\000"
+ 3264      616D6550 
+ 3264      747200
+ 3265              	.LASF1:
+ 3266 0505 756E7369 		.ascii	"unsigned char\000"
+ 3266      676E6564 
+ 3266      20636861 
+ 3266      7200
+ 3267              	.LASF308:
+ 3268 0513 6765745F 		.ascii	"get_bmp280_press_temp\000"
+ 3268      626D7032 
+ 3268      38305F70 
+ 3268      72657373 
+ 3268      5F74656D 
+ 3269              	.LASF246:
+ 3270 0529 466C6167 		.ascii	"FlagsPend\000"
+ 3270      7350656E 
+ 3270      6400
+ 3271              	.LASF52:
+ 3272 0533 4F535F45 		.ascii	"OS_ERR_FLAG_NOT_RDY\000"
+ 3272      52525F46 
+ 3272      4C41475F 
+ 3272      4E4F545F 
+ 3272      52445900 
+ 3273              	.LASF255:
+ 3274 0547 4379636C 		.ascii	"CyclesTotal\000"
+ 3274      6573546F 
+ 3274      74616C00 
+ 3275              	.LASF168:
+ 3276 0553 4F535F45 		.ascii	"OS_ERR_TICK_STK_SIZE_INVALID\000"
+ 3276      52525F54 
+ 3276      49434B5F 
+ 3276      53544B5F 
+ 3276      53495A45 
+ 3277              	.LASF261:
+ 3278 0570 44626750 		.ascii	"DbgPrevPtr\000"
+ 3278      72657650 
+ 3278      747200
+ 3279              	.LASF218:
+ 3280 057b 53746B50 		.ascii	"StkPtr\000"
+ 3280      747200
+ 3281              	.LASF148:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 69
+
+
+ 3282 0582 4F535F45 		.ascii	"OS_ERR_TASK_OPT\000"
+ 3282      52525F54 
+ 3282      41534B5F 
+ 3282      4F505400 
+ 3283              	.LASF131:
+ 3284 0592 4F535F45 		.ascii	"OS_ERR_STATE_INVALID\000"
+ 3284      52525F53 
+ 3284      54415445 
+ 3284      5F494E56 
+ 3284      414C4944 
+ 3285              	.LASF37:
+ 3286 05a7 4F535F53 		.ascii	"OS_STATE\000"
+ 3286      54415445 
+ 3286      00
+ 3287              	.LASF207:
+ 3288 05b0 4F535F4D 		.ascii	"OS_MSG_Q\000"
+ 3288      53475F51 
+ 3288      00
+ 3289              	.LASF26:
+ 3290 05b9 4F535F43 		.ascii	"OS_CYCLES\000"
+ 3290      59434C45 
+ 3290      5300
+ 3291              	.LASF32:
+ 3292 05c3 4F535F4F 		.ascii	"OS_OBJ_TYPE\000"
+ 3292      424A5F54 
+ 3292      59504500 
+ 3293              	.LASF69:
+ 3294 05cf 4F535F45 		.ascii	"OS_ERR_MEM_CREATE_ISR\000"
+ 3294      52525F4D 
+ 3294      454D5F43 
+ 3294      52454154 
+ 3294      455F4953 
+ 3295              	.LASF11:
+ 3296 05e5 63686172 		.ascii	"char\000"
+ 3296      00
+ 3297              	.LASF243:
+ 3298 05ea 4D736751 		.ascii	"MsgQPendTime\000"
+ 3298      50656E64 
+ 3298      54696D65 
+ 3298      00
+ 3299              	.LASF72:
+ 3300 05f7 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_BLKS\000"
+ 3300      52525F4D 
+ 3300      454D5F49 
+ 3300      4E56414C 
+ 3300      49445F42 
+ 3301              	.LASF192:
+ 3302 060f 4F535F45 		.ascii	"OS_ERR_TMR_STK_SIZE_INVALID\000"
+ 3302      52525F54 
+ 3302      4D525F53 
+ 3302      544B5F53 
+ 3302      495A455F 
+ 3303              	.LASF239:
+ 3304 062b 5469636B 		.ascii	"TickRemain\000"
+ 3304      52656D61 
+ 3304      696E00
+ 3305              	.LASF42:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 70
+
+
+ 3306 0636 4F535F45 		.ascii	"OS_ERR_ACCEPT_ISR\000"
+ 3306      52525F41 
+ 3306      43434550 
+ 3306      545F4953 
+ 3306      5200
+ 3307              	.LASF206:
+ 3308 0648 4D736754 		.ascii	"MsgTS\000"
+ 3308      5300
+ 3309              	.LASF229:
+ 3310 064e 50656E64 		.ascii	"PendDataTblPtr\000"
+ 3310      44617461 
+ 3310      54626C50 
+ 3310      747200
+ 3311              	.LASF71:
+ 3312 065d 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_P_ADDR\000"
+ 3312      52525F4D 
+ 3312      454D5F49 
+ 3312      4E56414C 
+ 3312      49445F50 
+ 3313              	.LASF291:
+ 3314 0677 626D7032 		.ascii	"bmp280_data\000"
+ 3314      38305F64 
+ 3314      61746100 
+ 3315              	.LASF114:
+ 3316 0683 4F535F45 		.ascii	"OS_ERR_Q_SIZE\000"
+ 3316      52525F51 
+ 3316      5F53495A 
+ 3316      4500
+ 3317              	.LASF81:
+ 3318 0691 4F535F45 		.ascii	"OS_ERR_MUTEX_NOT_OWNER\000"
+ 3318      52525F4D 
+ 3318      55544558 
+ 3318      5F4E4F54 
+ 3318      5F4F574E 
+ 3319              	.LASF208:
+ 3320 06a8 6F735F6D 		.ascii	"os_msg\000"
+ 3320      736700
+ 3321              	.LASF96:
+ 3322 06af 4F535F45 		.ascii	"OS_ERR_PEND_ABORT\000"
+ 3322      52525F50 
+ 3322      454E445F 
+ 3322      41424F52 
+ 3322      5400
+ 3323              	.LASF297:
+ 3324 06c1 4170705F 		.ascii	"App_TaskCOM_TCB\000"
+ 3324      5461736B 
+ 3324      434F4D5F 
+ 3324      54434200 
+ 3325              	.LASF134:
+ 3326 06d1 4F535F45 		.ascii	"OS_ERR_STK_SIZE_INVALID\000"
+ 3326      52525F53 
+ 3326      544B5F53 
+ 3326      495A455F 
+ 3326      494E5641 
+ 3327              	.LASF147:
+ 3328 06e9 4F535F45 		.ascii	"OS_ERR_TASK_NOT_SUSPENDED\000"
+ 3328      52525F54 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 71
+
+
+ 3328      41534B5F 
+ 3328      4E4F545F 
+ 3328      53555350 
+ 3329              	.LASF130:
+ 3330 0703 4F535F45 		.ascii	"OS_ERR_STAT_STK_SIZE_INVALID\000"
+ 3330      52525F53 
+ 3330      5441545F 
+ 3330      53544B5F 
+ 3330      53495A45 
+ 3331              	.LASF220:
+ 3332 0720 53746B4C 		.ascii	"StkLimitPtr\000"
+ 3332      696D6974 
+ 3332      50747200 
+ 3333              	.LASF18:
+ 3334 072c 4350555F 		.ascii	"CPU_INT32S\000"
+ 3334      494E5433 
+ 3334      325300
+ 3335              	.LASF17:
+ 3336 0737 4350555F 		.ascii	"CPU_INT32U\000"
+ 3336      494E5433 
+ 3336      325500
+ 3337              	.LASF171:
+ 3338 0742 4F535F45 		.ascii	"OS_ERR_TIME_DLY_RESUME_ISR\000"
+ 3338      52525F54 
+ 3338      494D455F 
+ 3338      444C595F 
+ 3338      52455355 
+ 3339              	.LASF314:
+ 3340 075d 4F53496E 		.ascii	"OSInit\000"
+ 3340      697400
+ 3341              	.LASF185:
+ 3342 0764 4F535F45 		.ascii	"OS_ERR_TMR_INVALID_STATE\000"
+ 3342      52525F54 
+ 3342      4D525F49 
+ 3342      4E56414C 
+ 3342      49445F53 
+ 3343              	.LASF165:
+ 3344 077d 4F535F45 		.ascii	"OS_ERR_TLS_DESTRUCT_ASSIGNED\000"
+ 3344      52525F54 
+ 3344      4C535F44 
+ 3344      45535452 
+ 3344      5543545F 
+ 3345              	.LASF19:
+ 3346 079a 4350555F 		.ascii	"CPU_ADDR\000"
+ 3346      41444452 
+ 3346      00
+ 3347              	.LASF286:
+ 3348 07a3 426D7032 		.ascii	"Bmp280_press_temp\000"
+ 3348      38305F70 
+ 3348      72657373 
+ 3348      5F74656D 
+ 3348      7000
+ 3349              	.LASF124:
+ 3350 07b5 4F535F45 		.ascii	"OS_ERR_SCHED_UNLOCK_ISR\000"
+ 3350      52525F53 
+ 3350      43484544 
+ 3350      5F554E4C 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 72
+
+
+ 3350      4F434B5F 
+ 3351              	.LASF35:
+ 3352 07cd 4F535F52 		.ascii	"OS_REG\000"
+ 3352      454700
+ 3353              	.LASF173:
+ 3354 07d4 4F535F45 		.ascii	"OS_ERR_TIME_INVALID_HOURS\000"
+ 3354      52525F54 
+ 3354      494D455F 
+ 3354      494E5641 
+ 3354      4C49445F 
+ 3355              	.LASF62:
+ 3356 07ee 4F535F45 		.ascii	"OS_ERR_INT_Q_STK_INVALID\000"
+ 3356      52525F49 
+ 3356      4E545F51 
+ 3356      5F53544B 
+ 3356      5F494E56 
+ 3357              	.LASF63:
+ 3358 0807 4F535F45 		.ascii	"OS_ERR_INT_Q_STK_SIZE_INVALID\000"
+ 3358      52525F49 
+ 3358      4E545F51 
+ 3358      5F53544B 
+ 3358      5F53495A 
+ 3359              	.LASF157:
+ 3360 0825 4F535F45 		.ascii	"OS_ERR_TASK_SUSPEND_ISR\000"
+ 3360      52525F54 
+ 3360      41534B5F 
+ 3360      53555350 
+ 3360      454E445F 
+ 3361              	.LASF73:
+ 3362 083d 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_PART\000"
+ 3362      52525F4D 
+ 3362      454D5F49 
+ 3362      4E56414C 
+ 3362      49445F50 
+ 3363              	.LASF223:
+ 3364 0855 5469636B 		.ascii	"TickPrevPtr\000"
+ 3364      50726576 
+ 3364      50747200 
+ 3365              	.LASF89:
+ 3366 0861 4F535F45 		.ascii	"OS_ERR_OBJ_DEL\000"
+ 3366      52525F4F 
+ 3366      424A5F44 
+ 3366      454C00
+ 3367              	.LASF123:
+ 3368 0870 4F535F45 		.ascii	"OS_ERR_SCHED_NOT_LOCKED\000"
+ 3368      52525F53 
+ 3368      43484544 
+ 3368      5F4E4F54 
+ 3368      5F4C4F43 
+ 3369              	.LASF22:
+ 3370 0888 4350555F 		.ascii	"CPU_TS32\000"
+ 3370      54533332 
+ 3370      00
+ 3371              	.LASF25:
+ 3372 0891 4F535F43 		.ascii	"OS_CTX_SW_CTR\000"
+ 3372      54585F53 
+ 3372      575F4354 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 73
+
+
+ 3372      5200
+ 3373              	.LASF267:
+ 3374 089f 4F535F50 		.ascii	"OS_PEND_DATA\000"
+ 3374      454E445F 
+ 3374      44415441 
+ 3374      00
+ 3375              	.LASF175:
+ 3376 08ac 4F535F45 		.ascii	"OS_ERR_TIME_INVALID_SECONDS\000"
+ 3376      52525F54 
+ 3376      494D455F 
+ 3376      494E5641 
+ 3376      4C49445F 
+ 3377              	.LASF282:
+ 3378 08c8 50656E64 		.ascii	"PendList\000"
+ 3378      4C697374 
+ 3378      00
+ 3379              	.LASF180:
+ 3380 08d1 4F535F45 		.ascii	"OS_ERR_TIMEOUT\000"
+ 3380      52525F54 
+ 3380      494D454F 
+ 3380      555400
+ 3381              	.LASF86:
+ 3382 08e0 4F535F45 		.ascii	"OS_ERR_NO_MORE_ID_AVAIL\000"
+ 3382      52525F4E 
+ 3382      4F5F4D4F 
+ 3382      52455F49 
+ 3382      445F4156 
+ 3383              	.LASF138:
+ 3384 08f8 4F535F45 		.ascii	"OS_ERR_TASK_CREATE_ISR\000"
+ 3384      52525F54 
+ 3384      41534B5F 
+ 3384      43524541 
+ 3384      54455F49 
+ 3385              	.LASF182:
+ 3386 090f 4F535F45 		.ascii	"OS_ERR_TMR_INVALID_DEST\000"
+ 3386      52525F54 
+ 3386      4D525F49 
+ 3386      4E56414C 
+ 3386      49445F44 
+ 3387              	.LASF252:
+ 3388 0927 43747853 		.ascii	"CtxSwCtr\000"
+ 3388      77437472 
+ 3388      00
+ 3389              	.LASF189:
+ 3390 0930 4F535F45 		.ascii	"OS_ERR_TMR_NON_AVAIL\000"
+ 3390      52525F54 
+ 3390      4D525F4E 
+ 3390      4F4E5F41 
+ 3390      5641494C 
+ 3391              	.LASF133:
+ 3392 0945 4F535F45 		.ascii	"OS_ERR_STK_INVALID\000"
+ 3392      52525F53 
+ 3392      544B5F49 
+ 3392      4E56414C 
+ 3392      494400
+ 3393              	.LASF5:
+ 3394 0958 6C6F6E67 		.ascii	"long unsigned int\000"
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 74
+
+
+ 3394      20756E73 
+ 3394      69676E65 
+ 3394      6420696E 
+ 3394      7400
+ 3395              	.LASF24:
+ 3396 096a 4F535F43 		.ascii	"OS_CPU_USAGE\000"
+ 3396      50555F55 
+ 3396      53414745 
+ 3396      00
+ 3397              	.LASF149:
+ 3398 0977 4F535F45 		.ascii	"OS_ERR_TASK_RESUME_ISR\000"
+ 3398      52525F54 
+ 3398      41534B5F 
+ 3398      52455355 
+ 3398      4D455F49 
+ 3399              	.LASF145:
+ 3400 098e 4F535F45 		.ascii	"OS_ERR_TASK_NOT_DLY\000"
+ 3400      52525F54 
+ 3400      41534B5F 
+ 3400      4E4F545F 
+ 3400      444C5900 
+ 3401              	.LASF45:
+ 3402 09a2 4F535F45 		.ascii	"OS_ERR_CREATE_ISR\000"
+ 3402      52525F43 
+ 3402      52454154 
+ 3402      455F4953 
+ 3402      5200
+ 3403              	.LASF279:
+ 3404 09b4 4F535F50 		.ascii	"OS_PEND_OBJ\000"
+ 3404      454E445F 
+ 3404      4F424A00 
+ 3405              	.LASF97:
+ 3406 09c0 4F535F45 		.ascii	"OS_ERR_PEND_ABORT_ISR\000"
+ 3406      52525F50 
+ 3406      454E445F 
+ 3406      41424F52 
+ 3406      545F4953 
+ 3407              	.LASF153:
+ 3408 09d6 4F535F45 		.ascii	"OS_ERR_TASK_STK_CHK_ISR\000"
+ 3408      52525F54 
+ 3408      41534B5F 
+ 3408      53544B5F 
+ 3408      43484B5F 
+ 3409              	.LASF163:
+ 3410 09ee 4F535F45 		.ascii	"OS_ERR_TLS_NO_MORE_AVAIL\000"
+ 3410      52525F54 
+ 3410      4C535F4E 
+ 3410      4F5F4D4F 
+ 3410      52455F41 
+ 3411              	.LASF174:
+ 3412 0a07 4F535F45 		.ascii	"OS_ERR_TIME_INVALID_MINUTES\000"
+ 3412      52525F54 
+ 3412      494D455F 
+ 3412      494E5641 
+ 3412      4C49445F 
+ 3413              	.LASF31:
+ 3414 0a23 4F535F4F 		.ascii	"OS_OBJ_QTY\000"
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 75
+
+
+ 3414      424A5F51 
+ 3414      545900
+ 3415              	.LASF234:
+ 3416 0a2e 53746B53 		.ascii	"StkSize\000"
+ 3416      697A6500 
+ 3417              	.LASF40:
+ 3418 0a36 4F535F45 		.ascii	"OS_ERR_NONE\000"
+ 3418      52525F4E 
+ 3418      4F4E4500 
+ 3419              	.LASF240:
+ 3420 0a42 54696D65 		.ascii	"TimeQuanta\000"
+ 3420      5175616E 
+ 3420      746100
+ 3421              	.LASF303:
+ 3422 0a4d 4253505F 		.ascii	"BSP_CPU_TickInit\000"
+ 3422      4350555F 
+ 3422      5469636B 
+ 3422      496E6974 
+ 3422      00
+ 3423              	.LASF34:
+ 3424 0a5e 4F535F50 		.ascii	"OS_PRIO\000"
+ 3424      52494F00 
+ 3425              	.LASF248:
+ 3426 0a66 466C6167 		.ascii	"FlagsOpt\000"
+ 3426      734F7074 
+ 3426      00
+ 3427              	.LASF6:
+ 3428 0a6f 6C6F6E67 		.ascii	"long long int\000"
+ 3428      206C6F6E 
+ 3428      6720696E 
+ 3428      7400
+ 3429              	.LASF39:
+ 3430 0a7d 4F535F54 		.ascii	"OS_TICK\000"
+ 3430      49434B00 
+ 3431              	.LASF99:
+ 3432 0a85 4F535F45 		.ascii	"OS_ERR_PEND_ABORT_SELF\000"
+ 3432      52525F50 
+ 3432      454E445F 
+ 3432      41424F52 
+ 3432      545F5345 
+ 3433              	.LASF12:
+ 3434 0a9c 646F7562 		.ascii	"double\000"
+ 3434      6C6500
+ 3435              	.LASF265:
+ 3436 0aa3 6F735F74 		.ascii	"os_tick_spoke\000"
+ 3436      69636B5F 
+ 3436      73706F6B 
+ 3436      6500
+ 3437              	.LASF199:
+ 3438 0ab1 4F535F45 		.ascii	"OS_ERR_YIELD_ISR\000"
+ 3438      52525F59 
+ 3438      49454C44 
+ 3438      5F495352 
+ 3438      00
+ 3439              	.LASF142:
+ 3440 0ac2 4F535F45 		.ascii	"OS_ERR_TASK_DEL_ISR\000"
+ 3440      52525F54 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 76
+
+
+ 3440      41534B5F 
+ 3440      44454C5F 
+ 3440      49535200 
+ 3441              	.LASF36:
+ 3442 0ad6 4F535F53 		.ascii	"OS_SEM_CTR\000"
+ 3442      454D5F43 
+ 3442      545200
+ 3443              	.LASF186:
+ 3444 0ae1 4F535F45 		.ascii	"OS_ERR_TMR_INVALID\000"
+ 3444      52525F54 
+ 3444      4D525F49 
+ 3444      4E56414C 
+ 3444      494400
+ 3445              	.LASF257:
+ 3446 0af4 53656D50 		.ascii	"SemPendTime\000"
+ 3446      656E6454 
+ 3446      696D6500 
+ 3447              	.LASF307:
+ 3448 0b00 7365745F 		.ascii	"set_bmp280_config\000"
+ 3448      626D7032 
+ 3448      38305F63 
+ 3448      6F6E6669 
+ 3448      6700
+ 3449              	.LASF30:
+ 3450 0b12 4F535F4E 		.ascii	"OS_NESTING_CTR\000"
+ 3450      45535449 
+ 3450      4E475F43 
+ 3450      545200
+ 3451              	.LASF128:
+ 3452 0b21 4F535F45 		.ascii	"OS_ERR_STAT_PRIO_INVALID\000"
+ 3452      52525F53 
+ 3452      5441545F 
+ 3452      5052494F 
+ 3452      5F494E56 
+ 3453              	.LASF319:
+ 3454 0b3a 4170705F 		.ascii	"App_TaskCreate\000"
+ 3454      5461736B 
+ 3454      43726561 
+ 3454      746500
+ 3455              	.LASF13:
+ 3456 0b49 666C6F61 		.ascii	"float\000"
+ 3456      7400
+ 3457              	.LASF290:
+ 3458 0b4f 705F6172 		.ascii	"p_arg\000"
+ 3458      6700
+ 3459              	.LASF318:
+ 3460 0b55 5C5C4D61 		.ascii	"\\\\Mac\\Home\\Documents\\cypress\\esw_bmp280_Petro"
+ 3460      635C486F 
+ 3460      6D655C44 
+ 3460      6F63756D 
+ 3460      656E7473 
+ 3461 0b82 7669635F 		.ascii	"vic_Wagner\\BMP280_CY8CKIT_059.cydsn\000"
+ 3461      5761676E 
+ 3461      65725C42 
+ 3461      4D503238 
+ 3461      305F4359 
+ 3462              	.LASF302:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 77
+
+
+ 3463 0ba6 4253505F 		.ascii	"BSP_PostInit\000"
+ 3463      506F7374 
+ 3463      496E6974 
+ 3463      00
+ 3464              	.LASF135:
+ 3465 0bb3 4F535F45 		.ascii	"OS_ERR_STK_LIMIT_INVALID\000"
+ 3465      52525F53 
+ 3465      544B5F4C 
+ 3465      494D4954 
+ 3465      5F494E56 
+ 3466              	.LASF21:
+ 3467 0bcc 4350555F 		.ascii	"CPU_STK_SIZE\000"
+ 3467      53544B5F 
+ 3467      53495A45 
+ 3467      00
+ 3468              	.LASF58:
+ 3469 0bd9 4F535F45 		.ascii	"OS_ERR_ILLEGAL_CREATE_RUN_TIME\000"
+ 3469      52525F49 
+ 3469      4C4C4547 
+ 3469      414C5F43 
+ 3469      52454154 
+ 3470              	.LASF232:
+ 3471 0bf8 5461736B 		.ascii	"TaskState\000"
+ 3471      53746174 
+ 3471      6500
+ 3472              	.LASF242:
+ 3473 0c02 4D736751 		.ascii	"MsgQ\000"
+ 3473      00
+ 3474              	.LASF8:
+ 3475 0c07 756E7369 		.ascii	"unsigned int\000"
+ 3475      676E6564 
+ 3475      20696E74 
+ 3475      00
+ 3476              	.LASF274:
+ 3477 0c14 52647954 		.ascii	"RdyTS\000"
+ 3477      5300
+ 3478              	.LASF183:
+ 3479 0c1a 4F535F45 		.ascii	"OS_ERR_TMR_INVALID_DLY\000"
+ 3479      52525F54 
+ 3479      4D525F49 
+ 3479      4E56414C 
+ 3479      49445F44 
+ 3480              	.LASF266:
+ 3481 0c31 46697273 		.ascii	"FirstPtr\000"
+ 3481      74507472 
+ 3481      00
+ 3482              	.LASF293:
+ 3483 0c3a 6D73675F 		.ascii	"msg_size\000"
+ 3483      73697A65 
+ 3483      00
+ 3484              	.LASF29:
+ 3485 0c43 4F535F4D 		.ascii	"OS_MSG_SIZE\000"
+ 3485      53475F53 
+ 3485      495A4500 
+ 3486              	.LASF93:
+ 3487 0c4f 4F535F45 		.ascii	"OS_ERR_OS_NOT_RUNNING\000"
+ 3487      52525F4F 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 78
+
+
+ 3487      535F4E4F 
+ 3487      545F5255 
+ 3487      4E4E494E 
+ 3488              	.LASF278:
+ 3489 0c65 5461696C 		.ascii	"TailPtr\000"
+ 3489      50747200 
+ 3490              	.LASF295:
+ 3491 0c6d 4170705F 		.ascii	"App_TaskStartTCB\000"
+ 3491      5461736B 
+ 3491      53746172 
+ 3491      74544342 
+ 3491      00
+ 3492              	.LASF281:
+ 3493 0c7e 54797065 		.ascii	"Type\000"
+ 3493      00
+ 3494              	.LASF104:
+ 3495 0c83 4F535F45 		.ascii	"OS_ERR_POST_NULL_PTR\000"
+ 3495      52525F50 
+ 3495      4F53545F 
+ 3495      4E554C4C 
+ 3495      5F505452 
+ 3496              	.LASF120:
+ 3497 0c98 4F535F45 		.ascii	"OS_ERR_SCHED_INVALID_TIME_SLICE\000"
+ 3497      52525F53 
+ 3497      43484544 
+ 3497      5F494E56 
+ 3497      414C4944 
+ 3498              	.LASF85:
+ 3499 0cb8 4F535F45 		.ascii	"OS_ERR_NAME\000"
+ 3499      52525F4E 
+ 3499      414D4500 
+ 3500              	.LASF219:
+ 3501 0cc4 45787450 		.ascii	"ExtPtr\000"
+ 3501      747200
+ 3502              	.LASF94:
+ 3503 0ccb 4F535F45 		.ascii	"OS_ERR_OS_RUNNING\000"
+ 3503      52525F4F 
+ 3503      535F5255 
+ 3503      4E4E494E 
+ 3503      4700
+ 3504              	.LASF38:
+ 3505 0cdd 4F535F53 		.ascii	"OS_STATUS\000"
+ 3505      54415455 
+ 3505      5300
+ 3506              	.LASF273:
+ 3507 0ce7 5264794D 		.ascii	"RdyMsgSize\000"
+ 3507      73675369 
+ 3507      7A6500
+ 3508              	.LASF238:
+ 3509 0cf2 5469636B 		.ascii	"TickCtrMatch\000"
+ 3509      4374724D 
+ 3509      61746368 
+ 3509      00
+ 3510              	.LASF102:
+ 3511 0cff 4F535F45 		.ascii	"OS_ERR_PEND_LOCKED\000"
+ 3511      52525F50 
+ 3511      454E445F 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 79
+
+
+ 3511      4C4F434B 
+ 3511      454400
+ 3512              	.LASF9:
+ 3513 0d12 6C6F6E67 		.ascii	"long double\000"
+ 3513      20646F75 
+ 3513      626C6500 
+ 3514              	.LASF254:
+ 3515 0d1e 4379636C 		.ascii	"CyclesStart\000"
+ 3515      65735374 
+ 3515      61727400 
+ 3516              	.LASF126:
+ 3517 0d2a 4F535F45 		.ascii	"OS_ERR_SET_ISR\000"
+ 3517      52525F53 
+ 3517      45545F49 
+ 3517      535200
+ 3518              	.LASF227:
+ 3519 0d39 5461736B 		.ascii	"TaskEntryAddr\000"
+ 3519      456E7472 
+ 3519      79416464 
+ 3519      7200
+ 3520              	.LASF287:
+ 3521 0d47 6F735F65 		.ascii	"os_err\000"
+ 3521      727200
+ 3522              	.LASF277:
+ 3523 0d4e 48656164 		.ascii	"HeadPtr\000"
+ 3523      50747200 
+ 3524              	.LASF155:
+ 3525 0d56 4F535F45 		.ascii	"OS_ERR_TASK_SUSPEND_IDLE\000"
+ 3525      52525F54 
+ 3525      41534B5F 
+ 3525      53555350 
+ 3525      454E445F 
+ 3526              	.LASF253:
+ 3527 0d6f 4379636C 		.ascii	"CyclesDelta\000"
+ 3527      65734465 
+ 3527      6C746100 
+ 3528              	.LASF139:
+ 3529 0d7b 4F535F45 		.ascii	"OS_ERR_TASK_DEL\000"
+ 3529      52525F54 
+ 3529      41534B5F 
+ 3529      44454C00 
+ 3530              	.LASF280:
+ 3531 0d8b 6F735F70 		.ascii	"os_pend_obj\000"
+ 3531      656E645F 
+ 3531      6F626A00 
+ 3532              	.LASF146:
+ 3533 0d97 4F535F45 		.ascii	"OS_ERR_TASK_NOT_EXIST\000"
+ 3533      52525F54 
+ 3533      41534B5F 
+ 3533      4E4F545F 
+ 3533      45584953 
+ 3534              	.LASF75:
+ 3535 0dad 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_P_MEM\000"
+ 3535      52525F4D 
+ 3535      454D5F49 
+ 3535      4E56414C 
+ 3535      49445F50 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 80
+
+
+ 3536              	.LASF214:
+ 3537 0dc6 4E627245 		.ascii	"NbrEntriesMax\000"
+ 3537      6E747269 
+ 3537      65734D61 
+ 3537      7800
+ 3538              	.LASF83:
+ 3539 0dd4 4F535F45 		.ascii	"OS_ERR_MUTEX_NESTING\000"
+ 3539      52525F4D 
+ 3539      55544558 
+ 3539      5F4E4553 
+ 3539      54494E47 
+ 3540              	.LASF100:
+ 3541 0de9 4F535F45 		.ascii	"OS_ERR_PEND_DEL\000"
+ 3541      52525F50 
+ 3541      454E445F 
+ 3541      44454C00 
+ 3542              	.LASF74:
+ 3543 0df9 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_P_BLK\000"
+ 3543      52525F4D 
+ 3543      454D5F49 
+ 3543      4E56414C 
+ 3543      49445F50 
+ 3544              	.LASF54:
+ 3545 0e12 4F535F45 		.ascii	"OS_ERR_FLUSH_ISR\000"
+ 3545      52525F46 
+ 3545      4C555348 
+ 3545      5F495352 
+ 3545      00
+ 3546              	.LASF271:
+ 3547 0e23 5264794F 		.ascii	"RdyObjPtr\000"
+ 3547      626A5074 
+ 3547      7200
+ 3548              	.LASF111:
+ 3549 0e2d 4F535F45 		.ascii	"OS_ERR_Q_FULL\000"
+ 3549      52525F51 
+ 3549      5F46554C 
+ 3549      4C00
+ 3550              	.LASF7:
+ 3551 0e3b 6C6F6E67 		.ascii	"long long unsigned int\000"
+ 3551      206C6F6E 
+ 3551      6720756E 
+ 3551      7369676E 
+ 3551      65642069 
+ 3552              	.LASF151:
+ 3553 0e52 4F535F45 		.ascii	"OS_ERR_TASK_RESUME_SELF\000"
+ 3553      52525F54 
+ 3553      41534B5F 
+ 3553      52455355 
+ 3553      4D455F53 
+ 3554              	.LASF188:
+ 3555 0e6a 4F535F45 		.ascii	"OS_ERR_TMR_NO_CALLBACK\000"
+ 3555      52525F54 
+ 3555      4D525F4E 
+ 3555      4F5F4341 
+ 3555      4C4C4241 
+ 3556              	.LASF109:
+ 3557 0e81 4F535F45 		.ascii	"OS_ERR_PTR_INVALID\000"
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 81
+
+
+ 3557      52525F50 
+ 3557      54525F49 
+ 3557      4E56414C 
+ 3557      494400
+ 3558              	.LASF51:
+ 3559 0e94 4F535F45 		.ascii	"OS_ERR_FLAG_GRP_DEPLETED\000"
+ 3559      52525F46 
+ 3559      4C41475F 
+ 3559      4752505F 
+ 3559      4445504C 
+ 3560              	.LASF150:
+ 3561 0ead 4F535F45 		.ascii	"OS_ERR_TASK_RESUME_PRIO\000"
+ 3561      52525F54 
+ 3561      41534B5F 
+ 3561      52455355 
+ 3561      4D455F50 
+ 3562              	.LASF292:
+ 3563 0ec5 4170705F 		.ascii	"App_TaskCOM\000"
+ 3563      5461736B 
+ 3563      434F4D00 
+ 3564              	.LASF76:
+ 3565 0ed1 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_P_DATA\000"
+ 3565      52525F4D 
+ 3565      454D5F49 
+ 3565      4E56414C 
+ 3565      49445F50 
+ 3566              	.LASF251:
+ 3567 0eeb 43505555 		.ascii	"CPUUsageMax\000"
+ 3567      73616765 
+ 3567      4D617800 
+ 3568              	.LASF108:
+ 3569 0ef7 4F535F45 		.ascii	"OS_ERR_PRIO_INVALID\000"
+ 3569      52525F50 
+ 3569      52494F5F 
+ 3569      494E5641 
+ 3569      4C494400 
+ 3570              	.LASF230:
+ 3571 0f0b 50656E64 		.ascii	"PendOn\000"
+ 3571      4F6E00
+ 3572              	.LASF116:
+ 3573 0f12 4F535F45 		.ascii	"OS_ERR_REG_ID_INVALID\000"
+ 3573      52525F52 
+ 3573      45475F49 
+ 3573      445F494E 
+ 3573      56414C49 
+ 3574              	.LASF264:
+ 3575 0f28 4F535F54 		.ascii	"OS_TICK_SPOKE\000"
+ 3575      49434B5F 
+ 3575      53504F4B 
+ 3575      4500
+ 3576              	.LASF77:
+ 3577 0f36 4F535F45 		.ascii	"OS_ERR_MEM_INVALID_SIZE\000"
+ 3577      52525F4D 
+ 3577      454D5F49 
+ 3577      4E56414C 
+ 3577      49445F53 
+ 3578              	.LASF159:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 82
+
+
+ 3579 0f4e 4F535F45 		.ascii	"OS_ERR_TASK_WAITING\000"
+ 3579      52525F54 
+ 3579      41534B5F 
+ 3579      57414954 
+ 3579      494E4700 
+ 3580              	.LASF141:
+ 3581 0f62 4F535F45 		.ascii	"OS_ERR_TASK_DEL_INVALID\000"
+ 3581      52525F54 
+ 3581      41534B5F 
+ 3581      44454C5F 
+ 3581      494E5641 
+ 3582              	.LASF228:
+ 3583 0f7a 5461736B 		.ascii	"TaskEntryArg\000"
+ 3583      456E7472 
+ 3583      79417267 
+ 3583      00
+ 3584              	.LASF61:
+ 3585 0f87 4F535F45 		.ascii	"OS_ERR_INT_Q_SIZE\000"
+ 3585      52525F49 
+ 3585      4E545F51 
+ 3585      5F53495A 
+ 3585      4500
+ 3586              	.LASF276:
+ 3587 0f99 6F735F70 		.ascii	"os_pend_list\000"
+ 3587      656E645F 
+ 3587      6C697374 
+ 3587      00
+ 3588              	.LASF300:
+ 3589 0fa6 4170705F 		.ascii	"App_TaskPRESSStk\000"
+ 3589      5461736B 
+ 3589      50524553 
+ 3589      5353746B 
+ 3589      00
+ 3590              	.LASF221:
+ 3591 0fb7 50726576 		.ascii	"PrevPtr\000"
+ 3591      50747200 
+ 3592              	.LASF224:
+ 3593 0fbf 5469636B 		.ascii	"TickSpokePtr\000"
+ 3593      53706F6B 
+ 3593      65507472 
+ 3593      00
+ 3594              	.LASF132:
+ 3595 0fcc 4F535F45 		.ascii	"OS_ERR_STATUS_INVALID\000"
+ 3595      52525F53 
+ 3595      54415455 
+ 3595      535F494E 
+ 3595      56414C49 
+ 3596              	.LASF310:
+ 3597 0fe2 4F535461 		.ascii	"OSTaskQPend\000"
+ 3597      736B5150 
+ 3597      656E6400 
+ 3598              	.LASF67:
+ 3599 0fee 4F535F45 		.ascii	"OS_ERR_LOCK_NESTING_OVF\000"
+ 3599      52525F4C 
+ 3599      4F434B5F 
+ 3599      4E455354 
+ 3599      494E475F 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 83
+
+
+ 3600              	.LASF156:
+ 3601 1006 4F535F45 		.ascii	"OS_ERR_TASK_SUSPEND_INT_HANDLER\000"
+ 3601      52525F54 
+ 3601      41534B5F 
+ 3601      53555350 
+ 3601      454E445F 
+ 3602              	.LASF176:
+ 3603 1026 4F535F45 		.ascii	"OS_ERR_TIME_INVALID_MILLISECONDS\000"
+ 3603      52525F54 
+ 3603      494D455F 
+ 3603      494E5641 
+ 3603      4C49445F 
+ 3604              	.LASF202:
+ 3605 1047 4F535F4D 		.ascii	"OS_MSG\000"
+ 3605      534700
+ 3606              	.LASF203:
+ 3607 104e 4E657874 		.ascii	"NextPtr\000"
+ 3607      50747200 
+ 3608              	.LASF270:
+ 3609 1056 50656E64 		.ascii	"PendObjPtr\000"
+ 3609      4F626A50 
+ 3609      747200
+ 3610              	.LASF27:
+ 3611 1061 4F535F46 		.ascii	"OS_FLAGS\000"
+ 3611      4C414753 
+ 3611      00
+ 3612              	.LASF210:
+ 3613 106a 496E5074 		.ascii	"InPtr\000"
+ 3613      7200
+ 3614              	.LASF259:
+ 3615 1070 53746B55 		.ascii	"StkUsed\000"
+ 3615      73656400 
+ 3616              	.LASF2:
+ 3617 1078 73686F72 		.ascii	"short int\000"
+ 3617      7420696E 
+ 3617      7400
+ 3618              	.LASF225:
+ 3619 1082 4E616D65 		.ascii	"NamePtr\000"
+ 3619      50747200 
+ 3620              	.LASF47:
+ 3621 108a 4F535F45 		.ascii	"OS_ERR_DEL_ISR\000"
+ 3621      52525F44 
+ 3621      454C5F49 
+ 3621      535200
+ 3622              	.LASF209:
+ 3623 1099 6F735F6D 		.ascii	"os_msg_q\000"
+ 3623      73675F71 
+ 3623      00
+ 3624              	.LASF112:
+ 3625 10a2 4F535F45 		.ascii	"OS_ERR_Q_EMPTY\000"
+ 3625      52525F51 
+ 3625      5F454D50 
+ 3625      545900
+ 3626              	.LASF294:
+ 3627 10b1 705F7278 		.ascii	"p_rx_msg\000"
+ 3627      5F6D7367 
+ 3627      00
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 84
+
+
+ 3628              	.LASF127:
+ 3629 10ba 4F535F45 		.ascii	"OS_ERR_STAT_RESET_ISR\000"
+ 3629      52525F53 
+ 3629      5441545F 
+ 3629      52455345 
+ 3629      545F4953 
+ 3630              	.LASF143:
+ 3631 10d0 4F535F45 		.ascii	"OS_ERR_TASK_INVALID\000"
+ 3631      52525F54 
+ 3631      41534B5F 
+ 3631      494E5641 
+ 3631      4C494400 
+ 3632              	.LASF211:
+ 3633 10e4 4F757450 		.ascii	"OutPtr\000"
+ 3633      747200
+ 3634              	.LASF181:
+ 3635 10eb 4F535F45 		.ascii	"OS_ERR_TMR_INACTIVE\000"
+ 3635      52525F54 
+ 3635      4D525F49 
+ 3635      4E414354 
+ 3635      49564500 
+ 3636              	.LASF213:
+ 3637 10ff 4E627245 		.ascii	"NbrEntries\000"
+ 3637      6E747269 
+ 3637      657300
+ 3638              	.LASF106:
+ 3639 110a 4F535F45 		.ascii	"OS_ERR_PRIO_EXIST\000"
+ 3639      52525F50 
+ 3639      52494F5F 
+ 3639      45584953 
+ 3639      5400
+ 3640              	.LASF205:
+ 3641 111c 4D736753 		.ascii	"MsgSize\000"
+ 3641      697A6500 
+ 3642              	.LASF256:
+ 3643 1124 4379636C 		.ascii	"CyclesTotalPrev\000"
+ 3643      6573546F 
+ 3643      74616C50 
+ 3643      72657600 
+ 3644              	.LASF184:
+ 3645 1134 4F535F45 		.ascii	"OS_ERR_TMR_INVALID_PERIOD\000"
+ 3645      52525F54 
+ 3645      4D525F49 
+ 3645      4E56414C 
+ 3645      49445F50 
+ 3646              	.LASF231:
+ 3647 114e 50656E64 		.ascii	"PendStatus\000"
+ 3647      53746174 
+ 3647      757300
+ 3648              	.LASF247:
+ 3649 1159 466C6167 		.ascii	"FlagsRdy\000"
+ 3649      73526479 
+ 3649      00
+ 3650              	.LASF226:
+ 3651 1162 53746B42 		.ascii	"StkBasePtr\000"
+ 3651      61736550 
+ 3651      747200
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 85
+
+
+ 3652              	.LASF262:
+ 3653 116d 4462674E 		.ascii	"DbgNextPtr\000"
+ 3653      65787450 
+ 3653      747200
+ 3654              	.LASF92:
+ 3655 1178 4F535F45 		.ascii	"OS_ERR_OPT_INVALID\000"
+ 3655      52525F4F 
+ 3655      50545F49 
+ 3655      4E56414C 
+ 3655      494400
+ 3656              	.LASF53:
+ 3657 118b 4F535F45 		.ascii	"OS_ERR_FLAG_PEND_OPT\000"
+ 3657      52525F46 
+ 3657      4C41475F 
+ 3657      50454E44 
+ 3657      5F4F5054 
+ 3658              	.LASF80:
+ 3659 11a0 4F535F45 		.ascii	"OS_ERR_MSG_POOL_NULL_PTR\000"
+ 3659      52525F4D 
+ 3659      53475F50 
+ 3659      4F4F4C5F 
+ 3659      4E554C4C 
+ 3660              	.LASF215:
+ 3661 11b9 4F535F54 		.ascii	"OS_TASK_PTR\000"
+ 3661      41534B5F 
+ 3661      50545200 
+ 3662              	.LASF28:
+ 3663 11c5 4F535F4D 		.ascii	"OS_MSG_QTY\000"
+ 3663      53475F51 
+ 3663      545900
+ 3664              	.LASF113:
+ 3665 11d0 4F535F45 		.ascii	"OS_ERR_Q_MAX\000"
+ 3665      52525F51 
+ 3665      5F4D4158 
+ 3665      00
+ 3666              	.LASF15:
+ 3667 11dd 4350555F 		.ascii	"CPU_INT08U\000"
+ 3667      494E5430 
+ 3667      385500
+ 3668              	.LASF187:
+ 3669 11e8 4F535F45 		.ascii	"OS_ERR_TMR_ISR\000"
+ 3669      52525F54 
+ 3669      4D525F49 
+ 3669      535200
+ 3670              	.LASF118:
+ 3671 11f7 4F535F45 		.ascii	"OS_ERR_ROUND_ROBIN_DISABLED\000"
+ 3671      52525F52 
+ 3671      4F554E44 
+ 3671      5F524F42 
+ 3671      494E5F44 
+ 3672              	.LASF167:
+ 3673 1213 4F535F45 		.ascii	"OS_ERR_TICK_STK_INVALID\000"
+ 3673      52525F54 
+ 3673      49434B5F 
+ 3673      53544B5F 
+ 3673      494E5641 
+ 3674              	.LASF178:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 86
+
+
+ 3675 122b 4F535F45 		.ascii	"OS_ERR_TIME_SET_ISR\000"
+ 3675      52525F54 
+ 3675      494D455F 
+ 3675      5345545F 
+ 3675      49535200 
+ 3676              	.LASF90:
+ 3677 123f 4F535F45 		.ascii	"OS_ERR_OBJ_PTR_NULL\000"
+ 3677      52525F4F 
+ 3677      424A5F50 
+ 3677      54525F4E 
+ 3677      554C4C00 
+ 3678              	.LASF169:
+ 3679 1253 4F535F45 		.ascii	"OS_ERR_TICK_WHEEL_SIZE\000"
+ 3679      52525F54 
+ 3679      49434B5F 
+ 3679      57484545 
+ 3679      4C5F5349 
+ 3680              	.LASF170:
+ 3681 126a 4F535F45 		.ascii	"OS_ERR_TIME_DLY_ISR\000"
+ 3681      52525F54 
+ 3681      494D455F 
+ 3681      444C595F 
+ 3681      49535200 
+ 3682              	.LASF315:
+ 3683 127e 4F535374 		.ascii	"OSStart\000"
+ 3683      61727400 
+ 3684              	.LASF158:
+ 3685 1286 4F535F45 		.ascii	"OS_ERR_TASK_SUSPEND_PRIO\000"
+ 3685      52525F54 
+ 3685      41534B5F 
+ 3685      53555350 
+ 3685      454E445F 
+ 3686              	.LASF3:
+ 3687 129f 73686F72 		.ascii	"short unsigned int\000"
+ 3687      7420756E 
+ 3687      7369676E 
+ 3687      65642069 
+ 3687      6E7400
+ 3688              	.LASF304:
+ 3689 12b2 4F535374 		.ascii	"OSStatTaskCPUUsageInit\000"
+ 3689      61745461 
+ 3689      736B4350 
+ 3689      55557361 
+ 3689      6765496E 
+ 3690              	.LASF164:
+ 3691 12c9 4F535F45 		.ascii	"OS_ERR_TLS_NOT_EN\000"
+ 3691      52525F54 
+ 3691      4C535F4E 
+ 3691      4F545F45 
+ 3691      4E00
+ 3692              	.LASF140:
+ 3693 12db 4F535F45 		.ascii	"OS_ERR_TASK_DEL_IDLE\000"
+ 3693      52525F54 
+ 3693      41534B5F 
+ 3693      44454C5F 
+ 3693      49444C45 
+ 3694              	.LASF107:
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 87
+
+
+ 3695 12f0 4F535F45 		.ascii	"OS_ERR_PRIO\000"
+ 3695      52525F50 
+ 3695      52494F00 
+ 3696              	.LASF59:
+ 3697 12fc 4F535F45 		.ascii	"OS_ERR_INT_Q\000"
+ 3697      52525F49 
+ 3697      4E545F51 
+ 3697      00
+ 3698              	.LASF152:
+ 3699 1309 4F535F45 		.ascii	"OS_ERR_TASK_RUNNING\000"
+ 3699      52525F54 
+ 3699      41534B5F 
+ 3699      52554E4E 
+ 3699      494E4700 
+ 3700              	.LASF233:
+ 3701 131d 5072696F 		.ascii	"Prio\000"
+ 3701      00
+ 3702              	.LASF305:
+ 3703 1322 77616974 		.ascii	"wait_bmp280_connecting\000"
+ 3703      5F626D70 
+ 3703      3238305F 
+ 3703      636F6E6E 
+ 3703      65637469 
+ 3704              	.LASF91:
+ 3705 1339 4F535F45 		.ascii	"OS_ERR_OBJ_TYPE\000"
+ 3705      52525F4F 
+ 3705      424A5F54 
+ 3705      59504500 
+ 3706              	.LASF236:
+ 3707 1349 53656D43 		.ascii	"SemCtr\000"
+ 3707      747200
+ 3708              	.LASF137:
+ 3709 1350 4F535F45 		.ascii	"OS_ERR_TASK_CHANGE_PRIO_ISR\000"
+ 3709      52525F54 
+ 3709      41534B5F 
+ 3709      4348414E 
+ 3709      47455F50 
+ 3710              	.LASF284:
+ 3711 136c 74656D70 		.ascii	"temp\000"
+ 3711      00
+ 3712              	.LASF166:
+ 3713 1371 4F535F45 		.ascii	"OS_ERR_TICK_PRIO_INVALID\000"
+ 3713      52525F54 
+ 3713      49434B5F 
+ 3713      5052494F 
+ 3713      5F494E56 
+ 3714              	.LASF103:
+ 3715 138a 4F535F45 		.ascii	"OS_ERR_PEND_WOULD_BLOCK\000"
+ 3715      52525F50 
+ 3715      454E445F 
+ 3715      574F554C 
+ 3715      445F424C 
+ 3716              	.LASF244:
+ 3717 13a2 4D736751 		.ascii	"MsgQPendTimeMax\000"
+ 3717      50656E64 
+ 3717      54696D65 
+ 3717      4D617800 
+ARM GAS  C:\Users\filip\AppData\Local\Temp\ccRbv8Vp.s 			page 88
+
+
+ 3718              	.LASF309:
+ 3719 13b2 4F535461 		.ascii	"OSTaskQPost\000"
+ 3719      736B5150 
+ 3719      6F737400 
+ 3720              	.LASF272:
+ 3721 13be 5264794D 		.ascii	"RdyMsgPtr\000"
+ 3721      73675074 
+ 3721      7200
+ 3722              	.LASF285:
+ 3723 13c8 70726573 		.ascii	"press\000"
+ 3723      7300
+ 3724              	.LASF172:
+ 3725 13ce 4F535F45 		.ascii	"OS_ERR_TIME_GET_ISR\000"
+ 3725      52525F54 
+ 3725      494D455F 
+ 3725      4745545F 
+ 3725      49535200 
+ 3726              	.LASF311:
+ 3727 13e2 75617274 		.ascii	"uart_send_press_temp\000"
+ 3727      5F73656E 
+ 3727      645F7072 
+ 3727      6573735F 
+ 3727      74656D70 
+ 3728              	.LASF121:
+ 3729 13f7 4F535F45 		.ascii	"OS_ERR_SCHED_LOCK_ISR\000"
+ 3729      52525F53 
+ 3729      43484544 
+ 3729      5F4C4F43 
+ 3729      4B5F4953 
+ 3730              		.ident	"GCC: (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-bran
