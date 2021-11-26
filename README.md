@@ -1,4 +1,4 @@
-# ESW-BMP280
+# BMP280_CY8CKIT_059
 
 This CYPRESS PSoC Creator Project is designed with the [CY8CKIT-059 PROTOTYPING KIT](https://www.cypress.com/documentation/development-kitsboards/cy8ckit-059-psoc-5lp-prototyping-kit-onboard-programmer-and) connected with the BMP280 temperature and pressure sensor over SPI. The measured data is transmitted over UART. For a well looking representation of the measured data, [BMP280-Viewer](https://github.com/FutureFlash94/BMP280-Viewer) is recommended.
 
