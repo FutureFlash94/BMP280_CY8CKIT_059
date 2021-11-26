@@ -14,5 +14,15 @@ The configuration of the SPI interface:
 
 ## UART
 
-Measured and calibrated pressure and temperature is transmitted over UART with a BAUD = 115200, DATA BITS = 8, Parity = None, STOP BIT = 1 in the
-following format: "P:value-T:value"
+Measured and calibrated pressure and temperature is transmitted over UART with
+
+* BAUD = 115200
+* DATA BITS = 8
+* Parity = None
+* STOP BIT = 1 
+
+in the following format
+
+* "P:value-T:value"
+
+where P stands for pressure followed by the preasure value and T for temperature followed by the temperture value.
